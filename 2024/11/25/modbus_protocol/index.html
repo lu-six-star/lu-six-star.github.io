@@ -1,0 +1,690 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/imgs/ava/fluid.png">
+  <link rel="icon" href="/imgs/ava/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Chris">
+  <meta name="keywords" content="">
+  
+    <meta property="og:type" content="article">
+<meta property="og:title" content="Modbus-协议基本原理">
+<meta property="og:url" content="https://lu-six-star.github.io/2024/11/25/modbus_protocol/index.html">
+<meta property="og:site_name" content="星橙点点">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/Modbus-%E5%8D%8F%E8%AE%AE%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/image-20241125100326114.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/Modbus-%E5%8D%8F%E8%AE%AE%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/image-20241125100459918.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/Modbus-%E5%8D%8F%E8%AE%AE%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/image-20241125101948042.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/Modbus-%E5%8D%8F%E8%AE%AE%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/image-20241125102132052.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/Modbus-%E5%8D%8F%E8%AE%AE%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/image-20241125102222471.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/Modbus-%E5%8D%8F%E8%AE%AE%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/image-20241125102332565.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/Modbus-%E5%8D%8F%E8%AE%AE%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/image-20241125102901509.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/Modbus-%E5%8D%8F%E8%AE%AE%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/image-20241125103236852.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/Modbus-%E5%8D%8F%E8%AE%AE%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/image-20241125103418980.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/Modbus-%E5%8D%8F%E8%AE%AE%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/image-20241125103536667.png">
+<meta property="article:published_time" content="2024-11-25T01:58:24.000Z">
+<meta property="article:modified_time" content="2025-06-29T03:50:54.349Z">
+<meta property="article:author" content="Chris">
+<meta property="article:tag" content="Modbus">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://lu-six-star.github.io/imgs/Modbus-%E5%8D%8F%E8%AE%AE%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/image-20241125100326114.png">
+  
+  
+  
+  <title>Modbus-协议基本原理 - 星橙点点</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"lu-six-star.github.io","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>星橙点点</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Modbus-协议基本原理"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2024-11-25 09:58" pubdate>
+          2024年11月25日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          4k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          34 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">Modbus-协议基本原理</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <!-- modbus_protocol-->
+
+<span id="more"></span>
+
+<p>转载自<a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_43866583/article/details/125762016?spm=1001.2014.3001.5502">https://blog.csdn.net/weixin_43866583&#x2F;article&#x2F;details&#x2F;125762016?spm&#x3D;1001.2014.3001.5502</a></p>
+<h3 id="Modbus简介"><a href="#Modbus简介" class="headerlink" title="Modbus简介"></a>Modbus简介</h3><p>Modbus 是由 Modicon（现为施耐德电气公司的一个品牌）在 1979 年发明的，是全球第一个真正用于工业现场的总线协议。</p>
+<p>ModBus 网络是一个工业通信系统，由带智能终端的可编程序控制器和计算机通过公用线路或局部专用线路连接而成。其系统结构既包括硬件、亦包括软件。它可应用于各种数据采集和过程监控。</p>
+<p>为更好地普及和推动 Modbus 在基于以太网上的分布式应用，目前施耐德公司已将 Modbus 协议的所有权移交给 IDA（Interface for Distributed Automation，分布式自动化接口）组织，并成立了Modbus-IDA 组织，为 Modbus 今后的发展奠定了基础。</p>
+<h3 id="Modbus协议概述"><a href="#Modbus协议概述" class="headerlink" title="Modbus协议概述"></a>Modbus协议概述</h3><p>Modbus是一个主-从模式的通信协议，属于数据链路层上的协议，协议本身不涉及具体的硬件要求。<br>常见的应用Modbus协议的物理接口有RS-485、RS232、USART等的通信链路中。</p>
+<p>Modbus协议中，一个时刻内只允许有一个主机连接于总线，多个从机连接于总线上，通信都是只能由主机发起，从机进行响应。不能从机主动发起通信。</p>
+<h3 id="Modbus-主从机通信模式"><a href="#Modbus-主从机通信模式" class="headerlink" title="Modbus 主从机通信模式"></a>Modbus 主从机通信模式</h3><p>主机和从机之间的通信，可以用两种模式进行：广播通知模式、单播点对点模式。</p>
+<h5 id="单播点对点模式"><a href="#单播点对点模式" class="headerlink" title="单播点对点模式"></a>单播点对点模式</h5><p>主机按照从机的明确地址访问相应的从机，从机接到来自主机的请求并处理完请求后，从机会向主机返回一个应答，完成一个通信。</p>
+<p>在这种模式，一个 Modbus 事务处理包含 2 个报文：一个来自主机的请求，一个来自从机的应答。</p>
+<p>在总线上，每个从机都必须有唯一的从机地址 (1 到 247)，这样才能区别于其它节点被独立的寻址。</p>
+<h5 id="广播通知模式"><a href="#广播通知模式" class="headerlink" title="广播通知模式"></a>广播通知模式</h5><p>主机向所总线通过广播指令发送请求，所有的从机都要接收来自主机的广播信息。</p>
+<p>对于主机广播的请求，从机是没有应答返回的。所有的从机必须要接受主机的广播模写功能。</p>
+<p><font color=red>注意：地址 0 是专门用于主机向各个从机广播数据的。</font></p>
+<h3 id="Modbus-地址规则"><a href="#Modbus-地址规则" class="headerlink" title="Modbus 地址规则"></a>Modbus 地址规则</h3><p>Modbus 寻址空间有 256 个不同地址。</p>
+<p><img src="/imgs/Modbus-%E5%8D%8F%E8%AE%AE%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/image-20241125100326114.png" srcset="/img/loading.gif" lazyload></p>
+<p>地址 0 为<strong>广播地址</strong>。所有的从机必须识别广播地址。</p>
+<p>Modbus 主机本身是没有地址的，只有从机必须要有一个地址。 该地址必须在 Modbus 串行总线上唯一。</p>
+<p>248~255作为预留使用的地址。</p>
+<h3 id="Modbus-的帧格式"><a href="#Modbus-的帧格式" class="headerlink" title="Modbus 的帧格式"></a>Modbus 的帧格式</h3><p>Modbus的帧格式按照选择的模式不同帧格式也是有所区别的。</p>
+<h5 id="RTU模式"><a href="#RTU模式" class="headerlink" title="RTU模式"></a>RTU模式</h5><p><img src="/imgs/Modbus-%E5%8D%8F%E8%AE%AE%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/image-20241125100459918.png" srcset="/img/loading.gif" lazyload></p>
+<p>Modbus RTU 帧总长度最大为 256 字节。</p>
+<p>RTU 模式每个字节 ( 11 位 ) </p>
+<p>每字节的 bit 流:<br><strong>1 起始位<br>8 数据位， 首先发送最低有效位<br>1 位作为奇偶校验<br>1 停止位</strong></p>
+<p>偶校验是要求的， 其它模式 ( 奇校验， 无校验 ) 也可以使用。 为了保证与其它产品的最大兼容性，同时支持无校验模式是建议的。默认校验模式模式 必须为偶校验。</p>
+<p><strong>注 : 使用无校验要求 2 个停止位。</strong></p>
+<p>RTU时，每个字符或字节均由此顺序发送(从左到右)：<br>最低有效位 (LSB) . . . 最高有效位 (MSB)</p>
+<p><img src="/imgs/Modbus-%E5%8D%8F%E8%AE%AE%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/image-20241125101948042.png" srcset="/img/loading.gif" lazyload></p>
+<h5 id="RTU模式下的帧通信"><a href="#RTU模式下的帧通信" class="headerlink" title="RTU模式下的帧通信"></a>RTU模式下的帧通信</h5><p>由发送设备将 Modbus 报文构造为带有已知起始和结束标记的帧。这使设备可以在报文的开始接收新帧，并且知道何时报文结束。</p>
+<p>不完整的报文必须能够被检测到而错误标志必须作为结果被设置。</p>
+<p>在 RTU 模式，报文帧由时长至少为 3.5 个字符时间的空闲间隔区分。</p>
+<p><img src="/imgs/Modbus-%E5%8D%8F%E8%AE%AE%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/image-20241125102132052.png" srcset="/img/loading.gif" lazyload></p>
+<p>整个报文帧必须以连续的字符流发送。</p>
+<p>如果两个字符之间的空闲间隔大于 1.5 个字符时间，则报文帧被认为不完整应该被接收节点丢弃。</p>
+<p><img src="/imgs/Modbus-%E5%8D%8F%E8%AE%AE%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/image-20241125102222471.png" srcset="/img/loading.gif" lazyload></p>
+<p><font color=red>注意 : RTU 模式下接收数据时，由于 t1.5 和 t3.5 的时间隔要求的存在，一般在高通信速率下，会导致 CPU 负担加重。因此，在通信速率等于或低于 19200 bps 时，这两个定时必须严格遵守； 对于波特率大于 19200 bps 的情形，应该使用 2 个定时的固定值： 建议的字符间超时时间(t1.5)为 750µs， 帧间的超时时间 (t1.5) 为 1.750ms。</font></p>
+<p><img src="/imgs/Modbus-%E5%8D%8F%E8%AE%AE%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/image-20241125102332565.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li><p>从 “初始” 态到 “空闲” 态转换需要 t3.5 定时超时: 这保证帧间延迟</p>
+</li>
+<li><p>“空闲” 态是没有发送和接收报文要处理的正常状态。</p>
+</li>
+<li><p>在 RTU 模式， 当没有活动的传输的时间间隔达 3.5 个字符长时，通信链路被认为在 “空闲” 态。</p>
+</li>
+<li><p>当链路空闲时， 在链路上检测到的任何传输的字符被识别为帧起始。 链路变为 “活动” 状态。 然后当链路上没有字符传输的时间间个达到 t3.5 后，被识别为帧结束。</p>
+</li>
+<li><p>检测到帧结束后，完成 CRC 计算和检验。然后，分析地址域以确定帧是否发往此设备，如果不是，则丢弃此帧。 为了减少接收处理时间，地址域可以在一接到就分析，而不需要等到整个帧结束。这样，CRC 计算只需要在帧寻址到该节点 (包括广播帧) 时进行。</p>
+</li>
+</ul>
+<h5 id="RTU模式的CRC校验"><a href="#RTU模式的CRC校验" class="headerlink" title="RTU模式的CRC校验"></a>RTU模式的CRC校验</h5><p>在 RTU 模式包含一个对全部报文内容执行的，基于循环冗余校验 (CRC - Cyclical Redundancy Checking) 算法的错误检验域。CRC 域检验整个报文的内容。不管报文有无奇偶校验，均执行此检验。</p>
+<p>CRC 包含由两个 8 位字节组成的一个 16 位值。</p>
+<p>CRC 域作为报文的最后的域附加在报文之后。计算后，首先附加低字节，然后是高字节。CRC 高字<br>节为报文发送的最后一个子节。</p>
+<p>附加在报文后面的 CRC 的值由发送设备计算。接收设备在接收报文时重新计算 CRC 的值，并将计<br>算结果于实际接收到的 CRC 值相比较。如果两个值不相等，则为错误。</p>
+<p>CRC 的计算, 开始对一个 16 位寄存器预装全 1。 然后将报文中的连续的 8 位子节对其进行后续的计<br>算。只有字符中的 8 个数据位参与生成 CRC 的运算，起始位，停止位和校验位不参与 CRC 计算。</p>
+<p>CRC 的生成过程中， 每个 8–位字符与寄存器中的值异或。然后结果向最低有效位(LSB)方向移动<br>(Shift) 1 位，而最高有效位(MSB)位置充零。 然后提取并检查 LSB：如果 LSB 为 1， 则寄存器中的值与一个固定的预置值异或；如果 LSB 为 0， 则不进行异或操作。</p>
+<p>这个过程将重复直到执行完 8 次移位。完成最后一次（第 8 次）移位及相关操作后，下一个 8 位字节与寄存器的当前值异或，然后又同上面描述过的一样重复 8 次。当所有报文中子节都运算之后得到的寄存器的最终值，就是 CRC。</p>
+<h5 id="ASCII传输模式"><a href="#ASCII传输模式" class="headerlink" title="ASCII传输模式"></a>ASCII传输模式</h5><p>当 Modbus 串行链路的设备被配置为使用 ASCII模式通信时，报文中的每个 8 位字节以两个 ASCII 字符发送。<br>一般在通信链路或者设备无法符合 RTU 模式的定时管理时使用该模式。</p>
+<p><img src="/imgs/Modbus-%E5%8D%8F%E8%AE%AE%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/image-20241125102901509.png" srcset="/img/loading.gif" lazyload></p>
+<p>比如 : 字节 0X5B 会被编码为两个字符 : 0x35 和 0x42 ( ASCII 编码 0x35 &#x3D;“5”， 0x42 &#x3D;“B” )。</p>
+<p><font color=red>注 : 由于一个子节需要两个字符，此模式比 RTU 效率低。</font></p>
+<p>ASCII 模式每个字节 ( 10 位 ) 的格式为 :<br><strong>1 起始位<br>7 数据位， 首先发送最低有效位<br>1 位作为奇偶校验<br>1 停止位</strong></p>
+<p>偶校验是要求的， 其它模式 ( 奇校验， 无校验 ) 也可以使用。 为了保证与其它产品的最大兼容性，<br>同时支持无校验模式是建议的。默认校验模式模式 必须为偶校验。</p>
+<p><font color=red>注 : 使用无校验要求 2 个停止位。</font></p>
+<h5 id="ASCII的报文帧"><a href="#ASCII的报文帧" class="headerlink" title="ASCII的报文帧"></a>ASCII的报文帧</h5><p>在 ASCII 模式， 报文用特殊的字符区分帧起始和帧结束。一个报文必须以一个‘冒号’ ( : ) (ASCII十六进制 3A )起始，以 ‘回车-换行’ (CR LF) 对 (ASCII 十六进制 0D 和 0A) 结束。</p>
+<p>对于所有的域，允许传送的字符为十六进制 0–9， A–F (ASCII 编码)。 设备连续的监视总线上的 ‘冒<br>号’ 字符。当收到这个字符后，每个设备解码后续的字符一直到帧结束。</p>
+<p>报文中字符间的时间间隔可以达一秒。如果有更大的间隔，则接受设备认为发生了错误。</p>
+<p><font color=red>每个字符子节需要用两个字符编码。因此，为了确保 ASCII 模式 和 RTU 模式在 Modbus 应用级兼容，ASCII 数据域最大数据长度为 (2x252) 是 RTU 数据域 (252) 的两倍。</font></p>
+<p> Modbus ASCII 帧的最大尺寸为 513 个字符。</p>
+<p><img src="/imgs/Modbus-%E5%8D%8F%E8%AE%AE%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/image-20241125103236852.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>“空闲” 态是没有发送和接收报文要处理的正常状态。</li>
+<li>每次接收到 “:” 字符表示新的报文的开始。如果在一个报文的接收过程中收到该字符，则当前地报文被认为不完整并被丢弃。而一个新的接收缓冲区被重新分配。</li>
+<li>检测到帧结束后，完成 LRC 计算和检验。然后，分析地址域以确定帧是否发往此设备，如果不是，则丢弃此帧。 为了减少接收处理时间，地址域可以在一接到就分析，而不需要等到整个帧结束。</li>
+</ul>
+<h5 id="ASCII的LRC校验"><a href="#ASCII的LRC校验" class="headerlink" title="ASCII的LRC校验"></a>ASCII的LRC校验</h5><p>在 ASCII 模式，包含一个对全部报文内容执行的，基于纵向冗余校验 (LRC - Longitudinal<br>Redundancy Checking) 算法的错误检验域。LRC 域检验不包括起始“冒号”和结尾 CRLF 对的整个报<br>文的内容。不管报文有无奇偶校验，均执行此检验。</p>
+<p>LRC 域为一个子节，包含一个 8 位二进制值。LRC 值由发送设备计算，然后将 LRC 附在报文后面。<br>接收设备在接收报文时重新计算 LRC 的值，并将计算结果于实际接收到的 LRC 值相比较。如果两个值不相等，则为错误。</p>
+<p>LRC 的计算, 对报文中的所有的连续 8 位字节相加，忽略任何进位，然后求出其二进制补码。执行检<br>验针对不包括起始“冒号”和结尾 CRLF 对的整个 ASCII 报文域的内容。在 ASCII 模式，LRC 的结果<br>被 ASCII 编码为两个字节并放置于 ASCII 模式报文帧的结尾，CRLF 之前。</p>
+<h3 id="Modbus的异常码"><a href="#Modbus的异常码" class="headerlink" title="Modbus的异常码"></a>Modbus的异常码</h3><p><img src="/imgs/Modbus-%E5%8D%8F%E8%AE%AE%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/image-20241125103418980.png" srcset="/img/loading.gif" lazyload></p>
+<p>1） 一个正确的 MODBUS 响应：响应功能码 &#x3D; 请求功能码</p>
+<p>2） 一个 MODBUS 异常响应</p>
+<p>3）用来为客户机提供处理过程中与被发现的差错相关的信息</p>
+<p>4）响应功能码 &#x3D; 请求功能码 + 0x80</p>
+<p>5）提供一个异常码来指示差错原因。</p>
+<h3 id="Modbus的功能码"><a href="#Modbus的功能码" class="headerlink" title="Modbus的功能码"></a>Modbus的功能码</h3><p>目前Modbus的功能中可以分为三类：公共功能码、用户定义功能码、保留功能码。</p>
+<p><img src="/imgs/Modbus-%E5%8D%8F%E8%AE%AE%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/image-20241125103536667.png" srcset="/img/loading.gif" lazyload></p>
+<p>公共功能码：是已经被定义的功能码。</p>
+<p>用户定义功能码：有两个可以由用户定义功能码。范围为： 65 至 72 和十进制 100 至 110。</p>
+<p>保留功能码：特殊情况下使用的，并且对公共使用是无效的功能码。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Protocol/" class="category-chain-item">Protocol</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Modbus/" class="print-no-link">#Modbus</a>
+      
+    </div>
+  
+</div>
+
+
+              
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2024/11/25/can_protocol/" title="CAN协议">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">CAN协议</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2024/11/25/freertos_learn_heap/" title="FreeRTOS学习-五种内存管理方式">
+                        <span class="hidden-mobile">FreeRTOS学习-五种内存管理方式</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

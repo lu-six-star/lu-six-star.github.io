@@ -1,0 +1,636 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/imgs/ava/fluid.png">
+  <link rel="icon" href="/imgs/ava/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Chris">
+  <meta name="keywords" content="">
+  
+    <meta property="og:type" content="article">
+<meta property="og:title" content="FreeRTOS学习-信号量与优先级反转">
+<meta property="og:url" content="https://lu-six-star.github.io/2024/11/22/freertos_learn_Semaphore/index.html">
+<meta property="og:site_name" content="星橙点点">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/FreeRTOS%E5%AD%A6%E4%B9%A0-%E4%BF%A1%E5%8F%B7%E9%87%8F%E4%B8%8E%E4%BC%98%E5%85%88%E7%BA%A7%E5%8F%8D%E8%BD%AC/image-20241122171402197.png">
+<meta property="article:published_time" content="2024-11-22T09:04:25.000Z">
+<meta property="article:modified_time" content="2025-06-29T03:50:54.351Z">
+<meta property="article:author" content="Chris">
+<meta property="article:tag" content="RTOS">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://lu-six-star.github.io/imgs/FreeRTOS%E5%AD%A6%E4%B9%A0-%E4%BF%A1%E5%8F%B7%E9%87%8F%E4%B8%8E%E4%BC%98%E5%85%88%E7%BA%A7%E5%8F%8D%E8%BD%AC/image-20241122171402197.png">
+  
+  
+  
+  <title>FreeRTOS学习-信号量与优先级反转 - 星橙点点</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"lu-six-star.github.io","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>星橙点点</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="FreeRTOS学习-信号量与优先级反转"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2024-11-22 17:04" pubdate>
+          2024年11月22日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          1.8k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          15 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">FreeRTOS学习-信号量与优先级反转</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <!-- freertos_learn_Semaphore-->
+
+<span id="more"></span>
+
+<p>转载自<a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_43866583/article/details/125528885?spm=1001.2014.3001.5502">https://blog.csdn.net/weixin_43866583&#x2F;article&#x2F;details&#x2F;125528885?spm&#x3D;1001.2014.3001.5502</a></p>
+<h3 id="FreeRTOS学习-信号量与优先级反转"><a href="#FreeRTOS学习-信号量与优先级反转" class="headerlink" title="FreeRTOS学习-信号量与优先级反转"></a>FreeRTOS学习-信号量与优先级反转</h3><p>FreeRTOS中最常用到的信号量有：二值信号量、计数信号量、互斥信号量。</p>
+<h4 id="二值信号量"><a href="#二值信号量" class="headerlink" title="二值信号量"></a>二值信号量</h4><p>二值信号量是指所创建的信号量只有两个值（0 和 1），通常用于互斥访问或者同步。</p>
+<p> 二值信号量在某处被占有使用之后，其他地方想要申请这个二值信号量是无法成功申请的，只有当这个被占有的二值信号量被使用完毕并释放之后，才能被再次申请占有使用！</p>
+<p>总而言之，二值信号量被使用之后会变为无效状态，需要被重新释放才能进入有效状态。</p>
+<h4 id="创建二值信号量"><a href="#创建二值信号量" class="headerlink" title="创建二值信号量"></a>创建二值信号量</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs 复制">SemaphoreHandle_t xSemaphoreCreateBinary(void)<br></code></pre></td></tr></table></figure>
+
+<p>函数描述：</p>
+<p>​    函数 xSemaphoreCreateBinary 用于创建二值信号量。</p>
+<p>​    返回值：如果创建成功会返回二值信号量的句柄，创建失败会返回 NULL。</p>
+<h4 id="等待二值信号量"><a href="#等待二值信号量" class="headerlink" title="等待二值信号量"></a>等待二值信号量</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs 复制">xSemaphoreTake( SemaphoreHandle_t xSemaphore,     /* 信号量句柄 */ <br>                TickType_t xTicksToWait );        /* 等待信号量可用的最大等待时间 */<br></code></pre></td></tr></table></figure>
+
+<p>函数 xSemaphoreTake 用于在任务代码中获取信号量。</p>
+<h4 id="在中断中等待信号量"><a href="#在中断中等待信号量" class="headerlink" title="在中断中等待信号量"></a>在中断中等待信号量</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs 复制">xSemaphoreTakeFromISR( xSemaphore, pxHigherPriorityTaskWoken )<br></code></pre></td></tr></table></figure>
+
+
+
+<h4 id="释放二值信号量"><a href="#释放二值信号量" class="headerlink" title="释放二值信号量"></a>释放二值信号量</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs 复制">xSemaphoreGive( SemaphoreHandle_t xSemaphore ); /* 信号量句柄 */<br></code></pre></td></tr></table></figure>
+
+<p>返回值，如果信号量释放成功返回 pdTRUE，否则返回 pdFALSE，因为信号量的实现是基于消息队列，返回失败的主要原因是消息队列已经满了。</p>
+<h4 id="用于在中断中释放二值信号量"><a href="#用于在中断中释放二值信号量" class="headerlink" title="用于在中断中释放二值信号量"></a>用于在中断中释放二值信号量</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs 复制">xSemaphoreGiveFromISR(    SemaphoreHandle_t xSemaphore, <br>                          signed BaseType_t *pxHigherPriorityTaskWoken)<br></code></pre></td></tr></table></figure>
+
+
+
+<h3 id="计数信号量"><a href="#计数信号量" class="headerlink" title="计数信号量"></a>计数信号量</h3><p>计数信号量是一个相当于长度大于1的队列，用于任务之间的同步和共享资源的保护。</p>
+<p>计数信号量与二值信号量的不同在于，二值信号量只能被一个地方申请使用，只有在这个申请使用的地方了释放了才能被其他处申请使用。而计数信号量是可以创建一定数量的信号量的，多个地方可以同时申请使用，直到达到最大的计数信号量的阈值。</p>
+<h4 id="创建计数信号量"><a href="#创建计数信号量" class="headerlink" title="创建计数信号量"></a>创建计数信号量</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs 复制">SemaphoreHandle_t xSemaphoreCreateCounting( <br>                                            UBaseType_t uxMaxCount, /* 支持的最大计数值 */                                                     <br>                                            UBaseType_t uxInitialCount); /* 初始计数值 */<br></code></pre></td></tr></table></figure>
+
+
+
+
+
+<h3 id="优先级反转-互斥信号量"><a href="#优先级反转-互斥信号量" class="headerlink" title="优先级反转 &amp; 互斥信号量"></a>优先级反转 &amp; 互斥信号量</h3><p>在实时操作系统中，优先级反转的问题是不容忽视的，程序设计的过程中，也是要充分考虑这个问题的。</p>
+<p>那优先级反转到底是什么呢？</p>
+<p>优先反转是指：假如一个系统中有高（H）、中（M）、低（L）三个优先级的任务，并有一个二值信号量。在某一个时刻二值信号量被低（L）优先级的任务使用了，并在运行过程中，高优先级任务（H）抢占了低优先级（L）的CPU使用权，但是也想要获取二值信号量被低优先（L）的任务占有着，高优先级任务（H）由此被挂起等待了，中优先级任务（M）因为不需要二值信号量，会抢占低优先级（L）任务的执行而得到运行，而高优先级任务（H）依然只能等到低优先级任务（L）释放二值信号量才能得到执行。</p>
+<p>由此造成了高优先级任务得不到及时的执行，而低优先级任务却能比高优先级任务更多的得到执行。</p>
+<p><img src="/imgs/FreeRTOS%E5%AD%A6%E4%B9%A0-%E4%BF%A1%E5%8F%B7%E9%87%8F%E4%B8%8E%E4%BC%98%E5%85%88%E7%BA%A7%E5%8F%8D%E8%BD%AC/image-20241122171402197.png" srcset="/img/loading.gif" lazyload></p>
+<p>解决优先级反转的问题最好的办法是使用互斥信号量。</p>
+<p>互斥信号量和二值信号量比较相似，不同之处在于互斥信号量具有优先级继承的特性，如果一个互斥信号量正在被一个低优先级的任务使用，而此时这个高优先级的任务也希望获取这个互斥信号量的话就会被阻塞。</p>
+<p>使用互斥信号量时，高优先级的任务会把低优先级的任务的优先级先提高到和自己相同的优先级，保证低优先级的任务能够继续运行至结束这样极大减少了因为高优先级获取不到信号量被阻塞过长时间的问题。</p>
+<h4 id="创建互斥信号量"><a href="#创建互斥信号量" class="headerlink" title="创建互斥信号量"></a>创建互斥信号量</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs 复制">SemaphoreHandle_t xSemaphoreCreateMutex(void)<br></code></pre></td></tr></table></figure>
+
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/RTOS/" class="category-chain-item">RTOS</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/RTOS/" class="print-no-link">#RTOS</a>
+      
+    </div>
+  
+</div>
+
+
+              
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2024/11/23/freertos_learn_Notify/" title="FreeRTOS学习-消息邮箱">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">FreeRTOS学习-消息邮箱</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2024/11/20/freertos_learn_task/" title="FreeRTOS学习-任务的创建与管理">
+                        <span class="hidden-mobile">FreeRTOS学习-任务的创建与管理</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

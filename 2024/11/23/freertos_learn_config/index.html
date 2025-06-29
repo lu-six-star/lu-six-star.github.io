@@ -1,0 +1,661 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/imgs/ava/fluid.png">
+  <link rel="icon" href="/imgs/ava/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Chris">
+  <meta name="keywords" content="">
+  
+    <meta property="og:type" content="article">
+<meta property="og:title" content="FreeRTOS学习-配置项">
+<meta property="og:url" content="https://lu-six-star.github.io/2024/11/23/freertos_learn_config/index.html">
+<meta property="og:site_name" content="星橙点点">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-11-23T02:31:37.000Z">
+<meta property="article:modified_time" content="2025-06-29T03:50:54.352Z">
+<meta property="article:author" content="Chris">
+<meta property="article:tag" content="RTOS">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>FreeRTOS学习-配置项 - 星橙点点</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"lu-six-star.github.io","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>星橙点点</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="FreeRTOS学习-配置项"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2024-11-23 10:31" pubdate>
+          2024年11月23日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          2.4k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          20 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">FreeRTOS学习-配置项</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <!-- freertos_learn_config-->
+
+<span id="more"></span>
+
+<p>转载自<a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_43866583/article/details/125562063?spm=1001.2014.3001.5502">https://blog.csdn.net/weixin_43866583&#x2F;article&#x2F;details&#x2F;125562063?spm&#x3D;1001.2014.3001.5502</a></p>
+<p>FreeRTOS的大部分配置项都在文件 FreeRTOSConfig.h 和 FreeRTOS.h 中，这两个文件中有很多的宏定义，用于系统的配置和裁剪，是很重要的文件</p>
+<p>想要更加详细的了解相关的宏的作用和使用方法，可以参考freeRTOS官网给出的有关说明，链接如下：<br><a target="_blank" rel="noopener" href="https://www.freertos.org/a00110.html#configUSE_PREEMPTION">https://www.freertos.org/a00110.html#configUSE_PREEMPTION</a></p>
+<h3 id="系统调度模式的选择"><a href="#系统调度模式的选择" class="headerlink" title="系统调度模式的选择"></a>系统调度模式的选择</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> configUSE_PREEMPTION			1</span><br></code></pre></td></tr></table></figure>
+
+<p>这个宏就是用于配置系统的调度模式的，调度模式选择如下：</p>
+<p>0 - 合作式调度，任务之间根据时间片轮流的进行执行；</p>
+<p>1 - 抢占式调度，即优先级高的任务可以抢占低优先级任务的运行权，优先执行；<br>系统要求实时响应的话，该宏配置为 1 即可。</p>
+<h3 id="tickless-低功耗模式"><a href="#tickless-低功耗模式" class="headerlink" title="tickless 低功耗模式"></a>tickless 低功耗模式</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> configUSE_TICKLESS_IDLE    0</span><br></code></pre></td></tr></table></figure>
+
+<p>0 - 禁能 tickless 低功耗模式</p>
+<p>1 - 使能 tickless 低功耗模式</p>
+<h3 id="系统主频的设置"><a href="#系统主频的设置" class="headerlink" title="系统主频的设置"></a>系统主频的设置</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> configCPU_CLOCK_HZ				( 72000000 )</span><br></code></pre></td></tr></table></figure>
+
+<p>这个宏用于配置CPU的主频，单位是Hz。这个数值要根据所用的cpu的实际时钟大小进行设置。比如：<br>STM32F103的主频最高位72MHz，STM32F407的主频为168MHz，这个不要填错。</p>
+<h3 id="系统心跳的速率"><a href="#系统心跳的速率" class="headerlink" title="系统心跳的速率"></a>系统心跳的速率</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> configTICK_RATE_HZ				(1000 )</span><br></code></pre></td></tr></table></figure>
+
+<p>心跳速率也称为系统滴答，即系统每秒钟滴答的次数。比如上面配置为1000，就是把1秒分成了1000份，每一份为 1 毫秒。</p>
+<h3 id="系统最大的优先级"><a href="#系统最大的优先级" class="headerlink" title="系统最大的优先级"></a>系统最大的优先级</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> configMAX_PRIORITIES			( 5 )</span><br></code></pre></td></tr></table></figure>
+
+<p>这个宏用于配置系统最大可用的优先级。比如上面设置为 5，所以系统可以用的优先级为 0 - 4，5是不能用的。如果优先级超过这个设定，系统会忽略不处理。</p>
+<p>注意：FreeRTOS中优先级数值越大，优先级越高。而UCOS则相反。</p>
+<h3 id="最小堆栈的设置"><a href="#最小堆栈的设置" class="headerlink" title="最小堆栈的设置"></a>最小堆栈的设置</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> configMINIMAL_STACK_SIZE		( 128 )</span><br></code></pre></td></tr></table></figure>
+
+<p>在系统中，这个宏用于配置一些任务的堆栈空间的大小，一般用于空闲、定时等一些系统任务中。<br>注意：这个配置的单位是字，而不是字节！在RAM中，一个字是4byte！！</p>
+<h3 id="系统总堆栈大小"><a href="#系统总堆栈大小" class="headerlink" title="系统总堆栈大小"></a>系统总堆栈大小</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> configTOTAL_HEAP_SIZE			( 30 * 1024 ) </span><br></code></pre></td></tr></table></figure>
+
+<p>这个宏用于设定系统的可用堆栈的总量大小（单位为字）。</p>
+<p>使用时需要根据MCU的RAM和项目开发的功能情况定义这个值。不能定义太小，太小内存容易溢出；也不能定义太大，如果芯片RAM容量不够大，会导致变量定义失败，或分配其他堆栈空间时申请不到空间。</p>
+<h3 id="任务名称最大长度"><a href="#任务名称最大长度" class="headerlink" title="任务名称最大长度"></a>任务名称最大长度</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> configMAX_TASK_NAME_LEN			( 25 )</span><br></code></pre></td></tr></table></figure>
+
+<p>这个宏用于定义任务名称允许的最大字符串长度。</p>
+<p>注意：结束符“\0”也包括在内。</p>
+<h3 id="互斥信号量"><a href="#互斥信号量" class="headerlink" title="互斥信号量"></a>互斥信号量</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> configUSE_MUTEXES				1</span><br></code></pre></td></tr></table></figure>
+
+<p>互斥信号量是一种很重要的同步手段。一般用于资源共享的“加锁” 和任务优先级反转上。</p>
+<p>它可以实现多任务间对共享资源的独占和保护。即在某个资源在某个时刻只允许一个任务使用，使用完之后才允许其他任务使用该共享资源。</p>
+<p>比如：任务A是高优先级任务，B是低优先级任务；A、B任务都用同一个串口发送指令数据，（每次必须发送完整，不能被打断）。当任务B正在发送数据时，任务A要打断任务B，任务B就需要使用互斥信号占有该串口，等发送完数据之后，再释放该串口给任务A使用。</p>
+<h3 id="信号量计数功能"><a href="#信号量计数功能" class="headerlink" title="信号量计数功能"></a>信号量计数功能</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> configUSE_COUNTING_SEMAPHORES	1</span><br></code></pre></td></tr></table></figure>
+
+<p>0 - 不使用信号量计数功能</p>
+<p>1 - 使用信号量计数功能</p>
+<h3 id="使能任务间直接的消息传递"><a href="#使能任务间直接的消息传递" class="headerlink" title="使能任务间直接的消息传递"></a>使能任务间直接的消息传递</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> configUSE_TASK_NOTIFICATIONS    1</span><br></code></pre></td></tr></table></figure>
+
+<p>0 - 禁止任务间直接的消息传递</p>
+<p>1 - 使能任务间直接的消息传递，包含信号量，事件标志组和消息邮箱。</p>
+<h3 id="版本兼容性选择"><a href="#版本兼容性选择" class="headerlink" title="版本兼容性选择"></a>版本兼容性选择</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> configENABLE_BACKWARD_COMPATIBILITY    1</span><br></code></pre></td></tr></table></figure>
+
+<p>0 - 新旧版本不兼容</p>
+<p>1 - 新旧版本之间可兼容，即新版本兼容老版本</p>
+<h3 id="获取任务运行信息"><a href="#获取任务运行信息" class="headerlink" title="获取任务运行信息"></a>获取任务运行信息</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> configGENERATE_RUN_TIME_STATS	0</span><br></code></pre></td></tr></table></figure>
+
+<p>0 - 禁止获取任务运行状态参数</p>
+<p>1 - 使能任务运行状态参数统计</p>
+<h3 id="开启软件定时器"><a href="#开启软件定时器" class="headerlink" title="开启软件定时器"></a>开启软件定时器</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> configUSE_TIMERS				1</span><br></code></pre></td></tr></table></figure>
+
+<p>通过将这个宏设置为1来使能软件定时器功能。</p>
+<h3 id="配置软件定时器任务的优先级"><a href="#配置软件定时器任务的优先级" class="headerlink" title="配置软件定时器任务的优先级"></a>配置软件定时器任务的优先级</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> configTIMER_TASK_PRIORITY		( 3 )</span><br></code></pre></td></tr></table></figure>
+
+<p>软件定时器的实现是基于系统心跳实现的，管理软件定时器本质也是由一个定时器任务进行的，所以也是需要设置定时器任务的优先级的。具体的优先级根据自己项目的实际情况设置吧！</p>
+<h3 id="软件定时器命令队列的长度"><a href="#软件定时器命令队列的长度" class="headerlink" title="软件定时器命令队列的长度"></a>软件定时器命令队列的长度</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> configTIMER_QUEUE_LENGTH		10</span><br></code></pre></td></tr></table></figure>
+
+<p>说白了，FreeRTOS的软件定时器其实是通过消息队列实现的。具体的数值根据你使用到多个软件定时器而定吧！</p>
+<h3 id="软件定时器任务的栈空间"><a href="#软件定时器任务的栈空间" class="headerlink" title="软件定时器任务的栈空间"></a>软件定时器任务的栈空间</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> configTIMER_TASK_STACK_DEPTH	128</span><br></code></pre></td></tr></table></figure>
+
+<p>软件定时器任务的堆栈空间的大小，和创建任务一样，也要给软件定时器任务分配堆栈空间。</p>
+<h3 id="断言设置"><a href="#断言设置" class="headerlink" title="断言设置"></a>断言设置</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> configASSERT( ( x ) ) <span class="hljs-keyword">if</span>( ( x ) == 0 ) vAssertCalled( __FILE__, __LINE__ )</span><br></code></pre></td></tr></table></figure>
+
+<p>关键字 <strong>LINE</strong> 表示源代码行号，关键字__FILE__表示源代码文件名,函数 vAssertCalled 里面调用串口打印之类的功能，将出现错误的源文件和代码行号打印出来,比较方便！</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/RTOS/" class="category-chain-item">RTOS</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/RTOS/" class="print-no-link">#RTOS</a>
+      
+    </div>
+  
+</div>
+
+
+              
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2024/11/23/freertos_learn_event/" title="FreeRTOS学习-事件标志组">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">FreeRTOS学习-事件标志组</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2024/11/23/freertos_learn_queue/" title="FreeRTOS学习-消息队列">
+                        <span class="hidden-mobile">FreeRTOS学习-消息队列</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

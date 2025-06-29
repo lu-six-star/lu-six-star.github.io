@@ -1,0 +1,647 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/imgs/ava/fluid.png">
+  <link rel="icon" href="/imgs/ava/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Chris">
+  <meta name="keywords" content="">
+  
+    <meta property="og:type" content="article">
+<meta property="og:title" content="模数转换">
+<meta property="og:url" content="https://lu-six-star.github.io/2024/11/26/embedded_adc/index.html">
+<meta property="og:site_name" content="星橙点点">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/%E6%A8%A1%E6%95%B0%E8%BD%AC%E6%8D%A2/image-20241126162947795.png">
+<meta property="article:published_time" content="2024-11-26T08:24:34.000Z">
+<meta property="article:modified_time" content="2025-06-29T03:50:54.339Z">
+<meta property="article:author" content="Chris">
+<meta property="article:tag" content="adc">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://lu-six-star.github.io/imgs/%E6%A8%A1%E6%95%B0%E8%BD%AC%E6%8D%A2/image-20241126162947795.png">
+  
+  
+  
+  <title>模数转换 - 星橙点点</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"lu-six-star.github.io","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>星橙点点</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="模数转换"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2024-11-26 16:24" pubdate>
+          2024年11月26日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          2.4k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          21 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">模数转换</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <!-- embedded_adc-->
+
+<span id="more"></span>
+
+<p>转载自<a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_43866583/article/details/127599971?spm=1001.2014.3001.5502">https://blog.csdn.net/weixin_43866583&#x2F;article&#x2F;details&#x2F;127599971?spm&#x3D;1001.2014.3001.5502</a></p>
+<h3 id="理解模拟信号-数字信号"><a href="#理解模拟信号-数字信号" class="headerlink" title="理解模拟信号 &amp; 数字信号"></a>理解模拟信号 &amp; 数字信号</h3><p><strong>模拟信号：</strong>模拟信号是指信息参数在给定范围内表现为连续的信号</p>
+<p>在一段连续的时间间隔内，其代表信息的特征量可以在任意瞬间呈现为任意数值（变动的）的信号。像那些<strong>电压&#x2F;电流与声音</strong>这些都是模拟信号。</p>
+<p><strong>数字信号：</strong>数字信号指信号幅度的取值是离散的，幅值范围被限制在有限个数值之内</p>
+<p>二进制就是一种数字信号。大多数情况下，二进制码受噪声的影响小，易于由数字电路进行处理，所以现在也是被广泛的应用在很多的产品和领域中</p>
+<h3 id="ADC-DAC"><a href="#ADC-DAC" class="headerlink" title="ADC &amp; DAC"></a>ADC &amp; DAC</h3><p> ADC英文名称 - Analog-to-Digital Converter（模数转换器），从字面理解，A 称为模拟信号（Analog signal），D 称为数字信号（digital signal）。</p>
+<p> A&#x2F;D 转换器也就是把模拟信号（A）转换成数字信号（D）的器件。</p>
+<p>DAC英文名称- Digital-to- Analog Converter（数模转换器），D&#x2F;A 转换器刚好与 A&#x2F;D 功能相反，它是把数字信号（D）转换为模拟信号（A）。</p>
+<h3 id="常用ADC-种类介绍"><a href="#常用ADC-种类介绍" class="headerlink" title="常用ADC 种类介绍"></a>常用ADC 种类介绍</h3><figure class="highlight armasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs armasm"><span class="hljs-number">1</span>．逐次逼近型<br><span class="hljs-number">2</span>．积分型 <span class="hljs-keyword">ADC</span><br><span class="hljs-number">3</span>. 压频变换型 <span class="hljs-keyword">ADC</span><br> <br>说明：<br>逐次逼近型、积分型、压频变换型等，主要应用于中速或较低速、中等精度的数据采集和智能仪器中。<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight avrasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs avrasm"><span class="hljs-number">1.</span>流水线型 <span class="hljs-keyword">ADC</span><br> <br>说明：<br>流水线型 <span class="hljs-keyword">ADC</span>主要应用于高速情况下的瞬态信号处理、快速波形存储与记录等领域。<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight armasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs armasm"><span class="hljs-number">1</span>.∑-Δ 型 <span class="hljs-keyword">ADC</span><br> <br>说明：<br>∑-Δ 型 <span class="hljs-keyword">ADC</span> 主应用于高精度数据采集特别是数字音响系统、多媒体、地震勘探仪器、声纳等电子测量领域。<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs css"><span class="hljs-number">1</span>．并行比较 <span class="hljs-selector-tag">A</span>/D 转换器<br></code></pre></td></tr></table></figure>
+
+
+
+<h3 id="ADC-的工作原理"><a href="#ADC-的工作原理" class="headerlink" title="ADC 的工作原理"></a>ADC 的工作原理</h3><p>在芯片内，模拟信号传输进去的时候，通过和芯片内部的模拟信号部件进行比对之后，从而转换为数字信号保存到数字信号寄存器中，从而把一段模拟信号用数字的方式表达出来（0和1）的方式表达出来。</p>
+<p>逐次逼近型模数转换器原理框图</p>
+<p><img src="/imgs/%E6%A8%A1%E6%95%B0%E8%BD%AC%E6%8D%A2/image-20241126162947795.png" srcset="/img/loading.gif" lazyload></p>
+<p>Ui为需要进行转换的模拟量，Uo为AD比较器的输出电压，通过AD转换器的逐渐比较不断的逼近Ui，最终得到一个与Ui匹配的数字值。（注意：AD转换一般都是需要一个参考电压 Vrf 的）</p>
+<p>逐次逼近型 A&#x2F;D 转换器，就是将输入模拟信号与不同的参考电压作多次比较，使转换所得的数字量在数值上逐次逼近输入模拟量对应值。</p>
+<figure class="highlight tap"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs tap">1）转换开始前先将所有寄存器清零。<br>2）开始转换以后，时钟脉冲首先将寄存器最高位置成 1，使输出数字为 100…0。<br>   这个数被数模转换器转换成相应的模拟电压 Uo，送到比较器中与 Ui 进行比较。<br>   若 Uo＞Ui，说明数字过大了，故将最高位的<span class="hljs-number"> 1 </span>清除；<br>   若 Uo＜Ui ，说明数字还不够大，应将最高位的<span class="hljs-number"> 1 </span>保留。<br>3）反复如此，再按同样的方式将次高位置成 1，并且经过比较以后确定这个<span class="hljs-number"> 1 </span>是否应该保留。<br>4）最终就可以得到一个逼近Ui的数值。<br></code></pre></td></tr></table></figure>
+
+<p>逐次逼近型ADC的工作流程</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs">（1）采样<br>（2）保持<br>（3）量化<br></code></pre></td></tr></table></figure>
+
+
+
+
+
+<h3 id="STM32的ADC的介绍"><a href="#STM32的ADC的介绍" class="headerlink" title="STM32的ADC的介绍"></a>STM32的ADC的介绍</h3><p>​    目前市场上流行的单片机几乎都有ADC功能，精度有高有低，使用的较多的，当属STM32了。下面以STM32F1为例。</p>
+<p>​    STM32F1的ADC是12位的逐次逼近型的模数转换器。</p>
+<p>​    它的AD的基本特点:</p>
+<h5 id="STM32F1的-ADC-开关控制"><a href="#STM32F1的-ADC-开关控制" class="headerlink" title="STM32F1的 ADC 开关控制"></a>STM32F1的 ADC 开关控制</h5><p>​    通过设置ADC_CR2寄存器的ADON位可给ADC上电。当第一次设置ADON位时，它将ADC从断电状态下唤醒。</p>
+<p>​    ADC上电延迟一段时间后(t STAB )，再次设置ADON位时开始进行转换。通过清除ADON位可以停止转换，并将ADC置于断电模式。在这个模式中，ADC几乎不耗电(仅几个μA)。</p>
+<h5 id="STM32F1的-ADC-时钟"><a href="#STM32F1的-ADC-时钟" class="headerlink" title="STM32F1的 ADC 时钟"></a>STM32F1的 ADC 时钟</h5><figure class="highlight scss"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs scss">由时钟控制器提供的ADCCLK时钟和<span class="hljs-built_in">PCLK2</span>(APB2时钟)同步。<br>RCC控制器为ADC时钟提供一个专用的可编程预分频器。<br></code></pre></td></tr></table></figure>
+
+<h5 id="STM32F1的-ADC-通道"><a href="#STM32F1的-ADC-通道" class="headerlink" title="STM32F1的 ADC 通道"></a>STM32F1的 ADC 通道</h5><p>​    有16个多路通道。可以把转换组织成两组：规则组和注入组。在任意多个通道上以任意顺序进行的一系列转换构成成组转换。例如，可以如下顺序完成转换：通道3、通道8、通道2、通道2、通道0、通道2、通道2、通道15。</p>
+<p>​    如果ADC_SQRx或ADC_JSQR寄存器在转换期间被更改，当前的转换被清除，一个新的启动脉冲将发送到ADC以转换新选择的组。</p>
+<h5 id="ADC转换模式"><a href="#ADC转换模式" class="headerlink" title="ADC转换模式"></a>ADC转换模式</h5><p> 1）单次转换模式下，ADC只执行一次转换。该模式既可通过设置ADC_CR2寄存器的ADON位(只适用于规则通道)启动也可通过外部触发启动(适用于规则通道或注入通道)，这时CONT位为0。</p>
+<p>2）在连续转换模式中，当前面ADC转换一结束马上就启动另一次转换。此模式可通过外部触发启动或通过设置ADC_CR2寄存器上的ADON位启动，此时CONT位是1。</p>
+<h5 id="ADC校准"><a href="#ADC校准" class="headerlink" title="ADC校准"></a>ADC校准</h5><p>​    ADC有一个内置自校准模式。校准可大幅减小因内部电容器组的变化而造成的准精度误差。在校准期间，在每个电容器上都会计算出一个误差修正码(数字值)，这个码用于消除在随后的转换中每个电容器上产生的误差。</p>
+<p>​    通过设置ADC_CR2寄存器的CAL位启动校准。一旦校准结束，CAL位被<a target="_blank" rel="noopener" href="https://marketing.csdn.net/p/3127db09a98e0723b83b2914d9256174?pId=2782?utm_source=glcblog&spm=1001.2101.3001.7020">硬件</a>复位，可以开始正常转换。建议在上电时执行一次ADC校准。校准阶段结束后，校准码储存在ADC_DR中。</p>
+<figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs basic"><span class="hljs-symbol">1 </span>建议在每次上电后执行一次校准。<br><span class="hljs-symbol">2 </span>启动校准前， ADC 必须处于关电状态 (ADON=’<span class="hljs-number">0</span>’) 超过至少两个 ADC 时钟周期。<br></code></pre></td></tr></table></figure>
+
+<h5 id="ADC通道的采样时间"><a href="#ADC通道的采样时间" class="headerlink" title="ADC通道的采样时间"></a>ADC通道的采样时间</h5><p>​    ADC使用若干个ADC_CLK周期对输入电压采样，采样周期数目可以通过ADC_SMPR1和ADC_SMPR2寄存器中的SMP[2:0]位更改。每个通道可以分别用不同的时间采样。</p>
+<p>总转换时间 </p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">T</span> CONV = 采样时间+ <span class="hljs-number">12</span>.<span class="hljs-number">5</span>个周期<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs routeros">当<span class="hljs-attribute">ADCCLK</span>=14MHz，采样时间为1.5周期<br> <br>T CONV = 1.5 + 12.5 = 14周期 = 1μs<br></code></pre></td></tr></table></figure>
+
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Embedded/" class="category-chain-item">Embedded</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/adc/" class="print-no-link">#adc</a>
+      
+    </div>
+  
+</div>
+
+
+              
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2024/11/27/embedded_ota/" title="OTA升级">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">OTA升级</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2024/11/26/data_struct_bidirectional_linked/" title="数据结构—双向链表">
+                        <span class="hidden-mobile">数据结构—双向链表</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

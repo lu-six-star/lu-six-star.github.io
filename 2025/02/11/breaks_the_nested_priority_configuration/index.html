@@ -1,0 +1,706 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/imgs/ava/fluid.png">
+  <link rel="icon" href="/imgs/ava/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Chris">
+  <meta name="keywords" content="">
+  
+    <meta property="og:type" content="article">
+<meta property="og:title" content="中断嵌套优先级配置">
+<meta property="og:url" content="https://lu-six-star.github.io/2025/02/11/breaks_the_nested_priority_configuration/index.html">
+<meta property="og:site_name" content="星橙点点">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-02-11T05:59:58.000Z">
+<meta property="article:modified_time" content="2025-06-29T03:50:54.336Z">
+<meta property="article:author" content="Chris">
+<meta property="article:tag" content="Embedded">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>中断嵌套优先级配置 - 星橙点点</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"lu-six-star.github.io","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>星橙点点</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="中断嵌套优先级配置"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-02-11 13:59" pubdate>
+          2025年2月11日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          2.1k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          18 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">中断嵌套优先级配置</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <!-- breaks_the_nested_priority_configuration-->
+
+<span id="more"></span>
+
+
+
+<p>中断嵌套与优先级配置是嵌入式系统实时响应的核心机制。</p>
+<h3 id="一、中断嵌套原理"><a href="#一、中断嵌套原理" class="headerlink" title="一、中断嵌套原理"></a><strong>一、中断嵌套原理</strong></h3><h4 id="1-触发条件"><a href="#1-触发条件" class="headerlink" title="1. 触发条件"></a><strong>1. 触发条件</strong></h4><ul>
+<li><strong>优先级规则</strong>：高优先级中断可抢占低优先级中断（数值越小优先级越高，如ARM Cortex-M）。</li>
+<li><strong>状态允许</strong>：当前中断服务程序（ISR）中全局中断使能（如ARM的<code>PRIMASK</code>已清除）。</li>
+</ul>
+<h4 id="2-执行流程"><a href="#2-执行流程" class="headerlink" title="2. 执行流程"></a><strong>2. 执行流程</strong></h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs c">低优先级ISR执行中...<br>↓<br>高优先级中断触发<br>↓<br>处理器自动保存当前上下文（压栈）<br>↓<br>跳转至高优先级ISR<br>↓<br>高优先级ISR执行完毕，恢复上下文<br>↓<br>返回低优先级ISR继续执行<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="二、优先级配置方法（以ARM-Cortex-M4为例）"><a href="#二、优先级配置方法（以ARM-Cortex-M4为例）" class="headerlink" title="二、优先级配置方法（以ARM Cortex-M4为例）"></a><strong>二、优先级配置方法（以ARM Cortex-M4为例）</strong></h3><h4 id="1-优先级分组"><a href="#1-优先级分组" class="headerlink" title="1. 优先级分组"></a><strong>1. 优先级分组</strong></h4><ul>
+<li><p><strong>寄存器</strong>：<code>SCB-&gt;AIRCR</code>（应用程序中断及复位控制寄存器）</p>
+</li>
+<li><p>分组模式：将8位优先级分为抢占优先级（Preemption）和子优先级（Subpriority）</p>
+  <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// 示例：选择优先级分组2（2位抢占，2位子优先级）</span><br>NVIC_SetPriorityGrouping(<span class="hljs-number">2</span>);<br></code></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>AIRCR分组值</th>
+<th>抢占优先级位数</th>
+<th>子优先级位数</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr>
+<td>3</td>
+<td>3</td>
+<td>1</td>
+</tr>
+</tbody></table>
+</li>
+</ul>
+<h4 id="2-设置中断优先级"><a href="#2-设置中断优先级" class="headerlink" title="2. 设置中断优先级"></a><strong>2. 设置中断优先级</strong></h4><ul>
+<li><p>函数：</p>
+  <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">NVIC_SetPriority(IRQn, priority)<br></code></pre></td></tr></table></figure>
+
+  <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// 设置UART中断抢占优先级1，子优先级0 → 优先级值 = (1 &lt;&lt; (4 - 抢占位数)) | 子优先级</span><br>NVIC_SetPriority(UART0_IRQn, <span class="hljs-number">0x10</span> | <span class="hljs-number">0x0</span>);  <span class="hljs-comment">// 假设分组为2（抢占2位，子2位）</span><br></code></pre></td></tr></table></figure></li>
+</ul>
+<h4 id="3-关键代码示例"><a href="#3-关键代码示例" class="headerlink" title="3. 关键代码示例"></a><strong>3. 关键代码示例</strong></h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">UART0_IRQHandler</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> &#123;<br>    <span class="hljs-comment">// 低优先级中断（抢占优先级2）</span><br>    <span class="hljs-comment">// 处理UART数据...</span><br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">Timer1_IRQHandler</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> &#123;<br>    <span class="hljs-comment">// 高优先级中断（抢占优先级1）</span><br>    <span class="hljs-comment">// 紧急任务处理...</span><br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span> &#123;<br>    NVIC_SetPriorityGrouping(<span class="hljs-number">2</span>);  <span class="hljs-comment">// 2位抢占，2位子优先级</span><br>    NVIC_SetPriority(UART0_IRQn, <span class="hljs-number">0x20</span>);  <span class="hljs-comment">// 抢占优先级2（二进制10），子优先级0</span><br>    NVIC_SetPriority(Timer1_IRQn, <span class="hljs-number">0x10</span>);  <span class="hljs-comment">// 抢占优先级1（二进制01），子优先级0</span><br>    NVIC_EnableIRQ(UART0_IRQn);<br>    NVIC_EnableIRQ(Timer1_IRQn);<br>    __enable_irq();  <span class="hljs-comment">// 使能全局中断</span><br>    <span class="hljs-keyword">while</span>(<span class="hljs-number">1</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="三、中断嵌套深度与性能影响"><a href="#三、中断嵌套深度与性能影响" class="headerlink" title="三、中断嵌套深度与性能影响"></a><strong>三、中断嵌套深度与性能影响</strong></h3><h4 id="1-最大嵌套深度"><a href="#1-最大嵌套深度" class="headerlink" title="1. 最大嵌套深度"></a><strong>1. 最大嵌套深度</strong></h4><ul>
+<li><p><strong>硬件限制</strong>：Cortex-M默认支持无限嵌套（受栈空间限制）。</p>
+</li>
+<li><p>栈溢出风险：每次嵌套需保存上下文（如8个寄存器），深度嵌套可能导致栈溢出。</p>
+  <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// 计算最大安全嵌套深度</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> STACK_SIZE 1024  <span class="hljs-comment">// 假设栈大小1KB</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> CONTEXT_SIZE 32  <span class="hljs-comment">// 每个中断保存32字节上下文</span></span><br><span class="hljs-type">int</span> max_nesting = STACK_SIZE / CONTEXT_SIZE;  <span class="hljs-comment">// 32层</span><br></code></pre></td></tr></table></figure></li>
+</ul>
+<h4 id="2-实时性优化"><a href="#2-实时性优化" class="headerlink" title="2. 实时性优化"></a><strong>2. 实时性优化</strong></h4><ul>
+<li><strong>ISR短小化</strong>：高优先级ISR应少于10μs，避免阻塞低优先级任务。</li>
+<li><strong>延迟处理</strong>：将耗时操作移至任务循环或低优先级中断。</li>
+</ul>
+<hr>
+<h3 id="四、实际应用案例（STM32F4）"><a href="#四、实际应用案例（STM32F4）" class="headerlink" title="四、实际应用案例（STM32F4）"></a><strong>四、实际应用案例（STM32F4）</strong></h3><h4 id="1-场景需求"><a href="#1-场景需求" class="headerlink" title="1. 场景需求"></a><strong>1. 场景需求</strong></h4><ul>
+<li><strong>外部中断（按键）</strong>：低优先级，响应用户输入。</li>
+<li><strong>PWM捕获中断</strong>：高优先级，精确测量电机转速。</li>
+</ul>
+<h4 id="2-配置步骤"><a href="#2-配置步骤" class="headerlink" title="2. 配置步骤"></a><strong>2. 配置步骤</strong></h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// 设置优先级分组为2位抢占，2位子优先级</span><br>NVIC_SetPriorityGrouping(<span class="hljs-number">2</span>);<br><br><span class="hljs-comment">// 配置EXTI0中断（按键）抢占优先级3</span><br>NVIC_SetPriority(EXTI0_IRQn, <span class="hljs-number">0x30</span>);  <span class="hljs-comment">// 二进制11 | 00</span><br><br><span class="hljs-comment">// 配置TIM1捕获中断抢占优先级1</span><br>NVIC_SetPriority(TIM1_CC_IRQn, <span class="hljs-number">0x10</span>);  <span class="hljs-comment">// 二进制01 | 00</span><br><br><span class="hljs-comment">// 使能中断</span><br>NVIC_EnableIRQ(EXTI0_IRQn);<br>NVIC_EnableIRQ(TIM1_CC_IRQn);<br></code></pre></td></tr></table></figure>
+
+<h4 id="3-行为验证"><a href="#3-行为验证" class="headerlink" title="3. 行为验证"></a><strong>3. 行为验证</strong></h4><ul>
+<li><p><strong>按键中断触发</strong>：进入<code>EXTI0_IRQHandler</code>。</p>
+</li>
+<li><p><strong>TIM1捕获中断触发</strong>：立即抢占，执行<code>TIM1_CC_IRQHandler</code>。</p>
+</li>
+<li><p>嵌套时序图：</p>
+  <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c">TIME    | EVENT<br>--------------------------<br><span class="hljs-number">0</span>ms     | EXTI0_IRQHandler开始<br><span class="hljs-number">0.5</span>ms   | TIM1_CC中断触发，抢占<br><span class="hljs-number">1</span>ms     | TIM1_CC_IRQHandler结束<br><span class="hljs-number">1.5</span>ms   | EXTI0_IRQHandler恢复并结束<br></code></pre></td></tr></table></figure></li>
+</ul>
+<hr>
+<h3 id="五、常见问题与调试"><a href="#五、常见问题与调试" class="headerlink" title="五、常见问题与调试"></a><strong>五、常见问题与调试</strong></h3><h4 id="1-中断不嵌套"><a href="#1-中断不嵌套" class="headerlink" title="1. 中断不嵌套"></a><strong>1. 中断不嵌套</strong></h4><ul>
+<li><strong>原因</strong>：未重新使能全局中断（如ARM中未清除<code>PRIMASK</code>）。</li>
+<li><strong>解决</strong>：在低优先级ISR内调用<code>__enable_irq()</code>。</li>
+</ul>
+<h4 id="2-优先级反转"><a href="#2-优先级反转" class="headerlink" title="2. 优先级反转"></a><strong>2. 优先级反转</strong></h4><ul>
+<li><strong>场景</strong>：低优先级ISR占用共享资源，阻塞高优先级ISR。</li>
+<li><strong>方案</strong>：使用临界区保护或优先级继承（如FreeRTOS的互斥量）。</li>
+</ul>
+<h4 id="3-性能分析工具"><a href="#3-性能分析工具" class="headerlink" title="3. 性能分析工具"></a><strong>3. 性能分析工具</strong></h4><ul>
+<li><strong>逻辑分析仪</strong>：抓取中断触发时序。</li>
+<li><strong>RTOS Trace</strong>：记录中断执行时间和嵌套深度。</li>
+</ul>
+<hr>
+<h3 id="六、对比总结"><a href="#六、对比总结" class="headerlink" title="六、对比总结"></a><strong>六、对比总结</strong></h3><table>
+<thead>
+<tr>
+<th><strong>架构</strong></th>
+<th><strong>优先级位数</strong></th>
+<th><strong>自动嵌套</strong></th>
+<th><strong>典型应用</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ARM Cortex-M</td>
+<td>4-8位可配置</td>
+<td>支持</td>
+<td>实时控制系统</td>
+</tr>
+<tr>
+<td>AVR (Arduino)</td>
+<td>2级固定</td>
+<td>不支持</td>
+<td>简单嵌入式设备</td>
+</tr>
+<tr>
+<td>x86</td>
+<td>APIC多级</td>
+<td>支持</td>
+<td>桌面&#x2F;服务器</td>
+</tr>
+</tbody></table>
+<p>正确配置中断优先级和嵌套可提升系统实时性，但需权衡响应速度与资源消耗。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Embedded/" class="category-chain-item">Embedded</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Embedded/" class="print-no-link">#Embedded</a>
+      
+    </div>
+  
+</div>
+
+
+              
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2025/02/11/embedded_security_mechanism/" title="嵌入式安全机制">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">嵌入式安全机制</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/02/11/memory_alignment/" title="内存对齐">
+                        <span class="hidden-mobile">内存对齐</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

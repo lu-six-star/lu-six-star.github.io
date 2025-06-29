@@ -1,0 +1,643 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/imgs/ava/fluid.png">
+  <link rel="icon" href="/imgs/ava/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Chris">
+  <meta name="keywords" content="">
+  
+    <meta property="og:type" content="article">
+<meta property="og:title" content="FreeRTOS学习-消息队列">
+<meta property="og:url" content="https://lu-six-star.github.io/2024/11/23/freertos_learn_queue/index.html">
+<meta property="og:site_name" content="星橙点点">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/FreeRTOS%E5%AD%A6%E4%B9%A0-%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/image-20241123101027534.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/FreeRTOS%E5%AD%A6%E4%B9%A0-%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/image-20241123101112971.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/FreeRTOS%E5%AD%A6%E4%B9%A0-%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/image-20241123101302746.png">
+<meta property="article:published_time" content="2024-11-23T02:05:07.000Z">
+<meta property="article:modified_time" content="2025-06-29T03:50:54.351Z">
+<meta property="article:author" content="Chris">
+<meta property="article:tag" content="RTOS">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://lu-six-star.github.io/imgs/FreeRTOS%E5%AD%A6%E4%B9%A0-%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/image-20241123101027534.png">
+  
+  
+  
+  <title>FreeRTOS学习-消息队列 - 星橙点点</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"lu-six-star.github.io","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>星橙点点</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="FreeRTOS学习-消息队列"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2024-11-23 10:05" pubdate>
+          2024年11月23日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          3.6k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          30 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">FreeRTOS学习-消息队列</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <!-- freertos_learn_queue-->
+
+<span id="more"></span>
+
+<p>转载自<a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_43866583/article/details/125555241?spm=1001.2014.3001.5502">https://blog.csdn.net/weixin_43866583&#x2F;article&#x2F;details&#x2F;125555241?spm&#x3D;1001.2014.3001.5502</a></p>
+<h2 id="FreeRTOS的消息队列"><a href="#FreeRTOS的消息队列" class="headerlink" title="FreeRTOS的消息队列"></a>FreeRTOS的消息队列</h2><p>FreeRTOS中提供了任务之间互相通信的另外的一种手段——消息队列。它的作用主要有：<br>1）为了在任务与任务之间、任务与中断之间的通信而准备的，可以在任务与任务之间，任务与中断之间传递消息；<br>2）消息队列可以存储有限的、大小固定的数据项目；</p>
+<p>它具有的特点有几个：<br>1）FreeRTOS中的消息队列传递的是一个实际的数据，而不是数据的地址。在RTX、ucos-ii、ucos-iii中的消息队列传递的是消息的地址。<br>2）消息队列不属于某个特定的任务，任何的任务都可以向队列中发送消息，也可以从队列中提取消息。<br>3）消息队列所能容纳的最大的数据项目就是队列的长度。</p>
+<h3 id="FreeRTOS的消息队列的管理"><a href="#FreeRTOS的消息队列的管理" class="headerlink" title="FreeRTOS的消息队列的管理"></a>FreeRTOS的消息队列的管理</h3><p><strong>队列的出队方式 &amp; 数据存储</strong></p>
+<p>通常的队列都是采取先进先出（FIFO）的存储缓冲机制方式，即往队列中发送消息的时候永远是先发到队列的尾部，而从队列中提取消息的时候是从头部提取的。同时FreeRTOS也支持 后进先出（LIFO）的方式。<br>因为FreeRTOS的消息队列传递的是实际的数据，所以数据发送到队列中会导致数据拷贝，会浪费一些时间。但是好处在于一旦消息被拷贝到了消息队列中，那么原始的数据缓冲区或者数据就可以删除或者改变，达到反复利用的效果。</p>
+<p><strong>队列的阻塞</strong></p>
+<p>队列阻塞的作用是在当任务从队列中获取消息的时候，所指定的一个等待时间。队列在出队和入队都是可以设置阻塞的。有三种阻塞的时间：<br>不等待：不等待直接执行之后的内容（为0不等待）；</p>
+<p>定时等待：任务等待一个固定的时间间隔，可以为 0 ~ portMAX_DELAY；</p>
+<p>一直等待：设置为 portMAX_DELAY 的时候，会一直等待。</p>
+<h3 id="FreeRTOS的队列的实现"><a href="#FreeRTOS的队列的实现" class="headerlink" title="FreeRTOS的队列的实现"></a>FreeRTOS的队列的实现</h3><p><img src="/imgs/FreeRTOS%E5%AD%A6%E4%B9%A0-%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/image-20241123101027534.png" srcset="/img/loading.gif" lazyload></p>
+<p><img src="/imgs/FreeRTOS%E5%AD%A6%E4%B9%A0-%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/image-20241123101112971.png" srcset="/img/loading.gif" lazyload></p>
+<p><strong>消息队列的两种通信方式</strong></p>
+<p><img src="/imgs/FreeRTOS%E5%AD%A6%E4%B9%A0-%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/image-20241123101302746.png" srcset="/img/loading.gif" lazyload></p>
+<h3 id="FreeRTOS-消息队列实现的API函数"><a href="#FreeRTOS-消息队列实现的API函数" class="headerlink" title="FreeRTOS 消息队列实现的API函数"></a>FreeRTOS 消息队列实现的API函数</h3><p><strong>创建消息队列</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c">QueueHandle_t <span class="hljs-title function_">xQueueCreate</span><span class="hljs-params">( UBaseType_t uxQueueLength, <span class="hljs-comment">/* 消息个数 */</span></span><br><span class="hljs-params">    			 UBaseType_t uxItemSize )</span>;  <span class="hljs-comment">/* 每个消息大小，单位字节 */</span><br><br></code></pre></td></tr></table></figure>
+
+<p>函数描述：<br>函数 xQueueCreate 用于创建消息队列。<br>第 1 个参数是消息队列支持的消息个数。即队列长度。<br>第 2 个参数是每个消息的大小，单位字节。<br>返回值：如果创建成功会返回消息队列的句柄，失败会返回 NULL。</p>
+<p>使用这个函数要注意以下问题：<br>1）FreeRTOS 的消息传递是数据的复制，而不是传递的数据地址，这点要特别注意。每一次传递都是<br>uxItemSize 个字节。<br>2.）uxItemSize：所要发送&#x2F;接收的消息队列的总字节数。比如要发送10个消息，每个消息占4个字节，所以<br>uxItemSize &#x3D; 4(byte) * 10(个) &#x3D; 40 Byte</p>
+<p><strong>向消息队列中发送消息</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c">BaseType_t <span class="hljs-title function_">xQueueSend</span><span class="hljs-params">(</span><br><span class="hljs-params">    					QueueHandle_t xQueue,       <span class="hljs-comment">/* 消息队列句柄 */</span></span><br><span class="hljs-params">    					<span class="hljs-type">const</span> <span class="hljs-type">void</span> * pvItemToQueue, <span class="hljs-comment">/* 要传递数据地址 */</span></span><br><span class="hljs-params">    					TickType_t xTicksToWait     <span class="hljs-comment">/* 等待消息队列有空间的最大等待时间 */</span></span><br><span class="hljs-params">    	           	)</span>;<br><br></code></pre></td></tr></table></figure>
+
+<p>函数描述：<br>函数 xQueueSend 用于任务中消息发送。<br>第 1 个参数：是消息队列句柄。<br>第 2 个参数：要传递的数据地址，每次发送都是将消息队列创建函数 xQueueCreate 所指定的单个消息大<br>小复制到消息队列空间中。<br>第 3 个参数：是当消息队列已经满时，等待消息队列有空间时的最大等待时间，单位为系统时钟节拍。<br>返回值：如果消息成功发送返回 pdTRUE，否则返回errQUEUE_FULL。</p>
+<p>使用这个函数要注意以下问题：<br>1）FreeRTOS 的消息传递是数据的复制，而不是传递的数据地址。</p>
+<p>2）此函数是用于任务代码中调用的，故不可以在中断服务程序中调用此函数，中断服务程序中使用的是<br>xQueueSendFromISR。</p>
+<p>3）如果消息队列已经满且第三个参数为 0，那么此函数会立即返回。</p>
+<p>4）如果用户将 FreeRTOSConfig.h 文件中的宏定义INCLUDE_vTaskSuspend 配置为 1 且第三个参数配<br>置为 portMAX_DELAY，那么此发送函数会永久等待直到消息队列有空间可以使用。</p>
+<p>5）消息队列还有两个函数 xQueueSendToBack 和 xQueueSendToFront，函数 xQueueSendToBack<br>实现的是 FIFO 方式的存取，函数 xQueueSendToFront 实现的是 LIFO 方式的读写。一般说的函<br>数 xQueueSend 等效于 xQueueSendToBack，即实现的是 FIFO 方式的存取。</p>
+<p><strong>从消息队列中读取消息</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c">BaseType_t <span class="hljs-title function_">xQueueReceive</span><span class="hljs-params">(</span><br><span class="hljs-params">    						QueueHandle_t xQueue, <span class="hljs-comment">/* 消息队列句柄 */</span></span><br><span class="hljs-params">    						<span class="hljs-type">void</span> *pvBuffer, <span class="hljs-comment">/* 接收消息队列数据的缓冲地址 */</span></span><br><span class="hljs-params">    						TickType_t xTicksToWait <span class="hljs-comment">/* 等待消息队列有数据的最大等待时间 */</span></span><br><span class="hljs-params">    		     		 )</span>;<br><br></code></pre></td></tr></table></figure>
+
+<p>函数描述：<br>函数 xQueueReceive 用于接收消息队列中的数据。<br>第 1 个参数：是消息队列句柄。<br>第 2 个参数：是从消息队列中复制出数据后所储存的缓冲地址，缓冲区空间要大于等于消息队列创建函<br>数 xQueueCreate 所指定的单个消息大小，否则取出的数据无法全部存储到缓冲区，从而造成内存溢<br>出。<br>第 3 个参数：是消息队列为空时，等待消息队列有数据的最大等待时间，单位系统时钟节拍。<br>返回值：如果接到到消息返回 pdTRUE，否则返回 pdFALSE。</p>
+<p>使用这个函数要注意以下问题：<br>1）此函数是用于任务代码中调用的，故不可以在中断服务程序中调用此函数，中断服务程序使用的是<br>xQueueReceiveFromISR 。</p>
+<p>2）如果消息队列为空且第三个参数为 0，那么此函数会立即返回。</p>
+<p>3）如果将 FreeRTOSConfig.h 文件中的宏定义 INCLUDE_vTaskSuspend 配置为 1 且第三个参数配<br>置为 portMAX_DELAY，那么此函数会永久等待直到消息队列有数据。</p>
+<p><strong>队列初始化函数</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">prvInitialiseNewQueue</span><span class="hljs-params">( <span class="hljs-type">const</span> UBaseType_t uxQueueLength, <span class="hljs-comment">//队列长度</span></span><br><span class="hljs-params">    								<span class="hljs-type">const</span> UBaseType_t uxItemSize,    <span class="hljs-comment">//队列项目长度</span></span><br><span class="hljs-params">        							<span class="hljs-type">uint8_t</span> *pucQueueStorage, 	 <span class="hljs-comment">//队列项目的存储区</span></span><br><span class="hljs-params">            						<span class="hljs-type">const</span> <span class="hljs-type">uint8_t</span> ucQueueType, 	 <span class="hljs-comment">//队列类型</span></span><br><span class="hljs-params">               					Queue_t *pxNewQueue )</span>		 <span class="hljs-comment">//队列结构</span><br><br></code></pre></td></tr></table></figure>
+
+<p><strong>队列复位</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">BaseType_t <span class="hljs-title function_">xQueueGenericReset</span><span class="hljs-params">( QueueHandle_t xQueue, BaseType_t xNewQueue )</span><br></code></pre></td></tr></table></figure>
+
+
+
+
+
+<p>创建两个任务，一个任务发送三个数据给另外一个任务，另一个任务接收并打印，循环发送，每次发送都对发送的数据增加后发送。代码如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-number">1</span>、创建消息队列<br>QueueHandle_t     NewQueue;	<span class="hljs-comment">//消息队列</span><br>NewQueue  = xQueueCreate(<span class="hljs-number">3</span>,<span class="hljs-keyword">sizeof</span>(<span class="hljs-type">int</span>)*<span class="hljs-number">3</span>); <span class="hljs-comment">//这一步非常重要，所需字节数 = 每个消息的字节数*队列长度</span><br><br><span class="hljs-number">2</span>、发送消息队列 &amp;&amp; 接收消息队列<br><span class="hljs-comment">//task1任务函数 </span><br><span class="hljs-type">void</span> <span class="hljs-title function_">task1_task</span><span class="hljs-params">(<span class="hljs-type">void</span> *pvParameters)</span> <span class="hljs-comment">//prio = 2</span><br>&#123;<br><br>    u32 recStr[<span class="hljs-number">3</span>] = &#123;<span class="hljs-number">0</span>&#125;;<br>    <span class="hljs-keyword">while</span>(<span class="hljs-number">1</span>)<br>    &#123;<br>        xQueueReceive(NewQueue, recStr, <span class="hljs-number">0</span>);	<span class="hljs-comment">//接收消息队列</span><br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;Tx0 = %d Tx1 = %d Tx2 = %d\r\n&quot;</span>,recStr[<span class="hljs-number">0</span>],recStr[<span class="hljs-number">1</span>],recStr[<span class="hljs-number">2</span>]);<br>        LED1 ^= <span class="hljs-number">1</span>;<br>        vTaskDelay(<span class="hljs-number">200</span>);   <span class="hljs-comment">//延时n个时钟节拍	</span><br>    &#125;<br>&#125;<br><br><span class="hljs-comment">//task2任务函数  </span><br><span class="hljs-type">void</span> <span class="hljs-title function_">task2_task</span><span class="hljs-params">(<span class="hljs-type">void</span> *pvParameters)</span> <span class="hljs-comment">//prio = 3</span><br>&#123;<br><br>    u32 TxStr[<span class="hljs-number">3</span>] = &#123;<span class="hljs-number">0</span>&#125;;<br>	<span class="hljs-keyword">while</span>(<span class="hljs-number">1</span>)<br>	&#123;<br>        xQueueSend(NewQueue, TxStr, portMAX_DELAY);	<span class="hljs-comment">//发送消息队列</span><br>        TxStr[<span class="hljs-number">0</span>] ++;<br>        TxStr[<span class="hljs-number">1</span>] += <span class="hljs-number">5</span>;<br>        TxStr[<span class="hljs-number">2</span>] += <span class="hljs-number">10</span>;<br>        LED0 ^= <span class="hljs-number">1</span>;<br><br>        vTaskDelay(<span class="hljs-number">500</span>);       <span class="hljs-comment">//延时n个时钟节拍	</span><br>	&#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/RTOS/" class="category-chain-item">RTOS</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/RTOS/" class="print-no-link">#RTOS</a>
+      
+    </div>
+  
+</div>
+
+
+              
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2024/11/23/freertos_learn_config/" title="FreeRTOS学习-配置项">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">FreeRTOS学习-配置项</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2024/11/23/freertos_learn_Notify/" title="FreeRTOS学习-消息邮箱">
+                        <span class="hidden-mobile">FreeRTOS学习-消息邮箱</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

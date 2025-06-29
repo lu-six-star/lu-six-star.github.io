@@ -1,0 +1,732 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/imgs/ava/fluid.png">
+  <link rel="icon" href="/imgs/ava/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Chris">
+  <meta name="keywords" content="">
+  
+    <meta property="og:type" content="article">
+<meta property="og:title" content="动态电压频率调节（DVFS）策略">
+<meta property="og:url" content="https://lu-six-star.github.io/2025/02/11/dvfs_strategy/index.html">
+<meta property="og:site_name" content="星橙点点">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-02-11T03:47:58.000Z">
+<meta property="article:modified_time" content="2025-06-29T03:50:54.337Z">
+<meta property="article:author" content="Chris">
+<meta property="article:tag" content="DVFS">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>动态电压频率调节（DVFS）策略 - 星橙点点</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"lu-six-star.github.io","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>星橙点点</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="动态电压频率调节（DVFS）策略"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-02-11 11:47" pubdate>
+          2025年2月11日 中午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          1.9k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          16 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">动态电压频率调节（DVFS）策略</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <!-- dvfs_strategy-->
+
+<span id="more"></span>
+
+<p>动态电压频率调节（Dynamic Voltage and Frequency Scaling, DVFS）是一种通过 <strong>实时调整处理器电压和频率</strong> 以优化性能与功耗的关键技术。</p>
+<h3 id="1-DVFS-基本原理"><a href="#1-DVFS-基本原理" class="headerlink" title="1. DVFS 基本原理"></a><strong>1. DVFS 基本原理</strong></h3><table>
+<thead>
+<tr>
+<th><strong>参数</strong></th>
+<th><strong>影响</strong></th>
+<th><strong>关系</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>频率 (f)</strong></td>
+<td>计算速度</td>
+<td>功耗 ∝ f × V²</td>
+</tr>
+<tr>
+<td><strong>电压 (V)</strong></td>
+<td>功耗与稳定性</td>
+<td>最低电压由频率决定（V_min ∝ f）</td>
+</tr>
+</tbody></table>
+<p><strong>目标</strong>：在满足性能需求的前提下，找到 <strong>最低可用电压-频率对（V-f Pair）</strong>。</p>
+<hr>
+<h3 id="2-常见DVFS策略"><a href="#2-常见DVFS策略" class="headerlink" title="2. 常见DVFS策略"></a><strong>2. 常见DVFS策略</strong></h3><h4 id="1-按需调节（On-Demand）"><a href="#1-按需调节（On-Demand）" class="headerlink" title="(1) 按需调节（On-Demand）"></a><strong>(1) 按需调节（On-Demand）</strong></h4><ul>
+<li><strong>机制</strong>：监控CPU负载，超过阈值升频，低于阈值降频。</li>
+<li><strong>优势</strong>：响应快，适合负载波动大的场景（如手机交互）。</li>
+<li><strong>Linux实现</strong>：<code>cpufreq_ondemand</code> 调速器。</li>
+</ul>
+<h4 id="2-性能优先（Performance）"><a href="#2-性能优先（Performance）" class="headerlink" title="(2) 性能优先（Performance）"></a><strong>(2) 性能优先（Performance）</strong></h4><ul>
+<li><strong>机制</strong>：始终锁定最高频率。</li>
+<li><strong>应用场景</strong>：计算密集型任务（如游戏、视频渲染）。</li>
+</ul>
+<h4 id="3-节能优先（Powersave）"><a href="#3-节能优先（Powersave）" class="headerlink" title="(3) 节能优先（Powersave）"></a><strong>(3) 节能优先（Powersave）</strong></h4><ul>
+<li><strong>机制</strong>：始终锁定最低频率。</li>
+<li><strong>应用场景</strong>：后台任务或待机状态。</li>
+</ul>
+<h4 id="4-预测调节（Predictive）"><a href="#4-预测调节（Predictive）" class="headerlink" title="(4) 预测调节（Predictive）"></a><strong>(4) 预测调节（Predictive）</strong></h4><ul>
+<li><strong>机制</strong>：基于历史负载预测未来需求，提前调整频率。</li>
+<li><strong>算法示例</strong>：指数加权移动平均（EMA）。</li>
+</ul>
+<h4 id="5-固定步进（Interactive）"><a href="#5-固定步进（Interactive）" class="headerlink" title="(5) 固定步进（Interactive）"></a><strong>(5) 固定步进（Interactive）</strong></h4><ul>
+<li><strong>机制</strong>：负载变化时快速升频，降频则延迟处理。</li>
+<li><strong>适用场景</strong>：用户体验敏感的移动设备。</li>
+</ul>
+<hr>
+<h3 id="3-DVFS-实现步骤"><a href="#3-DVFS-实现步骤" class="headerlink" title="3. DVFS 实现步骤"></a><strong>3. DVFS 实现步骤</strong></h3><h4 id="1-硬件支持"><a href="#1-硬件支持" class="headerlink" title="(1) 硬件支持"></a><strong>(1) 硬件支持</strong></h4><ul>
+<li><strong>电压调节模块（VRM）</strong>：支持动态电压调整。</li>
+<li><strong>时钟生成器（PLL）</strong>：支持频率快速切换。</li>
+</ul>
+<h4 id="2-软件架构"><a href="#2-软件架构" class="headerlink" title="(2) 软件架构"></a><strong>(2) 软件架构</strong></h4><figure class="highlight 1c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs 1c">应用层<br>  <span class="hljs-string">|</span><br>调度器（触发负载评估）<br>  <span class="hljs-string">|</span><br>DVFS控制器（决策V-f对）<br>  <span class="hljs-string">|</span><br>内核驱动（写寄存器调整V/f）<br>  <span class="hljs-string">|</span><br>硬件层（CPU/SoC）<br></code></pre></td></tr></table></figure>
+
+<h4 id="3-代码示例（ARM-Cortex-A-系列）"><a href="#3-代码示例（ARM-Cortex-A-系列）" class="headerlink" title="(3) 代码示例（ARM Cortex-A 系列）"></a><strong>(3) 代码示例（ARM Cortex-A 系列）</strong></h4><figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs gradle"><span class="hljs-comment">// 设置频率和电压（伪代码）</span><br><span class="hljs-keyword">void</span> set_cpu_freq(uint32_t freq, uint32_t voltage) &#123;<br>    <span class="hljs-comment">// 1. 切换至中间频率（避免电压不足）</span><br>    write_clock_reg(INTERMEDIATE_FREQ);<br>    <br>    <span class="hljs-comment">// 2. 调整电压</span><br>    set_voltage_reg(voltage);<br>    <br>    <span class="hljs-comment">// 3. 设置目标频率</span><br>    write_clock_reg(freq);<br>&#125;<br><br><span class="hljs-comment">// Linux用户层触发频率调整</span><br>$ echo <span class="hljs-string">&quot;userspace&quot;</span> &gt; <span class="hljs-regexp">/sys/</span>devices<span class="hljs-regexp">/system/</span>cpu<span class="hljs-regexp">/cpu0/</span>cpufreq/scaling_governor<br>$ echo <span class="hljs-number">1200000</span> &gt; <span class="hljs-regexp">/sys/</span>devices<span class="hljs-regexp">/system/</span>cpu<span class="hljs-regexp">/cpu0/</span>cpufreq/scaling_setspeed<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="4-关键优化技术"><a href="#4-关键优化技术" class="headerlink" title="4. 关键优化技术"></a><strong>4. 关键优化技术</strong></h3><h4 id="1-电压-频率表（V-f-Table）"><a href="#1-电压-频率表（V-f-Table）" class="headerlink" title="(1) 电压-频率表（V-f Table）"></a><strong>(1) 电压-频率表（V-f Table）</strong></h4><ul>
+<li><p><strong>预校准表</strong>：芯片厂商提供，确保每个频率对应最低稳定电压。</p>
+</li>
+<li><p>示例：</p>
+<table>
+<thead>
+<tr>
+<th>频率 (MHz)</th>
+<th>电压 (mV)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>2000</td>
+<td>1100</td>
+</tr>
+<tr>
+<td>1500</td>
+<td>950</td>
+</tr>
+<tr>
+<td>1000</td>
+<td>850</td>
+</tr>
+</tbody></table>
+</li>
+</ul>
+<h4 id="2-温度补偿"><a href="#2-温度补偿" class="headerlink" title="(2) 温度补偿"></a><strong>(2) 温度补偿</strong></h4><ul>
+<li><strong>动态降频</strong>：温度超过阈值时强制降频（如Tjunc &gt; 85°C）。</li>
+<li><strong>实现</strong>：读取温度传感器，调整V-f表。</li>
+</ul>
+<h4 id="3-多核协同"><a href="#3-多核协同" class="headerlink" title="(3) 多核协同"></a><strong>(3) 多核协同</strong></h4><ul>
+<li><strong>集群调节</strong>：多核CPU分组管理，按负载启用&#x2F;关闭核心。</li>
+<li><strong>负载均衡</strong>：迁移任务到低负载核心，关闭空闲核心。</li>
+</ul>
+<hr>
+<h3 id="5-实际应用案例"><a href="#5-实际应用案例" class="headerlink" title="5. 实际应用案例"></a><strong>5. 实际应用案例</strong></h3><h4 id="1-智能手机（Android）"><a href="#1-智能手机（Android）" class="headerlink" title="(1) 智能手机（Android）"></a><strong>(1) 智能手机（Android）</strong></h4><ul>
+<li><strong>场景</strong>：屏幕触摸时升频至1.5GHz，静止时降频至500MHz。</li>
+<li><strong>策略</strong>：<code>interactive</code> 调速器 + 温度监控。</li>
+</ul>
+<h4 id="2-数据中心服务器"><a href="#2-数据中心服务器" class="headerlink" title="(2) 数据中心服务器"></a><strong>(2) 数据中心服务器</strong></h4><ul>
+<li><strong>目标</strong>：在SLA（服务协议）内最大化能效比。</li>
+<li><strong>方法</strong>：根据QPS（每秒请求数）动态调整CPU频率。</li>
+</ul>
+<h4 id="3-嵌入式设备（无人机）"><a href="#3-嵌入式设备（无人机）" class="headerlink" title="(3) 嵌入式设备（无人机）"></a><strong>(3) 嵌入式设备（无人机）</strong></h4><ul>
+<li><strong>需求</strong>：突发计算（图像处理）时升频，巡航时降频。</li>
+<li><strong>实现</strong>：基于RTOS的任务优先级触发DVFS。</li>
+</ul>
+<hr>
+<h3 id="6-挑战与解决方案"><a href="#6-挑战与解决方案" class="headerlink" title="6. 挑战与解决方案"></a><strong>6. 挑战与解决方案</strong></h3><table>
+<thead>
+<tr>
+<th><strong>挑战</strong></th>
+<th><strong>解决方案</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>频率切换延迟（μs级）</td>
+<td>预判负载变化，提前调整</td>
+</tr>
+<tr>
+<td>电压瞬态导致的不稳定</td>
+<td>加入稳压电容，分步切换电压</td>
+</tr>
+<tr>
+<td>多核频率协同</td>
+<td>使用CPPC（协作处理器性能控制）协议</td>
+</tr>
+<tr>
+<td>非线性功耗模型</td>
+<td>机器学习预测最佳V-f点（如强化学习）</td>
+</tr>
+</tbody></table>
+<hr>
+<h3 id="7-监控与调试工具"><a href="#7-监控与调试工具" class="headerlink" title="7. 监控与调试工具"></a><strong>7. 监控与调试工具</strong></h3><ul>
+<li><p>Linux工具：</p>
+  <figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs awk"><span class="hljs-comment"># 查看当前频率策略</span><br>cat <span class="hljs-regexp">/sys/</span>devices<span class="hljs-regexp">/system/</span>cpu<span class="hljs-regexp">/cpu0/</span>cpufreq/scaling_governor<br><br><span class="hljs-comment"># 实时监控频率</span><br>watch -n <span class="hljs-number">1</span> <span class="hljs-string">&quot;cat /proc/cpuinfo | grep &#x27;MHz&#x27;&quot;</span><br></code></pre></td></tr></table></figure>
+</li>
+<li><p><strong>硬件探头</strong>：示波器测量Vcore引脚电压波动。</p>
+</li>
+</ul>
+<hr>
+<h3 id="8-能效评估指标"><a href="#8-能效评估指标" class="headerlink" title="8. 能效评估指标"></a><strong>8. 能效评估指标</strong></h3><ul>
+<li><strong>MIPS&#x2F;Watt</strong>：每瓦特百万指令数。</li>
+<li>**Energy-Delay Product (EDP)**：能量延迟积，综合评估指标。</li>
+</ul>
+<hr>
+<p>通过合理设计DVFS策略，可在 <strong>性能损失 &lt;5%</strong> 的情况下，实现 <strong>20-40% 的功耗降低</strong>，广泛应用于从IoT设备到超算的各类场景。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Embedded/" class="category-chain-item">Embedded</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/DVFS/" class="print-no-link">#DVFS</a>
+      
+    </div>
+  
+</div>
+
+
+              
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2025/02/11/stack_overflow_detection/" title="栈溢出检测">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">栈溢出检测</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/02/11/dts_description_overlay/" title="设备树（DTS）硬件描述与覆盖机制">
+                        <span class="hidden-mobile">设备树（DTS）硬件描述与覆盖机制</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

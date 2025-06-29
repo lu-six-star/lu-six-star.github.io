@@ -1,0 +1,656 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/imgs/ava/fluid.png">
+  <link rel="icon" href="/imgs/ava/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Chris">
+  <meta name="keywords" content="">
+  
+    <meta property="og:type" content="article">
+<meta property="og:title" content="IIC协议">
+<meta property="og:url" content="https://lu-six-star.github.io/2024/11/20/iic_protocol/index.html">
+<meta property="og:site_name" content="星橙点点">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/IIC%E5%8D%8F%E8%AE%AE/image-20241120134450282.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/IIC%E5%8D%8F%E8%AE%AE/image-20241120135008477.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/IIC%E5%8D%8F%E8%AE%AE/image-20241120135106749.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/IIC%E5%8D%8F%E8%AE%AE/image-20241120140153360.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/IIC%E5%8D%8F%E8%AE%AE/image-20241120141543024.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/IIC%E5%8D%8F%E8%AE%AE/image-20241120141718784.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/IIC%E5%8D%8F%E8%AE%AE/image-20241120141900401.png">
+<meta property="article:published_time" content="2024-11-20T05:30:10.000Z">
+<meta property="article:modified_time" content="2025-06-29T03:50:54.348Z">
+<meta property="article:author" content="Chris">
+<meta property="article:tag" content="IIC">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://lu-six-star.github.io/imgs/IIC%E5%8D%8F%E8%AE%AE/image-20241120134450282.png">
+  
+  
+  
+  <title>IIC协议 - 星橙点点</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"lu-six-star.github.io","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>星橙点点</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="IIC协议"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2024-11-20 13:30" pubdate>
+          2024年11月20日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          2.6k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          22 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">IIC协议</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <!-- iic_protocol-->
+
+<span id="more"></span>
+
+<p>转载自<a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_43866583/article/details/125407605?spm=1001.2014.3001.5502">https://blog.csdn.net/weixin_43866583&#x2F;article&#x2F;details&#x2F;125407605?spm&#x3D;1001.2014.3001.5502</a></p>
+<h3 id="IIC协议的诞生"><a href="#IIC协议的诞生" class="headerlink" title="IIC协议的诞生"></a>IIC协议的诞生</h3><p>IIC协议最早1982年由飞利浦公司设计开发，是一种两线制（SDA + SCL）的串行通信方式，提供了主从机之间通行的一种方案，在今天也是被广泛的应用在很多的产品设备上。</p>
+<p>一个使用IIC协议进行通信的设备，它既可以作为主机又可以作为从机（支持多主多从），并且它是一种半双工的通信方式。</p>
+<p>IIC可以支持的通信速率范围较大，可以很好的满足多种设备的不同的通信速度的要求，它支持的速率有如下几个：</p>
+<p>1）普通模式（100kHz即100kbps）<br>2）快速模式(Fm）（400kHz）<br>3）快速模式+(Fs+)（1MHz）<br>4）高速模式(Hs）（3.4MHz）<br>5）超高速模式(UFm)（5MHz）</p>
+<h3 id="IIC总线的术语说明"><a href="#IIC总线的术语说明" class="headerlink" title="IIC总线的术语说明"></a>IIC总线的术语说明</h3><!-- ![](C:\Users\w6530\MyBlog\source\imgs\IIC协议\image-20241120134437440.png) -->
+
+<p><img src="/imgs/IIC%E5%8D%8F%E8%AE%AE/image-20241120134450282.png" srcset="/img/loading.gif" lazyload></p>
+<h3 id="SDA-线和-SCL线"><a href="#SDA-线和-SCL线" class="headerlink" title="SDA 线和 SCL线"></a>SDA 线和 SCL线</h3><p>IIC设备有两条接口线：串行数据 SDA 线和串行时钟 SCL 线。</p>
+<p>连接到IIC总线上的设备通过这两根线互相传递信息，SDA 和 SCL 都是双向线，可以互相之间进行信息的交互，但是是一种同步半双工的通信方式，同一时刻只能有一个方向进行数据的操作，不能同时进行。</p>
+<!-- ![](C:\Users\w6530\MyBlog\source\imgs\IIC协议\image-20241120134930368.png) -->
+
+<p><img src="/imgs/IIC%E5%8D%8F%E8%AE%AE/image-20241120135008477.png" srcset="/img/loading.gif" lazyload></p>
+<h3 id="IIC总线协议"><a href="#IIC总线协议" class="headerlink" title="IIC总线协议"></a>IIC总线协议</h3><!-- ![](C:\Users\w6530\MyBlog\source\imgs\IIC协议\image-20241120135106749.png) -->
+
+<p><img src="/imgs/IIC%E5%8D%8F%E8%AE%AE/image-20241120135106749.png" srcset="/img/loading.gif" lazyload></p>
+<h3 id="IIC总线的起始信号"><a href="#IIC总线的起始信号" class="headerlink" title="IIC总线的起始信号"></a>IIC总线的起始信号</h3><p>发送启动信号时，时钟线SCL需要稳定的保持在高电位，SDA由高电位变化为低电位。启动信号发送完成之后就可以进行数据的发送了。</p>
+<p>如果在一次通信过程中，有两台以上的设备同时发出了起始信号，都希望获得总线控制权的话，那么第一个发出起始信号的设备将获得总线控制权，作为主设备开始传输数据。<br>注意：起始信号由主机负责产生。</p>
+<h3 id="停止信号"><a href="#停止信号" class="headerlink" title="停止信号"></a>停止信号</h3><p>停止信号是在时钟线SCL为高电位的时候，数据线SDA由低电平变化为高电平。停止信号一般是在通信完成之后或者通信失败退出之后发送的。<br>注意：停止信号由主机负责产生。</p>
+<h3 id="数据传输与有效性"><a href="#数据传输与有效性" class="headerlink" title="数据传输与有效性"></a>数据传输与有效性</h3><p>IIC协议要求在时钟信号SCL为高电位的期间，数据线SDA上的数据要保持稳定，不能发生变化。只有在时钟信号SCL电位变低的时候，数据线SDA上的电平状态才能发生跳变。<br>每一个数据的bit位传输需要一个时钟脉冲，一次传输最多是8bit。</p>
+<!-- ![](C:\Users\w6530\MyBlog\source\imgs\IIC协议\image-20241120140151269.png) -->
+
+<p><img src="/imgs/IIC%E5%8D%8F%E8%AE%AE/image-20241120140153360.png" srcset="/img/loading.gif" lazyload></p>
+<p>通信开始时，最开始发送的都是地址帧。比如，一个7Bit的地址，首先发出的是最高位，即读写位（1-读，0-写），用于指示是读操作还是写操作。</p>
+<p>帧的第9位是应答位（ACK&#x2F;NACK）。所有帧（数据或地址）都是一样的。一旦发送帧的前8位，接收设备就可以控制数据线SDA。如果接收设备在第9个时钟脉冲没有将SDA线拉低进行应答，则可能是接收设备没有接收到数据，或者出现错误。在这种情况下，主机需要决定该做什么样的处理（一般考虑重发或者退出）。</p>
+<p>注意：SCL时钟信号由主机负责产生。数据的发送是高位先发的！</p>
+<h3 id="总线的仲裁"><a href="#总线的仲裁" class="headerlink" title="总线的仲裁"></a>总线的仲裁</h3><p>IIC总线支持多个主机同时在总线上发送数据，但是同一时刻只能有一个主机传送数据。因此必须要通过某些手段来决定哪个主机获得总线的控制权，其它的没有获得主机控制权的设备就只能进行等待，直到获得总线控制权才能进行数据的传输。</p>
+<p>IIC总线仲裁的方式有两种：时钟同步、仲裁。</p>
+<h3 id="时钟同步"><a href="#时钟同步" class="headerlink" title="时钟同步"></a>时钟同步</h3><p>时钟同步是通过时钟线SCL来实现的。在时钟信号SCL由高到低的切换过程中，IIC器件会开始数自身的低电平周期。当主器件的时钟信号变为低电平的时候，它会使SCL线保持这个电平状态直到达到高电平。假如这个时候有另外一个器件的时钟依然是处于低电平的周期，这个时钟的低到高的变化不会改变SCL线的状态。</p>
+<p>因此，SCL线被有着最长的低电平周期的器件占有总线的控制权，而这个时候低电平周期短的器件会进入高电平的等待状态，直到当前的主器件释放总线控制权，自身能够获得总线控制权才会改变这些状态。</p>
+<h3 id="仲裁"><a href="#仲裁" class="headerlink" title="仲裁"></a>仲裁</h3><p>仲裁和同步一样，都是为了解决多主机情况下的总线控制冲突。仲裁的过程与从机无关。</p>
+<p>只有在总线空闲的时候主机才可以启动传输。两个主机可能在比较短的时间内在总线上同时产生一个有效的起始信号，这种情况下需要仲裁来决定由哪个主机占有总线控制权来完成数据传输。</p>
+<p>仲裁是逐位进行，在每一位数据的仲裁期间，当时钟线SCL为高电平时，每个主机都检查数据总线SDA上的电平是否和自己要发送的相同。</p>
+<p>这个过程需要持续很多位。理论上讲，如果两个主机所传输的内容完全相同，那么他们能够成功传输而不出现错误。但是，如果一个主机发送高电平但检测到SDA总线上的电平为低时，则认为自己仲裁失败并关闭自己的SDA数据线上的数据传输，而另一个主机则继续完成自己的传输。</p>
+<h3 id="IIC通信的流程"><a href="#IIC通信的流程" class="headerlink" title="IIC通信的流程"></a>IIC通信的流程</h3><p>每个I2C设备都通过唯一的器件地址进行识别，根据设备功能，他们既可以是发送器也可作为接收器。通信的流程如下：</p>
+<p>1）IIC从机检测到IIC总线上的起始信号之后，就开始从总线上接收地址，之后会把从总线接收到的地址和自身的器件地址（通过软件编程）进行比较，一旦两个地址相同，IIC从机将发送一个确认应答（ACK），并响应总线的后续命令；</p>
+<p>2）发送或接收所数据；</p>
+<p>3）发送或接收完成之后，在收到应答信号ACK之后结束数据的传输。</p>
+<p>此外，如果软件开启了广播呼叫，则IIC从机始终对一个广播地址 （0x00）发送确认应答。I2C模块始终支持7位和10位的地址。</p>
+<h3 id="地址帧的发送"><a href="#地址帧的发送" class="headerlink" title="地址帧的发送"></a>地址帧的发送</h3><p><strong>7 位地址的 IIC 通讯流程</strong></p>
+<!-- ![](C:\Users\w6530\MyBlog\source\imgs\IIC协议\image-20241120141541800.png) -->
+
+<p><img src="/imgs/IIC%E5%8D%8F%E8%AE%AE/image-20241120141543024.png" srcset="/img/loading.gif" lazyload></p>
+<p>7Bit地址的通信中，开始信号之后的第一帧是地址帧+读写位，刚好是8Bit的数据，直接发送，等待从设备应答之后便可以进行数据的通信。</p>
+<p><strong>10 位地址的 IIC 通讯流程（主机发送）</strong></p>
+<!-- ![](C:\Users\w6530\MyBlog\source\imgs\IIC协议\image-20241120141716825.png) -->
+
+<p> <img src="/imgs/IIC%E5%8D%8F%E8%AE%AE/image-20241120141718784.png" srcset="/img/loading.gif" lazyload> </p>
+<p>对于10-bit地的址设备，需要使用两个帧来传输10Bit的slave地址。</p>
+<p>第一个帧的前5个bit固定为b11110xx，后接slave地址的高2位，第8位仍然是读写(R&#x2F;W)位，接着是一个ACK位，由于总线上可能有多个10 Bit 从设备地址的高2bit相同，因此这个ACK可能由多有slave设备返回。</p>
+<p>第二个帧紧接着第一帧发送，包含slave地址的低8位（7:0），接着该地址的slave回复一个ACK（或NACK）。RS-485协议</p>
+<p>注意：10-bit地址的设备和7-bit地址的设备在总线中是可以并存的，因为7-bit地址的高5位不可能是b11110。</p>
+<p><strong>10 位地址的 I2C 通讯流程（主机接收）</strong></p>
+<!-- ![](C:\Users\w6530\MyBlog\source\imgs\IIC协议\image-20241120141856456.png)  -->
+
+<p><img src="/imgs/IIC%E5%8D%8F%E8%AE%AE/image-20241120141900401.png" srcset="/img/loading.gif" lazyload></p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Protocol/" class="category-chain-item">Protocol</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/IIC/" class="print-no-link">#IIC</a>
+      
+    </div>
+  
+</div>
+
+
+              
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2024/11/20/rs485_protocol/" title="RS-485协议">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">RS-485协议</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2024/11/18/mqtt_learn/" title="MQTT基础学习">
+                        <span class="hidden-mobile">MQTT基础学习</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

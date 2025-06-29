@@ -1,0 +1,661 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/imgs/ava/fluid.png">
+  <link rel="icon" href="/imgs/ava/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Chris">
+  <meta name="keywords" content="">
+  
+    <meta property="og:type" content="article">
+<meta property="og:title" content="OTA升级">
+<meta property="og:url" content="https://lu-six-star.github.io/2024/11/27/embedded_ota/index.html">
+<meta property="og:site_name" content="星橙点点">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/OTA%E5%8D%87%E7%BA%A7/image-20241127110913670.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/OTA%E5%8D%87%E7%BA%A7/image-20241127111133205.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/OTA%E5%8D%87%E7%BA%A7/image-20241127111251647.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/OTA%E5%8D%87%E7%BA%A7/image-20241127112701182.png">
+<meta property="article:published_time" content="2024-11-27T03:04:47.000Z">
+<meta property="article:modified_time" content="2025-06-29T03:50:54.335Z">
+<meta property="article:author" content="Chris">
+<meta property="article:tag" content="ota">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://lu-six-star.github.io/imgs/OTA%E5%8D%87%E7%BA%A7/image-20241127110913670.png">
+  
+  
+  
+  <title>OTA升级 - 星橙点点</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"lu-six-star.github.io","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>星橙点点</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="OTA升级"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2024-11-27 11:04" pubdate>
+          2024年11月27日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          3k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          25 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">OTA升级</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <!-- embedded_ota-->
+
+<span id="more"></span>
+
+<p>转载自<a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_43866583/article/details/127706079?spm=1001.2014.3001.5502">https://blog.csdn.net/weixin_43866583&#x2F;article&#x2F;details&#x2F;127706079?spm&#x3D;1001.2014.3001.5502</a></p>
+<h3 id="OTA-在线升级"><a href="#OTA-在线升级" class="headerlink" title="OTA 在线升级"></a>OTA 在线升级</h3><blockquote>
+<p>   OTA：Over-the-Air Technology，字面意思理解为：空中下载技术。</p>
+<p>​    OTA 在线升级：通过OTA的方式实现产品软件更新的一种方式。</p>
+</blockquote>
+<p>​    所以，简单而言，通过外部的方式（有线 &#x2F; 无线）对产品进行更新，而不是用传统的编程器刷入固件的方式就可以称之为 OTA 在线升级。</p>
+<p>​    严格意义上来讲，OTA 指的是空中下载，即只有通过无线的方式进行更新的才称之为 <strong>OTA 升级</strong>；而那种通过外部的接口接线来实现的更新，应该称之为<strong>本地升级</strong>。这两者还是有点区别的，只是一般我们都没有那么严格去区分罢了！</p>
+<h3 id="实现方式"><a href="#实现方式" class="headerlink" title="实现方式"></a>实现方式</h3><blockquote>
+<p>   1）接收新的升级固件并完成新旧固件的替换，这部分代码为 BootLoader；</p>
+<p>​    2）产品功能的正常程序，用于执行各种应用功能，这部分程序称为 App。</p>
+</blockquote>
+<p>那就是说，要实现在线升级，就需要准备两份程序，一份是BootLoader ，另一份是App。其中 bootloader 用于将外部传入的新固件（应用程序App）接收到内部并存储，接收完成以后，由 bootloader 用新接收到的固件去替换旧的固件，替换完成之后跳转到新的应用程序中进行执行。这样就完成了产品的固件更新。</p>
+<h3 id="后台式升级"><a href="#后台式升级" class="headerlink" title="后台式升级"></a>后台式升级</h3><p>​    后台式升级的意思是：在进行升级的时候，接收新固件包的方式是在后台进行的，不会影响功能的正常执行。等到固件更新完成之后，再跳转到Bootloader中去用新的固件替换旧的固件，替换完成之后呢再跳转到App去执行。</p>
+<p>​    比如，现在的智能手机的在线更新就是后台式升级的方式。在你升级系统的时候，接收升级包的过程中，你还是可以正常使用的手机的，打电话、看视频、玩游戏等都不耽误，直到下载完成，你点击了开始更新之后，手机才进入更新状态，不让你操作，等更新完毕之后重启就又可以继续操作了。</p>
+<h3 id="非后台式式更新"><a href="#非后台式式更新" class="headerlink" title="非后台式式更新"></a>非后台式式更新</h3><p>​    非后台式升级的意思是：在进行升级的时候，接收固件时需要跳转到Bootloader，这个时候你不能在使用这个产品的任何功能，只能一直等着它接收并完成更新，完成之后你才能继续操作其他的功能。</p>
+<h3 id="STM32-的在线升级"><a href="#STM32-的在线升级" class="headerlink" title="STM32 的在线升级"></a>STM32 的在线升级</h3><h5 id="划分-Flash-区域"><a href="#划分-Flash-区域" class="headerlink" title="划分 Flash 区域"></a>划分 Flash 区域</h5><p>要准备两份代码的，一份是BootLoader，另外一份是App。由于这两份代码在STM32中都是要存放在Flash中的，而且它们的空间还不能重叠，要独立区分开</p>
+<p><img src="/imgs/OTA%E5%8D%87%E7%BA%A7/image-20241127110913670.png" srcset="/img/loading.gif" lazyload></p>
+<p>（1）用于存放Bootloader程序；</p>
+<p>（2）用于存放应用程序；</p>
+<p>（3）用于存放接收到的新固件。（注：这部分可要可不要，根据你的设计选择）</p>
+<p><font color=red>注意：上图中（3）这个Flash区域是考虑用于保存在线升级的固件的，作为备份固件。方便用于以后系统出现异常时，可以从这个备份固件中重新加载到App中，防止固件丢失！</font></p>
+<p><strong>1 - Flash空间地址的划分</strong></p>
+<p>​    首先，我们要知道，在stm32中，flash的地址空间是从0x08000000开始的，在keil中也是默认的从这个位置开始的。</p>
+<p>​    一般而言，Bootloader 是在上电时默认开始执行，因此将Bootloader程序可以存放到STM32默认执行的位置（keil编译器默认从0x08000000地址开始存放）。</p>
+<p>​    应用程序从 Bootloader 后开始存放即可，只要不和BootLoader发生冲突即可。</p>
+<p>​    假设 Bootloader 的大小为10k，即0x2800字节，那么可以选取 0x08000000 ~ 0x08002800 地址范围作为BootLoader的存放区域。</p>
+<p>​     应用程序从0x08005000开始存放</p>
+<p><img src="/imgs/OTA%E5%8D%87%E7%BA%A7/image-20241127111133205.png" srcset="/img/loading.gif" lazyload></p>
+<p><strong>2 - 设置工程</strong></p>
+<p><strong>设置起始地址和大小</strong></p>
+<p>​    准备两个工程，一个是bootloader的程序，另外一个是应用程序的工程，并对工程进行设置。bootloader选择默认执行的位置，应用程序根据实际需要设置开始存放到flash指定的位置。</p>
+<p>比如：App的起始地址设为0x08005000，大小设为0x1B000（RAM总大小0x20000-0x5000）</p>
+<p><img src="/imgs/OTA%E5%8D%87%E7%BA%A7/image-20241127111251647.png" srcset="/img/loading.gif" lazyload></p>
+<p> BootLoader 也是一样的设置方式，只是地址不同而已。</p>
+<p><strong>生成 bin 文件</strong></p>
+<p>应用程序需要转换为bin文件才可以写入Flash中，能发送到产品中的固件也是要先转为bin格式的文件的</p>
+<p>编译器可以选择生成hex文件，再把hex文件转换为bin文件</p>
+<p>还可以使用简单方法,编译后直接执行fromelf.exe命令将.axf文件转换为.bin文件。生成的bin文件在工程目录下的out文件夹下</p>
+<p><strong>3 - 接收固件更新包</strong></p>
+<p>​    接收固件更新包的话，就要根据你的实际产品进行选择了。</p>
+<p>​    首先，如果你是后台式更新的话，那接收固件更新包的功能就要在App中实现；如果你是非后台式更新的话，那接收固件更新包的功能就要在BootLoader中实现。</p>
+<p>​    其次，要考虑接收固件更新包的方式。无线的话用的是wifi、蓝牙、4&#x2F;5G网络还是啥的；有线的话用的是串口UART、Spi、IIC、CAN、以太网还是啥的。</p>
+<p>​    最后，最好的方式是能够对接收到的固件更新包做一个校验，防止数据接收过程中出现错误，导致升级后出现严重问题。</p>
+<p>​    <font color=red>注意：BootLoader 需要提前刷入，不然无法完成在线升级！</font></p>
+<p><strong>4 - 拷贝程序至Flash</strong></p>
+<p>​    接收成功固件包之后，需要将数据写入到 Flash 的指定位置（比如 0x08005000）完成固件的更新程序写入。</p>
+<p>​    STM32对Flash的操作过程如下：</p>
+<figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs stata">1） Flash解锁。（FlashUnclock）<br>2） 擦除<span class="hljs-keyword">App</span>所在的Flash页。<br>3） 向<span class="hljs-keyword">App</span>的Flash区域写入数据。<br>4） 写完后，Flash上锁。（FlashClock）<br></code></pre></td></tr></table></figure>
+
+
+
+<p><strong>5 - 跳转至 App 应用程序</strong></p>
+<p>​    将接收到应用程序全部正确写入Flash的App指定位置后，<strong>Bootloader</strong> 需要完成跳转到应用程序App的开始位置的操作。</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">1</span>）关闭中断，防止在跳转过程中有中断发生。<br><span class="hljs-attribute">2</span>）获取栈指针。<br><span class="hljs-attribute">3</span>）获取复位向量，即为栈指针后的四字节内容（<span class="hljs-number">32</span>bits）。<br><span class="hljs-attribute">4</span>）重定向中断向量表，以保证应用程序中中断的正常工作。应用程序从<span class="hljs-number">0</span>x08005000存储，因此相对于Flash基地址<span class="hljs-number">0</span>x08000000偏移了<span class="hljs-number">0</span>x5000。<br><span class="hljs-attribute">5</span>）设置新的栈指针，上述中所获取的栈指针。<br><span class="hljs-attribute">6</span>）跳转至复位向量开始运行。<br></code></pre></td></tr></table></figure>
+
+
+
+<p><strong>特别注意 - 设置向量中断表偏移</strong></p>
+<p>​    这个跳转到用程序之后，有一个非常重要的事情要注意，就是要重新设置App的中断向量表，否则不能正常运行的。</p>
+<p><img src="/imgs/OTA%E5%8D%87%E7%BA%A7/image-20241127112701182.png" srcset="/img/loading.gif" lazyload></p>
+<p>STM32的内部闪存（FLASH）的地址默认是从0x8000000开始的，默认也是从这个位置开始执行程序的。并且在STM32的内部有一张 “中断向量表” 用于响应中断，程序在启动以后首先会从中断向量表取出复位中断程序，执行完复位中断程序以后才会跳转到main( )函数开始执行。</p>
+<p>​    中断向量表的位置从0x8000004开始，如果采用的是bootloader和应用程序的方式的话，bootloader一般放在默认开始的位置，所以它的中断向量表还是正确的。</p>
+<p>​    而APP应用程序是放置在其他的位置，那么APP应用程序部分的中断向量表就要发生偏移，才能为应用程序找到并响应中断。</p>
+<p>在应用程序中，与程序跳转需要注意的是，单片机从Bootloader程序跳转至应用程序的复位向量处开始执行，单片机在执行main函数之前会执行一些系统初始化程序</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Embedded/" class="category-chain-item">Embedded</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/ota/" class="print-no-link">#ota</a>
+      
+    </div>
+  
+</div>
+
+
+              
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2024/11/27/data_struct_memory_alignment/" title="结构体内存对齐">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">结构体内存对齐</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2024/11/26/embedded_adc/" title="模数转换">
+                        <span class="hidden-mobile">模数转换</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

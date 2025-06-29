@@ -1,0 +1,967 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/imgs/ava/fluid.png">
+  <link rel="icon" href="/imgs/ava/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Chris">
+  <meta name="keywords" content="">
+  
+    <meta property="og:type" content="article">
+<meta property="og:title" content="Redis详解">
+<meta property="og:url" content="https://lu-six-star.github.io/2023/05/04/redis_details/index.html">
+<meta property="og:site_name" content="星橙点点">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-05-04T06:12:35.000Z">
+<meta property="article:modified_time" content="2025-06-29T03:50:54.333Z">
+<meta property="article:author" content="Chris">
+<meta property="article:tag" content="Redis">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>Redis详解 - 星橙点点</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"lu-six-star.github.io","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>星橙点点</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Redis详解"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2023-05-04 14:12" pubdate>
+          2023年5月4日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          15k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          129 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">Redis详解</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <!--Redis详解 -->
+
+<span id="more"></span>
+
+<p>Redis详解</p>
+<h3 id="什么是Redis"><a href="#什么是Redis" class="headerlink" title="什么是Redis?"></a>什么是Redis?</h3><p>Redis是一种基于键值对（key-value）的NoSQL数据库</p>
+<p>比一般键值对数据库强大的地方，Redis中的value支持string（字符串）、hash（哈希）、 list（列表）、set（集合）、zset（有序集合）、Bitmaps（位图）、 HyperLogLog、GEO（地理信息定位）等多种数据结构</p>
+<p>Redis会将所有数据都存放在内存中，所以它的读写性能非常出色</p>
+<p>Redis还可以将内存的数据利用快照和日志的形式保存到硬盘上</p>
+<p>Redis还可以将内存的数据利用快照和日志的形式保存到硬盘上</p>
+<h3 id="用来干什么"><a href="#用来干什么" class="headerlink" title="用来干什么"></a>用来干什么</h3><ol>
+<li><p>缓存<br>Redis应用最广泛地方，基本所有的Web应用都会使用Redis作为缓存，来降低数据源压力，提高响应速度</p>
+</li>
+<li><p>计数器<br>Redis天然支持计数功能，而且计数性能非常好，可以用来记录浏览量、点赞量等等</p>
+</li>
+<li><p>排行榜<br>Redis提供了列表和有序集合数据结构，合理地使用这些数据结构可以很方便地构建各种排行榜系统。</p>
+</li>
+<li><p>社交网络<br>赞&#x2F;踩、粉丝、共同好友&#x2F;喜好、推送、下拉刷新</p>
+</li>
+<li><p>消息队列<br>Redis提供了发布订阅功能和阻塞队列的功能，可以满足一般消息队列功能</p>
+</li>
+<li><p>分布式锁<br>分布式环境下，利用Redis实现分布式锁，也是Redis常见的应用</p>
+</li>
+</ol>
+<p>Redis的应用结合项目：</p>
+<blockquote>
+<p>Token存储：用户登录成功之后，使用Redis存储Token<br>登录失败次数计数：使用Redis计数，登录失败超过一定次数，锁定账号<br>地址缓存：对省市区数据的缓存<br>分布式锁：分布式环境下登录、注册等操作加分布式锁<br>…</p>
+</blockquote>
+<h3 id="有哪些数据结构"><a href="#有哪些数据结构" class="headerlink" title="有哪些数据结构"></a>有哪些数据结构</h3><h5 id="五种基本数据结构"><a href="#五种基本数据结构" class="headerlink" title="五种基本数据结构"></a>五种基本数据结构</h5><p><strong>string</strong></p>
+<p>字符串最基础的数据结构。字符串类型的值实际可以是字符串（简单的字符串、复杂的字符串（例如JSON、XML））、数字 （整数、浮点数），甚至是二进制（图片、音频、视频），但是值最大不能超过512MB</p>
+<p><strong>hash</strong></p>
+<p>哈希类型是指键值本身又是一个键值对结构 缓存用户信息 缓存对象</p>
+<p><strong>list</strong></p>
+<p>列表（list）类型是用来存储多个有序的字符串。列表是一种比较灵活的数据结构，它可以充当栈和队列的角色</p>
+<p><strong>set</strong></p>
+<p>集合（set）类型也是用来保存多个的字符串元素，但和列表类型不一 样的是，集合中不允许有重复元素，并且集合中的元素是无序的。</p>
+<p><strong>sorted set</strong></p>
+<p>有序集合中的元素可以排序。但是它和列表使用索引下标作为排序依据不同的是，它给每个元素设置一个权重（score）作为排序的依据。</p>
+<h3 id="为什么快"><a href="#为什么快" class="headerlink" title="为什么快"></a>为什么快</h3><ol>
+<li>完全基于内存操作</li>
+<li>使⽤单线程，避免了线程切换和竞态产生的消耗</li>
+<li>基于⾮阻塞的IO多路复⽤机制</li>
+<li>C语⾔实现，优化过的数据结构，基于⼏种基础的数据结构，redis做了⼤量的优化，性能极⾼</li>
+</ol>
+<h3 id="I-O多路复用"><a href="#I-O多路复用" class="headerlink" title="I&#x2F;O多路复用"></a>I&#x2F;O多路复用</h3><p>Linux系统有三种方式实现IO多路复用：select、poll和epoll。<br>例如epoll方式是将用户socket对应的fd注册进epoll，然后epoll帮你监听哪些socket上有消息到达，这样就避免了大量的无用操作。此时的socket应该采用非阻塞模式。<br>这样，整个过程只在进行select、poll、epoll这些调用的时候才会阻塞，收发客户消息是不会阻塞的，整个进程或者线程就被充分利用起来，这就是事件驱动，所谓的reactor模式。</p>
+<h3 id="为什么早期选择单线程"><a href="#为什么早期选择单线程" class="headerlink" title="为什么早期选择单线程"></a>为什么早期选择单线程</h3><p>Redis 4.0 之后开始变成多线程，除了主线程外，它也有后台线程在处理一些较为缓慢的操作，例如清理脏数据、无用连接的释放、大 Key 的删除等等</p>
+<h3 id="Redis6-0使用多线程"><a href="#Redis6-0使用多线程" class="headerlink" title="Redis6.0使用多线程"></a>Redis6.0使用多线程</h3><p>Redis6.0的多线程是用多线程来处理数据的读写和协议解析，但是Redis执行命令还是单线程的<br>这样做的⽬的是因为Redis的性能瓶颈在于⽹络IO⽽⾮CPU，使⽤多线程能提升IO读写的效率，从⽽整体提⾼Redis的性能</p>
+<h3 id="Redis持久化⽅式"><a href="#Redis持久化⽅式" class="headerlink" title="Redis持久化⽅式"></a>Redis持久化⽅式</h3><p>Redis持久化⽅案分为RDB和AOF两种</p>
+<p><strong>RDB</strong></p>
+<p>RDB持久化是把当前进程数据生成快照保存到硬盘的过程，触发RDB持久化过程分为手动触发和自动触发。</p>
+<p>RDB⽂件是⼀个压缩的⼆进制⽂件，通过它可以还原某个时刻数据库的状态。由于RDB⽂件是保存在硬盘上的，所以即使Redis崩溃或者退出，只要RDB⽂件存在，就可以⽤它来恢复还原数据库的状态。</p>
+<p>手动触发分别对应save和bgsave命令</p>
+<pre><code class="hljs">-  save命令：阻塞当前Redis服务器，直到RDB过程完成为止，对于内存比较大的实例会造成长时间阻塞，线上环境不建议使用
+
+-  bgsave命令：Redis进程执行fork操作创建子进程，RDB持久化过程由子进程负责，完成后自动结束。阻塞只发生在fork阶段，一般时间很短
+</code></pre>
+<p>以下场景会自动触发RDB持久化</p>
+<pre><code class="hljs">- 使用save相关配置，如“save m n”。表示m秒内数据集存在n次修改时，自动触发bgsave。
+- 如果从节点执行全量复制操作，主节点自动执行bgsave生成RDB文件并发送给从节点
+- 执行debug reload命令重新加载Redis时，也会自动触发save操作
+- 默认情况下执行shutdown命令时，如果没有开启AOF持久化功能则自动执行bgsave。
+</code></pre>
+<p><strong>AOF</strong></p>
+<p>AOF（append only file）持久化：以独立日志的方式记录每次写命令， 重启时再重新执行AOF文件中的命令达到恢复数据的目的。AOF的主要作用是解决了数据持久化的实时性，目前已经是Redis持久化的主流方式。</p>
+<p>AOF的工作流程操作：命令写入 （append）、文件同步（sync）、文件重写（rewrite）、重启加载 （load）</p>
+<p>流程：</p>
+<ol>
+<li>所有的写入命令会追加到aof_buf（缓冲区）中。</li>
+<li>AOF缓冲区根据对应的策略向硬盘做同步操作。</li>
+<li>随着AOF文件越来越大，需要定期对AOF文件进行重写，达到压缩 的目的。</li>
+<li>当Redis服务器重启时，可以加载AOF文件进行数据恢复。</li>
+</ol>
+<h3 id="RDB-和-AOF-各自有什么优缺点"><a href="#RDB-和-AOF-各自有什么优缺点" class="headerlink" title="RDB 和 AOF 各自有什么优缺点"></a>RDB 和 AOF 各自有什么优缺点</h3><p><strong>RDB | 优点</strong></p>
+<p>只有一个紧凑的二进制文件 dump.rdb，非常适合备份、全量复制的场景。<br>容灾性好，可以把RDB文件拷贝道远程机器或者文件系统张，用于容灾恢复。<br>恢复速度快，RDB恢复数据的速度远远快于AOF的方式</p>
+<p><strong>RDB | 缺点</strong></p>
+<p>实时性低，RDB 是间隔一段时间进行持久化，没法做到实时持久化&#x2F;秒级持久化。如果在这一间隔事件发生故障，数据会丢失。<br>存在兼容问题，Redis演进过程存在多个格式的RDB版本，存在老版本Redis无法兼容新版本RDB的问题。</p>
+<p><strong>AOF | 优点</strong></p>
+<p>实时性好，aof 持久化可以配置 appendfsync 属性，有 always，每进行一次命令操作就记录到 aof 文件中一次。<br>通过 append 模式写文件，即使中途服务器宕机，可以通过 redis-check-aof 工具解决数据一致性问题。</p>
+<p><strong>AOF | 缺点</strong></p>
+<p>AOF 文件比 RDB 文件大，且 恢复速度慢。<br>数据集大 的时候，比 RDB 启动效率低。</p>
+<h3 id="RDB和AOF如何选择"><a href="#RDB和AOF如何选择" class="headerlink" title="RDB和AOF如何选择"></a>RDB和AOF如何选择</h3><ol>
+<li>一般来说， 如果想达到足以媲美数据库的 数据安全性，应该 同时使用两种持久化功能。在这种情况下，当 Redis 重启的时候会优先载入 AOF 文件来恢复原始的数据，因为在通常情况下 AOF 文件保存的数据集要比 RDB 文件保存的数据集要完整。</li>
+<li>如果 可以接受数分钟以内的数据丢失，那么可以 只使用 RDB 持久化。</li>
+<li>有很多用户都只使用 AOF 持久化，但并不推荐这种方式，因为定时生成 RDB 快照（snapshot）非常便于进行数据备份， 并且 RDB 恢复数据集的速度也要比 AOF 恢复的速度要快，除此之外，使用 RDB 还可以避免 AOF 程序的 bug。</li>
+<li>如果只需要数据在服务器运行的时候存在，也可以不使用任何持久化方式</li>
+</ol>
+<h3 id="Redis的数据恢复"><a href="#Redis的数据恢复" class="headerlink" title="Redis的数据恢复"></a>Redis的数据恢复</h3><p>当Redis发生了故障，可以从RDB或者AOF中恢复数据。</p>
+<p>恢复的过程也很简单，把RDB或者AOF文件拷贝到Redis的数据目录下，如果使用AOF恢复，配置文件开启AOF，然后启动redis-server即可</p>
+<p>Redis 启动时加载数据的流程：</p>
+<ul>
+<li>AOF持久化开启且存在AOF文件时，优先加载AOF文件。</li>
+<li>AOF关闭或者AOF文件不存在时，加载RDB文件。</li>
+<li>加载AOF&#x2F;RDB文件成功后，Redis启动成功。</li>
+<li>AOF&#x2F;RDB文件存在错误时，Redis启动失败并打印错误信息</li>
+</ul>
+<h3 id="Redis-4-0-的混合持久化"><a href="#Redis-4-0-的混合持久化" class="headerlink" title="Redis 4.0 的混合持久化"></a>Redis 4.0 的混合持久化</h3><p>重启 Redis 时，我们很少使用 RDB 来恢复内存状态，因为会丢失大量数据。我们通常使用 AOF 日志重放，但是重放 AOF 日志性能相对 RDB 来说要慢很多，这样在 Redis 实例很大的情况下，启动需要花费很长的时间</p>
+<p>Redis 4.0 为了解决这个问题，带来了一个新的持久化选项——混合持久化。将 rdb 文件的内容和增量的 AOF 日志文件存在一起。这里的 AOF 日志不再是全量的日志，而是 自持久化开始到持久化结束 的这段时间发生的增量 AOF 日志，通常这部分 AOF 日志很小</p>
+<p>于是在 Redis 重启的时候，可以先加载 rdb 的内容，然后再重放增量 AOF 日志就可以完全替代之前的 AOF 全量文件重放，重启效率因此大幅得到提升</p>
+<h3 id="Redis保证高可用主要有三种方式：主从、哨兵、集群"><a href="#Redis保证高可用主要有三种方式：主从、哨兵、集群" class="headerlink" title="Redis保证高可用主要有三种方式：主从、哨兵、集群"></a>Redis保证高可用主要有三种方式：主从、哨兵、集群</h3><p>主从复制，是指将一台 Redis 服务器的数据，复制到其他的 Redis 服务器。前者称为 主节点(master)，后者称为 从节点(slave)。且数据的复制是 单向 的，只能由主节点到从节点。Redis 主从复制支持 主从同步 和 从从同步 两种，后者是 Redis 后续版本新增的功能，以减轻主节点的同步负担</p>
+<ul>
+<li>数据冗余： 主从复制实现了数据的热备份，是持久化之外的一种数据冗余方式。</li>
+<li>故障恢复： 当主节点出现问题时，可以由从节点提供服务，实现快速的故障恢复 (实际上是一种服务的冗余)。</li>
+<li>负载均衡： 在主从复制的基础上，配合读写分离，可以由主节点提供写服务，由从节点提供读服务 （即写 Redis 数据时应用连接主节点，读 Redis 数据时应用连接从节点），分担服务器负载。尤其是在写少读多的场景下，通过多个从节点分担读负载，可以大大提高 Redis 服务器的并发量。</li>
+<li>高可用基石： 除了上述作用以外，主从复制还是哨兵和集群能够实施的 基础，因此说主从复制是 Redis 高可用的基础</li>
+</ul>
+<h3 id="常见的拓扑结构"><a href="#常见的拓扑结构" class="headerlink" title="常见的拓扑结构"></a>常见的拓扑结构</h3><p><strong>一主一从结构</strong></p>
+<p>一主一从结构是最简单的复制拓扑结构，用于主节点出现宕机时从节点提供故障转移支持</p>
+<p><strong>一主多从结构（又称为星形拓扑结构）</strong></p>
+<p>使得应用端可以利用多个从节点实现读写分离,对于读占比较大的场景，可以把读命令发送到从节点来分担主节点压力</p>
+<p><strong>树状主从结构（又称为树状拓扑结构）</strong></p>
+<p>使得从节点不但可以复制主节点数据，同时可以作为其他从节点的主节点继续向下层复制。通过引入复制中间层，可以有效降低主节点负载和需要传送给从节点的数据量</p>
+<h3 id="Redis的主从复制原理"><a href="#Redis的主从复制原理" class="headerlink" title="Redis的主从复制原理"></a>Redis的主从复制原理</h3><ol>
+<li>保存主节点（master）信息<br> 这一步只是保存主节点信息，保存主节点的ip和port。</li>
+<li>主从建立连接<br> 从节点（slave）发现新的主节点后，会尝试和主节点建立网络连接。</li>
+<li>发送ping命令<br> 连接建立成功后从节点发送ping请求进行首次通信，主要是检测主从之间网络套接字是否可用、主节点当前是否可接受处理命令。</li>
+<li>权限验证<br> 如果主节点要求密码验证，从节点必须正确的密码才能通过验证。</li>
+<li>同步数据集<br> 主从复制连接正常通信后，主节点会把持有的数据全部发送给从节点。</li>
+<li>命令持续复制<br> 接下来主节点会持续地把写命令发送给从节点，保证主从数据一致性。</li>
+</ol>
+<h3 id="主从数据同步的方式"><a href="#主从数据同步的方式" class="headerlink" title="主从数据同步的方式"></a>主从数据同步的方式</h3><p>Redis在2.8及以上版本使用psync命令完成主从数据同步，同步过程分为：全量复制和部分复制</p>
+<p><strong>全量复制</strong> 一般用于初次复制场景，Redis早期支持的复制功能只有全量复制，它会把主节点全部数据一次性发送给从节点，当数据量较大时，会对主从节点和网络造成很大的开销</p>
+<ol>
+<li>发送psync命令进行数据同步，由于是第一次进行复制，从节点没有复制偏移量和主节点的运行ID，所以发送psync-1。</li>
+<li>主节点根据psync-1解析出当前为全量复制，回复+FULLRESYNC响应。</li>
+<li>从节点接收主节点的响应数据保存运行ID和偏移量offset</li>
+<li>主节点执行bgsave保存RDB文件到本地</li>
+<li>主节点发送RDB文件给从节点，从节点把接收的RDB文件保存在本地并直接作为从节点的数据文件</li>
+<li>对于从节点开始接收RDB快照到接收完成期间，主节点仍然响应读写命令，因此主节点会把这期间写命令数据保存在复制客户端缓冲区内，当从节点加载完RDB文件后，主节点再把缓冲区内的数据发送给从节点，保证主从之间数据一致性。</li>
+<li>从节点接收完主节点传送来的全部数据后会清空自身旧数据</li>
+<li>从节点清空数据后开始加载RDB文件</li>
+<li>从节点成功加载完RDB后，如果当前节点开启了AOF持久化功能， 它会立刻做bgrewriteaof操作，为了保证全量复制后AOF持久化文件立刻可用。</li>
+</ol>
+<p><strong>部分复制</strong><br>部分复制主要是Redis针对全量复制的过高开销做出的一种优化措施， 使用psync{runId}{offset}命令实现。当从节点（slave）正在复制主节点 （master）时，如果出现网络闪断或者命令丢失等异常情况时，从节点会向 主节点要求补发丢失的命令数据，如果主节点的复制积压缓冲区内存在这部分数据则直接发送给从节点，这样就可以保持主从节点复制的一致性</p>
+<ol>
+<li>当主从节点之间网络出现中断时，如果超过repl-timeout时间，主节点会认为从节点故障并中断复制连接</li>
+<li>主从连接中断期间主节点依然响应命令，但因复制连接中断命令无法发送给从节点，不过主节点内部存在的复制积压缓冲区，依然可以保存最近一段时间的写命令数据，默认最大缓存1MB。</li>
+<li>当主从节点网络恢复后，从节点会再次连上主节点</li>
+<li>当主从连接恢复后，由于从节点之前保存了自身已复制的偏移量和主节点的运行ID。因此会把它们当作psync参数发送给主节点，要求进行部分复制操作。</li>
+<li>主节点接到psync命令后首先核对参数runId是否与自身一致，如果一 致，说明之前复制的是当前主节点；之后根据参数offset在自身复制积压缓冲区查找，如果偏移量之后的数据存在缓冲区中，则对从节点发送+CONTINUE响应，表示可以进行部分复制。</li>
+<li>主节点根据偏移量把复制积压缓冲区里的数据发送给从节点，保证主从复制进入正常状态。</li>
+</ol>
+<h3 id="主从复制存在哪些问题"><a href="#主从复制存在哪些问题" class="headerlink" title="主从复制存在哪些问题"></a>主从复制存在哪些问题</h3><p>主从复制虽好，但也存在一些问题：</p>
+<ul>
+<li>一旦主节点出现故障，需要手动将一个从节点晋升为主节点，同时需要修改应用方的主节点地址，还需要命令其他从节点去复制新的主节点，整个过程都需要人工干预。</li>
+<li>主节点的写能力受到单机的限制。</li>
+<li>主节点的存储能力受到单机的限制。</li>
+</ul>
+<p>第一个问题是Redis的高可用问题，第二、三个问题属于Redis的分布式问题。</p>
+<h3 id="Redis-Sentinel（哨兵）"><a href="#Redis-Sentinel（哨兵）" class="headerlink" title="Redis Sentinel（哨兵）"></a>Redis Sentinel（哨兵）</h3><p>主从复制存在一个问题，没法完成自动故障转移。所以我们需要一个方案来完成自动故障转移，它就是Redis Sentinel（哨兵）</p>
+<p><strong>Redis Sentinel</strong> ，它由两部分组成，哨兵节点和数据节点：</p>
+<ul>
+<li>哨兵节点： 哨兵系统由一个或多个哨兵节点组成，哨兵节点是特殊的 Redis 节点，不存储数据，对数据节点进行监控。</li>
+<li>数据节点： 主节点和从节点都是数据节点；</li>
+</ul>
+<p>在复制的基础上，哨兵实现了 自动化的故障恢复 功能，下面是官方对于哨兵功能的描述：</p>
+<ul>
+<li>监控（Monitoring）： 哨兵会不断地检查主节点和从节点是否运作正常。</li>
+<li>自动故障转移（Automatic failover）： 当 主节点 不能正常工作时，哨兵会开始 自动故障转移操作，它会将失效主节点的其中一个 从节点升级为新的主节点，并让其他从节点改为复制新的主节点。</li>
+<li>配置提供者（Configuration provider）： 客户端在初始化时，通过连接哨兵来获得当前 Redis 服务的主节点地址。</li>
+<li>通知（Notification）： 哨兵可以将故障转移的结果发送给客户端。</li>
+</ul>
+<p>其中，监控和自动故障转移功能，使得哨兵可以及时发现主节点故障并完成转移。而配置提供者和通知功能，则需要在与客户端的交互中才能体现。</p>
+<h3 id="Redis-Sentinel（哨兵）实现原理"><a href="#Redis-Sentinel（哨兵）实现原理" class="headerlink" title="Redis Sentinel（哨兵）实现原理"></a>Redis Sentinel（哨兵）实现原理</h3><p>哨兵模式是通过哨兵节点完成对数据节点的监控、下线、故障转移</p>
+<p><strong>定时监控</strong></p>
+<p>Sentinel通过三个定时监控任务完成对各个节点发现和监控：</p>
+<ul>
+<li>每隔10秒，每个Sentinel节点会向主节点和从节点发送info命令获取最新的拓扑结构</li>
+<li>每隔2秒，每个Sentinel节点会向Redis数据节点的__sentinel__：hello 频道上发送该Sentinel节点对于主节点的判断以及当前Sentinel节点的信息</li>
+<li>每隔1秒，每个Sentinel节点会向主节点、从节点、其余Sentinel节点发送一条ping命令做一次心跳检测，来确认这些节点当前是否可达</li>
+</ul>
+<p><strong>主观下线和客观下线</strong></p>
+<p>主观下线就是哨兵节点认为某个节点有问题，客观下线就是超过一定数量的哨兵节点认为主节点有问题</p>
+<ul>
+<li><p>主观下线<br> 每个Sentinel节点会每隔1秒对主节点、从节点、其他Sentinel节点发送ping命令做心跳检测，当这些节点超过 down-after-milliseconds没有进行有效回复，Sentinel节点就会对该节点做失败判定，这个行为叫做主观下线。</p>
+</li>
+<li><p>客观下线<br> 当Sentinel主观下线的节点是主节点时，该Sentinel节点会通过sentinel is- master-down-by-addr命令向其他Sentinel节点询问对主节点的判断，当超过 <quorum>个数，Sentinel节点认为主节点确实有问题，这时该Sentinel节点会做出客观下线的决定</p>
+</li>
+</ul>
+<p><strong>领导者Sentinel节点选举</strong></p>
+<p>Sentinel节点之间会做一个领导者选举的工作，选出一个Sentinel节点作为领导者进行故障转移的工作。Redis使用了Raft算法实现领导者选举</p>
+<p><strong>故障转移</strong></p>
+<ol>
+<li>在从节点列表中选出一个节点作为新的主节点，这一步是相对复杂一些的一步</li>
+<li>Sentinel领导者节点会对第一步选出来的从节点执行slaveof no one命令让其成为主节点</li>
+<li>Sentinel领导者节点会向剩余的从节点发送命令，让它们成为新主节点的从节点</li>
+<li>Sentinel节点集合会将原来的主节点更新为从节点，并保持着对其关注，当其恢复后命令它去复制新的主节点</li>
+</ol>
+<h3 id="领导者Sentinel节点选举"><a href="#领导者Sentinel节点选举" class="headerlink" title="领导者Sentinel节点选举"></a>领导者Sentinel节点选举</h3><p>Redis使用了Raft算法实 现领导者选举</p>
+<ol>
+<li>每个在线的Sentinel节点都有资格成为领导者，当它确认主节点主观 下线时候，会向其他Sentinel节点发送sentinel is-master-down-by-addr命令， 要求将自己设置为领导者。</li>
+<li>收到命令的Sentinel节点，如果没有同意过其他Sentinel节点的sentinel is-master-down-by-addr命令，将同意该请求，否则拒绝。</li>
+<li>如果该Sentinel节点发现自己的票数已经大于等于max（quorum， num（sentinels）&#x2F;2+1），那么它将成为领导者。</li>
+<li>如果此过程没有选举出领导者，将进入下一次选举</li>
+</ol>
+<h3 id="新的主节点是怎样被挑选出来"><a href="#新的主节点是怎样被挑选出来" class="headerlink" title="新的主节点是怎样被挑选出来"></a>新的主节点是怎样被挑选出来</h3><ol>
+<li>过滤：“不健康”（主观下线、断线）、5秒内没有回复过Sentinel节 点ping响应、与主节点失联超过down-after-milliseconds*10秒。</li>
+<li>选择slave-priority（从节点优先级）最高的从节点列表，如果存在则返回，不存在则继续。</li>
+<li>选择复制偏移量最大的从节点（复制的最完整），如果存在则返 回，不存在则继续。</li>
+<li>选择runid最小的从节点。</li>
+</ol>
+<h3 id="Redis-集群"><a href="#Redis-集群" class="headerlink" title="Redis 集群"></a>Redis 集群</h3><p>主从存在高可用和分布式的问题，哨兵解决了高可用的问题，而集群就是终极方案，一举解决高可用和分布式问题</p>
+<p><strong>数据分区</strong></p>
+<p>数据分区 (或称数据分片) 是集群最核心的功能。集群将数据分散到多个节点，一方面 突破了 Redis 单机内存大小的限制，存储容量大大增加；另一方面 每个主节点都可以对外提供读服务和写服务，大大提高了集群的响应能力。</p>
+<p><strong>高可用</strong></p>
+<p> 集群支持主从复制和主节点的 自动故障转移 （与哨兵类似），当任一节点发生故障时，集群仍然可以对外提供服务。</p>
+<h3 id="集群中数据如何分区"><a href="#集群中数据如何分区" class="headerlink" title="集群中数据如何分区"></a>集群中数据如何分区</h3><p>分布式的存储中，要把数据集按照分区规则映射到多个节点，常见的数据分区规则三种</p>
+<p><strong>节点取余分区</strong></p>
+<p>节点取余分区，非常好理解，使用特定的数据，比如Redis的键，或者用户ID之类，对响应的hash值取余：hash（key）%N，来确定数据映射到哪一个节点上。<br>不过该方案最大的问题是，当节点数量变化时，如扩容或收缩节点，数据节点映射关 系需要重新计算，会导致数据的重新迁移</p>
+<p><strong>一致性哈希分区</strong></p>
+<p>将整个 Hash 值空间组织成一个虚拟的圆环，然后将缓存节点的 IP 地址或者主机名做 Hash 取值后，放置在这个圆环上。当我们需要确定某一个 Key 需 要存取到哪个节点上的时候，先对这个 Key 做同样的 Hash 取值，确定在环上的位置，然后按照顺时针方向在环上“行走”，遇到的第一个缓存节点就是要访问的节点。</p>
+<p>这种方式相比节点取余最大的好处在于加入和删除节点只影响哈希环中 相邻的节点，对其他节点无影响。<br>但它还是存在问题：</p>
+<ul>
+<li>缓存节点在圆环上分布不平均，会造成部分缓存节点的压力较大</li>
+<li>当某个节点故障时，这个节点所要承担的所有访问都会被顺移到另一个节点上，会对后面这个节点造成力。</li>
+</ul>
+<p><strong>虚拟槽分区</strong></p>
+<p>这个方案 一致性哈希分区的基础上，引入了 虚拟节点 的概念。Redis 集群使用的便是该方案，其中的虚拟节点称为 槽（slot）。槽是介于数据和实际节点之间的虚拟概念，每个实际节点包含一定数量的槽，每个槽包含哈希值在一定范围内的数据。</p>
+<p>在使用了槽的一致性哈希分区中，槽是数据管理和迁移的基本单位。槽解耦了数据和实际节点 之间的关系，增加或删除节点对系统的影响很小</p>
+<h3 id="Redis集群的原理"><a href="#Redis集群的原理" class="headerlink" title="Redis集群的原理"></a>Redis集群的原理</h3><p>Redis集群通过数据分区来实现数据的分布式存储，通过自动故障转移实现高可用</p>
+<p><strong>集群创建</strong></p>
+<ul>
+<li>设置节点 Redis集群一般由多个节点组成，节点数量至少为6个才能保证组成完整高可用的集群。每个节点需要开启配置cluster-enabled yes，让Redis运行在集群模式下</li>
+<li>节点握手 节点握手是指一批运行在集群模式下的节点通过Gossip协议彼此通信， 达到感知对方的过程。节点握手是集群彼此通信的第一步，由客户端发起命 令：cluster meet{ip}{port}。完成节点握手之后，一个个的Redis节点就组成了一个多节点的集群</li>
+<li>分配槽（slot） Redis集群把所有的数据映射到16384个槽中。每个节点对应若干个槽，只有当节点分配了槽，才能响应和这些槽关联的键命令。通过 cluster addslots命令为节点分配槽</li>
+</ul>
+<p><strong>故障转移</strong></p>
+<p>Redis集群的故障转移和哨兵的故障转移类似，但是Redis集群中所有的节点都要承担状态维护的任务。</p>
+<ul>
+<li><p>故障发现 Redis集群内节点通过ping&#x2F;pong消息实现节点通信，集群中每个节点都会定期向其他节点发送ping消息，接收节点回复pong 消息作为响应。如果在cluster-node-timeout时间内通信一直失败，则发送节 点会认为接收节点存在故障，把接收节点标记为主观下线（pfail）状态.当某个节点判断另一个节点主观下线后，相应的节点状态会跟随消息在集群内传播。通过Gossip消息传播，集群内节点不断收集到故障节点的下线报告。当 半数以上持有槽的主节点都标记某个节点是主观下线时。触发客观下线流程</p>
+</li>
+<li><p>故障恢复 故障节点变为客观下线后，如果下线节点是持有槽的主节点则需要在它 的从节点中选出一个替换它，从而保证集群的高可用</p>
+<ol>
+<li>资格检查 每个从节点都要检查最后与主节点断线时间，判断是否有资格替换故障的主节点。</li>
+<li>准备选举时间 当从节点符合故障转移资格后，更新触发故障选举的时间，只有到达该时间后才能执行后续流程。</li>
+<li>发起选举 当从节点定时任务检测到达故障选举时间（failover_auth_time）到达后，发起选举流程。</li>
+<li>选举投票 持有槽的主节点处理故障选举消息。投票过程其实是一个领导者选举的过程，如集群内有N个持有槽的主节 点代表有N张选票。由于在每个配置纪元内持有槽的主节点只能投票给一个 从节点，因此只能有一个从节点获得N&#x2F;2+1的选票，保证能够找出唯一的从节点。</li>
+<li>替换主节点 当从节点收集到足够的选票之后，触发替换主节点操作。</li>
+</ol>
+</li>
+</ul>
+<h3 id="部署Redis集群至少需要几个物理节点"><a href="#部署Redis集群至少需要几个物理节点" class="headerlink" title="部署Redis集群至少需要几个物理节点"></a>部署Redis集群至少需要几个物理节点</h3><p>在投票选举的环节，故障主节点也算在投票数内，假设集群内节点规模是3主3从，其中有2 个主节点部署在一台机器上，当这台机器宕机时，由于从节点无法收集到 3&#x2F;2+1个主节点选票将导致故障转移失败。这个问题也适用于故障发现环节。因此部署集群时所有主节点最少需要部署在3台物理机上才能避免单点问题。</p>
+<h3 id="集群的伸缩"><a href="#集群的伸缩" class="headerlink" title="集群的伸缩"></a>集群的伸缩</h3><p>Redis集群提供了灵活的节点扩容和收缩方案，可以在不影响集群对外服务的情况下，为集群添加节点进行扩容也可以下线部分节点进行缩容<br>其实，集群扩容和缩容的关键点，就在于槽和节点的对应关系，扩容和缩容就是将一部分槽和数据迁移给新节点</p>
+<h3 id="缓存击穿"><a href="#缓存击穿" class="headerlink" title="缓存击穿"></a>缓存击穿</h3><p>一个并发访问量比较大的key在某个时间过期，导致所有的请求直接打在DB上。</p>
+<ol>
+<li>加锁更新，⽐如请求查询A，发现缓存中没有，对A这个key加锁，同时去数据库查询数据，写⼊缓存，再返回给⽤户，这样后⾯的请求就可以从缓存中拿到数据了</li>
+<li>将过期时间组合写在value中，通过异步的⽅式不断的刷新过期时间，防⽌此类现象</li>
+</ol>
+<h3 id="缓存穿透"><a href="#缓存穿透" class="headerlink" title="缓存穿透"></a>缓存穿透</h3><p>缓存穿透指的查询缓存和数据库中都不存在的数据，这样每次请求直接打到数据库，就好像缓存不存在一样。</p>
+<p>缓存穿透将导致不存在的数据每次请求都要到存储层去查询，失去了缓存保护后端存储的意义</p>
+<p>缓存穿透可能会使后端存储负载加大，如果发现大量存储层空命中，可能就是出现了缓存穿透问题。</p>
+<ul>
+<li>自身业务代码问题</li>
+<li>恶意攻击，爬虫造成空命中</li>
+</ul>
+<p><strong>缓存空值&#x2F;默认值</strong></p>
+<p>一种方式是在数据库不命中之后，把一个空对象或者默认值保存到缓存，之后再访问这个数据，就会从缓存中获取，这样就保护了数据库。</p>
+<p>缓存空值有两大问题<br>    1. 空值做了缓存，意味着缓存层中存了更多的键，需要更多的内存空间（如果是攻击，问题更严重），比较有效的方法是针对这类数据设置一个较短的过期时间，让其自动剔除。<br>    2. 缓存层和存储层的数据会有一段时间窗口的不一致，可能会对业务有一定影响。<br>        例如过期时间设置为5分钟，如果此时存储层添加了这个数据，那此段时间就会出现缓存层和存储层数据的不一致。<br>        这时候可以利用消息队列或者其它异步方式清理缓存中的空对象。<br>    <strong>布隆过滤器</strong> 除了缓存空对象，我们还可以在存储和缓存之前，加一个布隆过滤器，做一层过滤</p>
+<h3 id="缓存雪崩"><a href="#缓存雪崩" class="headerlink" title="缓存雪崩"></a>缓存雪崩</h3><p>某⼀时刻发⽣⼤规模的缓存失效的情况，例如缓存服务宕机、大量key在同一时间过期，这样的后果就是⼤量的请求进来直接打到DB上，可能导致整个系统的崩溃，称为雪崩。</p>
+<ul>
+<li><p>提高缓存可用性</p>
+<ol>
+<li>集群部署：通过集群来提升缓存的可用性，可以利用Redis本身的Redis Cluster或者第三方集群方案如Codis等。</li>
+<li>多级缓存：设置多级缓存，第一级缓存失效的基础上，访问二级缓存，每一级缓存的失效时间都不同</li>
+</ol>
+</li>
+<li><p>过期时间</p>
+<ol>
+<li>均匀过期：为了避免大量的缓存在同一时间过期，可以把不同的 key 过期时间随机生成，避免过期时间太过集中。</li>
+<li>热点数据永不过期。</li>
+</ol>
+</li>
+<li><p>熔断降级</p>
+<ol>
+<li>服务熔断：当缓存服务器宕机或超时响应时，为了防止整个系统出现雪崩，暂时停止业务服务访问缓存系统。</li>
+<li>服务降级：当出现大量缓存失效，而且处在高并发高负荷的情况下，在业务系统内部暂时舍弃对一些非核心的接口和数据的请求，而直接返回一个提前准备好的 fallback（退路）错误处理信息</li>
+</ol>
+</li>
+</ul>
+<h3 id="布隆过滤器"><a href="#布隆过滤器" class="headerlink" title="布隆过滤器"></a>布隆过滤器</h3><p>布隆过滤器，它是一个连续的数据结构，每个存储位存储都是一个bit，即0或者1, 来标识数据是否存在。</p>
+<p>存储数据的时时候，使用K个不同的哈希函数将这个变量映射为bit列表的的K个点，把它们置为1</p>
+<h3 id="保证缓存和数据库数据的⼀致性"><a href="#保证缓存和数据库数据的⼀致性" class="headerlink" title="保证缓存和数据库数据的⼀致性"></a>保证缓存和数据库数据的⼀致性</h3><p>根据CAP理论，在保证可用性和分区容错性的前提下，无法保证一致性，所以缓存和数据库的绝对一致是不可能实现的，只能尽可能保存缓存和数据库的最终一致性</p>
+<p><strong>选择合适的缓存更新策略</strong></p>
+<ol>
+<li>删除缓存而不是更新缓存<br> 当一个线程对缓存的key进行写操作的时候，如果其它线程进来读数据库的时候，读到的就是脏数据，产生了数据不一致问题。<br> 相比较而言，删除缓存的速度比更新缓存的速度快很多，所用时间相对也少很多，读脏数据的概率也小很多</li>
+<li>先更数据，后删缓存<br> 更新数据，耗时可能在删除缓存的百倍以上。在缓存中不存在对应的key，数据库又没有完成更新的时候，如果有线程进来读取数据，并写入到缓存，那么在更新成功之后，这个key就是一个脏数据。<br> 毫无疑问，先删缓存，再更数据库，缓存中key不存在的时间的时间更长，有更大的概率会产生脏数据<br> 目前最流行的缓存读写策略cache-aside-pattern就是采用先更数据库，再删缓存的方式</li>
+</ol>
+<p><strong>缓存不一致处理</strong></p>
+<p>如果不是并发特别高，对缓存依赖性很强，其实一定程序的不一致是可以接受的。<br>但是如果对一致性要求比较高，那就得想办法保证缓存和数据库中数据一致。<br>缓存和数据库数据不一致常见的两种原因：</p>
+<ul>
+<li>缓存key删除失败</li>
+<li>并发导致写入了脏数据</li>
+</ul>
+<ol>
+<li>消息队列保证key被删除 可以引入消息队列，把要删除的key或者删除失败的key丢尽消息队列，利用消息队列的重试机制，重试删除对应的key。<br> 这种方案看起来不错，缺点是对业务代码有一定的侵入性</li>
+<li>数据库订阅+消息队列保证key被删除 可以用一个服务（比如阿里的 canal）去监听数据库的binlog，获取需要操作的数据。<br> 然后用一个公共的服务获取订阅程序传来的信息，进行缓存删除操作。<br> 这种方式降低了对业务的侵入，但其实整个系统的复杂度是提升的，适合基建完善的大厂</li>
+<li>延时双删防止脏数据 还有一种情况，是在缓存不存在的时候，写入了脏数据，这种情况在先删缓存，再更数据库的缓存更新策略下发生的比较多，解决方案是延时双删<br> 简单说，就是在第一次删除缓存之后，过了一段时间之后，再次删除缓存。<br> 这种方式的延时时间设置需要仔细考量和测试。</li>
+<li>设置缓存过期时间兜底 这是一个朴素但是有用的办法，给缓存设置一个合理的过期时间，即使发生了缓存数据不一致的问题，它也不会永远不一致下去，缓存过期的时候，自然又会恢复一致。</li>
+</ol>
+<h3 id="保证本地缓存和分布式缓存的一致"><a href="#保证本地缓存和分布式缓存的一致" class="headerlink" title="保证本地缓存和分布式缓存的一致"></a>保证本地缓存和分布式缓存的一致</h3><p>所谓本地缓存，就是对应服务器的内存缓存，比如Caffeine，分布式缓存基本就是采用Redis</p>
+<p>Redis缓存，数据库发生更新，直接删除缓存的key即可，因为对于应用系统而言，它是一种中心化的缓存</p>
+<p>但是本地缓存，它是非中心化的，散落在分布式服务的各个节点上，没法通过客户端的请求删除本地缓存的key，所以得想办法通知集群所有节点，删除对应的本地缓存key</p>
+<ol>
+<li>采用Redis本身的Pub&#x2F;Sub机制，分布式集群的所有节点订阅删除本地缓存频道，删除Redis缓存的节点，同事发布删除本地缓存消息，订阅者们订阅到消息后，删除对应的本地key。<br>但是Redis的发布订阅不是可靠的，不能保证一定删除成功。</li>
+<li>引入专业的消息队列，比如RocketMQ，保证消息的可靠性，但是增加了系统的复杂度。</li>
+<li>设置适当的过期时间兜底，本地缓存可以设置相对短一些的过期时间</li>
+</ol>
+<h3 id="处理热key"><a href="#处理热key" class="headerlink" title="处理热key"></a>处理热key</h3><p>什么是热Key？ 所谓的热key，就是访问频率比较的key。</p>
+<p>热门新闻事件或商品，这类key通常有大流量的访问，对存储这类信息的 Redis来说，是不小的压力</p>
+<p>假如Redis集群部署，热key可能会造成整体流量的不均衡，个别节点出现OPS过大的情况，极端情况下热点key甚至会超过 Redis本身能够承受的OPS</p>
+<p>对热key的处理，最关键的是对热点key的监控，可以从这些端来监控热点key</p>
+<pre><code class="hljs">- 客户端
+    客户端其实是距离key“最近”的地方，因为Redis命令就是从客户端发出的，例如在客户端设置全局字典（key和调用次数），每次调用Redis命令时，使用这个字典进行记录。
+
+- 代理端
+    像Twemproxy、Codis这些基于代理的Redis分布式架构，所有客户端的请求都是通过代理端完成的，可以在代理端进行收集统计。
+
+- Redis服务端
+    使用monitor命令统计热点key是很多开发和运维人员首先想到，monitor命令可以监控到Redis执行的所有命令。
+</code></pre>
+<h3 id="缓存预热"><a href="#缓存预热" class="headerlink" title="缓存预热"></a>缓存预热</h3><p>所谓缓存预热，就是提前把数据库里的数据刷到缓存里，通常有这些方法：</p>
+<ol>
+<li>直接写个缓存刷新页面或者接口，上线时手动操作</li>
+<li>数据量不大，可以在项目启动的时候自动进行加载</li>
+<li>定时任务刷新缓存.</li>
+</ol>
+<h3 id="Redis报内存不足"><a href="#Redis报内存不足" class="headerlink" title="Redis报内存不足"></a>Redis报内存不足</h3><ul>
+<li>修改配置文件 redis.conf 的 maxmemory 参数，增加 Redis 可用内存</li>
+<li>也可以通过命令set maxmemory动态设置内存上限</li>
+<li>修改内存淘汰策略，及时释放内存空间</li>
+<li>使用 Redis 集群模式，进行横向扩容。</li>
+</ul>
+<h3 id="Redis的过期数据回收策略"><a href="#Redis的过期数据回收策略" class="headerlink" title="Redis的过期数据回收策略"></a>Redis的过期数据回收策略</h3><p><strong>惰性删除</strong></p>
+<p>惰性删除指的是当我们查询key的时候才对key进⾏检测，如果已经达到过期时间，则删除。显然，他有⼀个缺点就是如果这些过期的key没有被访问，那么他就⼀直⽆法被删除，⽽且⼀直占⽤内存。</p>
+<p><strong>定期删除</strong></p>
+<p>定期删除指的是Redis每隔⼀段时间对数据库做⼀次检查，删除⾥⾯的过期key。由于不可能对所有key去做轮询来删除，所以Redis会每次随机取⼀些key去做检查和删除。</p>
+<h3 id="使用Redis-如何实现异步队列"><a href="#使用Redis-如何实现异步队列" class="headerlink" title="使用Redis 如何实现异步队列"></a>使用Redis 如何实现异步队列</h3><p><strong>使用list作为队列，lpush生产消息，rpop消费消息</strong></p>
+<p>这种方式，消费者死循环rpop从队列中消费消息。但是这样，即使队列里没有消息，也会进行rpop，会导致RedisCPU的消耗。</p>
+<p>可以通过让消费者休眠的方式的方式来处理，但是这样又会有消息的延迟问题</p>
+<p><strong>使用list作为队列，lpush生产消息，brpop消费消息</strong></p>
+<p>brpop是rpop的阻塞版本，list为空的时候，它会一直阻塞，直到list中有值或者超时。</p>
+<p>这种方式只能实现一对一的消息队列</p>
+<p><strong>使用Redis的pub&#x2F;sub来进行消息的发布&#x2F;订阅</strong></p>
+<p>发布&#x2F;订阅模式可以1：N的消息发布&#x2F;订阅。发布者将消息发布到指定的频道频道（channel），订阅相应频道的客户端都能收到消息</p>
+<p>但是这种方式不是可靠的，它不保证订阅者一定能收到消息，也不进行消息的存储。</p>
+<p>所以，一般的异步队列的实现还是交给专业的消息队列。</p>
+<h3 id="Redis-如何实现延时队列"><a href="#Redis-如何实现延时队列" class="headerlink" title="Redis 如何实现延时队列"></a>Redis 如何实现延时队列</h3><p><strong>使用zset，利用排序实现</strong></p>
+<p>可以使用 zset这个结构，用设置好的时间戳作为score进行排序，使用 zadd score1 value1 ….命令就可以一直往内存中生产消息。再利用 zrangebysocre 查询符合条件的所有待处理的任务，通过循环执行队列任务即可。</p>
+<h3 id="Redis-支持事务"><a href="#Redis-支持事务" class="headerlink" title="Redis 支持事务"></a>Redis 支持事务</h3><p>Redis提供了简单的事务，但它对事务ACID的支持并不完备</p>
+<p>multi命令代表事务开始，exec命令代表事务结束，它们之间的命令是原子顺序执行的：</p>
+<p>Redis事务的原理，是所有的指令在 exec 之前不执行，而是缓存在 服务器的一个事务队列中，服务器一旦收到 exec 指令，才开执行整个事务队列，执行完毕后一次性返回所有指令的运行结果。</p>
+<p>因为Redis执行命令是单线程的，所以这组命令顺序执行，而且不会被其它线程打断。</p>
+<p><strong>Redis事务的注意点有哪些</strong></p>
+<ul>
+<li>Redis 事务是不支持回滚的，不像 MySQL 的事务一样，要么都执行要么都不执行；</li>
+<li>Redis 服务端在执行事务的过程中，不会被其他客户端发送来的命令请求打断。直到事务命令全部执行完毕才会执行其他客户端的命令。</li>
+</ul>
+<p><strong>Redis 事务为什么不支持回滚</strong></p>
+<p>Redis 的事务不支持回滚。<br>如果执行的命令有语法错误，Redis 会执行失败，这些问题可以从程序层面捕获并解决。但是如果出现其他问题，则依然会继续执行余下的命令。<br>这样做的原因是因为回滚需要增加很多工作，而不支持回滚则可以保持简单、快速的特性。</p>
+<h3 id="Redis和Lua脚本的使用"><a href="#Redis和Lua脚本的使用" class="headerlink" title="Redis和Lua脚本的使用"></a>Redis和Lua脚本的使用</h3><p>Redis的事务功能比较简单，平时的开发中，可以利用Lua脚本来增强Redis的命令。</p>
+<p>Lua脚本能给开发人员带来这些好处：</p>
+<ul>
+<li>Lua脚本在Redis中是原子执行的，执行过程中间不会插入其他命令。</li>
+<li>Lua脚本可以帮助开发和运维人员创造出自己定制的命令，并可以将这些命令常驻在Redis内存中，实现复用的效果。</li>
+<li>Lua脚本可以将多条命令一次性打包，有效地减少网络开销。</li>
+</ul>
+<h3 id="Redis的管道"><a href="#Redis的管道" class="headerlink" title="Redis的管道"></a>Redis的管道</h3><p>Redis 提供三种将客户端多条命令打包发送给服务端执行的方式</p>
+<p>Pipelining(管道) 、 Transactions(事务) 和 Lua Scripts(Lua 脚本) </p>
+<p><strong>Pipelining（管道）</strong></p>
+<p>Redis 管道是三者之中最简单的，当客户端需要执行多条 redis 命令时，可以通过管道一次性将要执行的多条命令发送给服务端，其作用是为了降低 RTT(Round Trip Time) 对性能的影响，比如我们使用 nc 命令将两条指令发送给 redis 服务端。</p>
+<p>Redis 服务端接收到管道发送过来的多条命令后，会一直执命令，并将命令的执行结果进行缓存，直到最后一条命令执行完成，再所有命令的执行结果一次性返回给客户端 </p>
+<p><strong>Pipelining的优势</strong></p>
+<p>节省了RTT：将多条命令打包一次性发送给服务端，减少了客户端与服务端之间的网络调用次数<br>减少了上下文切换：当客户端&#x2F;服务端需要从网络中读写数据时，都会产生一次系统调用，系统调用是非常耗时的操作，其中设计到程序由用户态切换到内核态，再从内核态切换回用户态的过程。当我们执行 10 条 redis 命令的时候，就会发生 10 次用户态到内核态的上下文切换，但如果我们使用 Pipeining 将多条命令打包成一条一次性发送给服务端，就只会产生一次上下文切换。</p>
+<h3 id="Redis实现分布式锁"><a href="#Redis实现分布式锁" class="headerlink" title="Redis实现分布式锁"></a>Redis实现分布式锁</h3><p>Redis是分布式锁本质上要实现的目标就是在 Redis 里面占一个“茅坑”，当别的进程也要来占时，发现已经有人蹲在那里了，就只好放弃或者稍后再试。</p>
+<p><strong>V1：setnx命令</strong></p>
+<p>占坑一般是使用 setnx(set if not exists) 指令，只允许被一个客户端占坑。先来先占， 用完了，再调用 del 指令释放茅坑<br>但是有个问题，如果逻辑执行到中间出现异常了，可能会导致 del 指令没有被调用，这样就会陷入死锁，锁永远得不到释放。</p>
+<p><strong>V2:锁超时释放</strong></p>
+<p>所以在拿到锁之后，再给锁加上一个过期时间，比如 5s，这样即使中间出现异常也可以保证 5 秒之后锁会自动释放<br>但是以上逻辑还有问题。如果在 setnx 和 expire 之间服务器进程突然挂掉了，可能是因为机器掉电或者是被人为杀掉的，就会导致 expire 得不到执行，也会造成死锁。<br>这种问题的根源就在于 setnx 和 expire 是两条指令而不是原子指令。如果这两条指令可以一起执行就不会出现问题。</p>
+<p><strong>V3:set指令</strong></p>
+<p>这个问题在Redis 2.8 版本中得到了解决，这个版本加入了 set 指令的扩展参数，使得 setnx 和expire 指令可以一起执行<br>当然实际的开发，没人会去自己写分布式锁的命令，因为有专业的轮子——Redisson。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Redis/" class="category-chain-item">Redis</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Redis/" class="print-no-link">#Redis</a>
+      
+    </div>
+  
+</div>
+
+
+              
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2023/06/08/kotlin_flow_use/" title="Kotlin Flow 操作符">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Kotlin Flow 操作符</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2023/05/03/linux_install_docker/" title="Deepin安装docker">
+                        <span class="hidden-mobile">Deepin安装docker</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

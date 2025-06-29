@@ -1,0 +1,1045 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/imgs/ava/fluid.png">
+  <link rel="icon" href="/imgs/ava/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Chris">
+  <meta name="keywords" content="">
+  
+    <meta property="og:type" content="article">
+<meta property="og:title" content="u8g2学习">
+<meta property="og:url" content="https://lu-six-star.github.io/2024/11/28/embedded_u8g2/index.html">
+<meta property="og:site_name" content="星橙点点">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128095755886.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128101242216.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128101335532.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128101514170.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128101653379.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128101856376.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128102053087.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128102210927.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128102312040.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128102428232.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128102714955.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128102918760.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128103042786.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128155738230.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128155823179.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128160031656.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128160123258.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128161138011.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128162439123.png">
+<meta property="article:published_time" content="2024-11-28T01:56:10.000Z">
+<meta property="article:modified_time" content="2025-06-29T03:50:54.336Z">
+<meta property="article:author" content="Chris">
+<meta property="article:tag" content="u8g2">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://lu-six-star.github.io/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128095755886.png">
+  
+  
+  
+  <title>u8g2学习 - 星橙点点</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"lu-six-star.github.io","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>星橙点点</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="u8g2学习"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2024-11-28 09:56" pubdate>
+          2024年11月28日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          14k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          119 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">u8g2学习</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <!-- embedded_u8g2-->
+
+<span id="more"></span>
+
+<p>转载自<a target="_blank" rel="noopener" href="https://blog.csdn.net/dpjcn1990/article/details/92831760">https://blog.csdn.net/dpjcn1990/article/details/92831760</a></p>
+<h3 id="u8g2学习"><a href="#u8g2学习" class="headerlink" title="u8g2学习"></a>u8g2学习</h3><p>Arduino平台上使用最广泛的OLED库</p>
+<p><strong>像素点点阵</strong></p>
+<p>OLED其实就是一个M x n 的像素点阵，想显示什么就得把具体位置的像素点亮起来。对于每一个像素点，有可能是1点亮，也有可能是0点亮； </p>
+<p><strong>坐标系</strong></p>
+<p><img src="/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128095755886.png" srcset="/img/loading.gif" lazyload></p>
+<p>在坐标系中，左上角是原点，向右是X轴，向下是Y轴。</p>
+<h3 id="U8g2是什么"><a href="#U8g2是什么" class="headerlink" title="U8g2是什么"></a>U8g2是什么</h3><p>U8g2是嵌入式设备的单色图形库，一句话简单明了。主要应用于嵌入式设备，包括我们常见的单片机；</p>
+<h3 id="U8g2支持的显示控制器"><a href="#U8g2支持的显示控制器" class="headerlink" title="U8g2支持的显示控制器"></a>U8g2支持的显示控制器</h3><p>    U8g2支持单色OLED和LCD，包括以下控制器：SSD1305，SSD1306，SSD1309，SSD1322，SSD1325，SSD1327，SSD1329，SSD1606，SSD1607，SH1106，SH1107，SH1108，SH1122，T6963，RA8835，LC7981，PCD8544，PCF8812，HX1230 ，UC1601，UC1604，UC1608，UC1610，UC1611，UC1701，ST7565，ST7567，ST7588，ST75256，NT7534，IST3020，ST7920，LD7032，KS0108，SED1520，SBN1661，IL3820，MAX7219等</p>
+<p>可以说，基本上主流的显示控制器都支持，比如我们常见的SSD1306 12864</p>
+<h3 id="U8g2支持的Arduino主板"><a href="#U8g2支持的Arduino主板" class="headerlink" title="U8g2支持的Arduino主板"></a>U8g2支持的Arduino主板</h3><p>可以说基本上所有Arduino API的主板都得到U8g2的支持</p>
+<ul>
+<li>Aruino Zero，Uno，Mega，Due，101，MKR Zero以及所有其他Arduino官方主板</li>
+<li>基于Arduino平台的STM32</li>
+<li>基于Arduino平台的ESP8266和ESP32</li>
+<li>甚至其他不知名的基于Arduino平台的开发板</li>
+</ul>
+<h3 id="U8g2的优势"><a href="#U8g2的优势" class="headerlink" title="U8g2的优势"></a>U8g2的优势</h3><p>为什么要运用U8g2库？也就是说U8g2库能带给我们什么样的开发便利</p>
+<ul>
+<li>U8g2库平台支持性好，基本上支持绝大部分Arduino开发板；</li>
+<li>U8g2库显示控制器支持性好，基本上市面上的OLED都完美支持；</li>
+<li>U8g2库 API众多，特别支持了中文，支持了不同字体，这是一个对于开发者俩说不小的福利。</li>
+</ul>
+<h3 id="U8g2库函数详解"><a href="#U8g2库函数详解" class="headerlink" title="U8g2库函数详解"></a>U8g2库函数详解</h3><p><strong>基本函数</strong></p>
+<p><strong>u8g2.begin() —— 构造U8G2</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 初始化U8g2库</span><br><span class="hljs-comment"> * @Note 关联方法 initDisplay clearDisplay setPowerSave</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">bool</span> <span class="hljs-title function_">U8G2::begin</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br></code></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">bool</span> <span class="hljs-title function_">begin</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> &#123;<br><span class="hljs-comment">/* note: call to u8x8_utf8_init is not required here, this is done in the setup procedures before */</span><br>   initDisplay(); <span class="hljs-comment">//初始化显示器</span><br>   clearDisplay();  <span class="hljs-comment">// 重置清屏</span><br>   setPowerSave(<span class="hljs-number">0</span>); <span class="hljs-comment">//唤醒屏幕</span><br>   <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+
+<p><strong>u8g2.beginSimple() —— 构造U8G2</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 简单初始化U8g2库</span><br><span class="hljs-comment"> * @Note 关联方法 beginSimple</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::beginSimple</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>;<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">beginSimple</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> &#123;<br><span class="hljs-comment">/* does not clear the display and does not wake up the display */</span><br><span class="hljs-comment">/* user is responsible for calling clearDisplay() and setPowerSave(0) */</span><br>   initDisplay();<span class="hljs-comment">//初始化显示器</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+
+<p><strong>u8g2.initDisplay() —— 初始化显示控制器</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 初始化显示控制器</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::initDisplay</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>这个方法不需要我们单独调用，会在begin函数主动调用一次</li>
+</ul>
+<p><strong>u8g2.clearDisplay() —— 清除屏幕内容</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 清除屏幕</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::clearDisplay</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>这个方法不需要我们单独调用，会在begin函数主动调用一次，我们主要理解即可；</li>
+<li>不要在 firstPage 和 nextPage 函数之间调用该方法；</li>
+</ul>
+<p><strong>u8g2.setPowerSave() —— 是否开启省电模式</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 清除显示缓冲区</span><br><span class="hljs-comment"> * @param is_enable</span><br><span class="hljs-comment"> *        1 表示启用显示器的省电模式，屏幕上看不到任何东西</span><br><span class="hljs-comment"> *        0 表示禁用省电模式</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::setPowerSave</span><span class="hljs-params">(<span class="hljs-type">uint8_t</span> is_enable)</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>不管是启用还是禁用，显示器需要的内存消耗是不会变的，说到底就是为了关闭屏幕，做到省电；</li>
+<li>所以这里就可以理解为什么初始化需要 setPowerSave(0);</li>
+</ul>
+<p><strong>u8g2.clear() —— 清除操作</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 清除屏幕显示，清除缓冲区，光标回到左上角原点位置（0，0）</span><br><span class="hljs-comment"> * @Note 关联方法 home clearDisplay clearBuffer</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::clear</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br></code></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">clear</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> &#123; <br>   home(); <span class="hljs-comment">//回到原点</span><br>   clearDisplay(); <span class="hljs-comment">//清除屏幕上的显示</span><br>   clearBuffer();  <span class="hljs-comment">//清除缓冲区</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+
+<p><strong>u8g2.clearBuffer() —— 清除缓冲区</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 清除内存中数据缓冲区</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::clearBuffer</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>一般这个函数是与sendBuffer函数配对使用</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">loop</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> &#123;<br>  u8g2.clearBuffer();<br>  <span class="hljs-comment">// ... write something to the buffer </span><br>  u8g2.sendBuffer();<br>  delay(<span class="hljs-number">1000</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+
+<p><strong>u8g2.disableUTF8Print() —— 禁用 UTF8打印</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 禁用Arduino平台下支持输出UTF8字符集，默认是开启</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::disableUTF8Print</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>我们的中文字符就是UTF8；</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">setup</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> &#123;<br>  u8g2.begin();<br>  u8g2.enableUTF8Print();		<span class="hljs-comment">// enable UTF8 support for the Arduino print() function</span><br>&#125;<br><span class="hljs-type">void</span> <span class="hljs-title function_">loop</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> &#123;<br>  u8g2.setFont(u8g2_font_unifont_t_chinese2);  <span class="hljs-comment">// use chinese2 for all the glyphs of &quot;你好世界&quot;</span><br>  u8g2.firstPage();<br>  <span class="hljs-keyword">do</span> &#123;<br>    u8g2.setCursor(<span class="hljs-number">0</span>, <span class="hljs-number">40</span>);<br>    u8g2.print(<span class="hljs-string">&quot;你好世界&quot;</span>);		<span class="hljs-comment">// Chinese &quot;Hello World&quot; </span><br>  &#125; <span class="hljs-keyword">while</span> ( u8g2.nextPage() );<br>  delay(<span class="hljs-number">1000</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+
+<p><strong>u8g2.home() —— 重置显示光标的位置</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 重置显示光标的位置，回到原点（0，0）</span><br><span class="hljs-comment"> * @Note 关联方法 print clear</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::home</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br></code></pre></td></tr></table></figure>
+
+
+
+
+
+<hr>
+<p><strong>绘制相关函数</strong></p>
+<p> <strong>u8g2.drawBox() —— 画实心方形</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 画实心方形，左上角坐标为(x,y),宽度为w，高度为h</span><br><span class="hljs-comment"> * @param x 左上角的x坐标</span><br><span class="hljs-comment"> * @param y 左上角的y坐标</span><br><span class="hljs-comment"> * @param w 方形的宽度</span><br><span class="hljs-comment"> * @param h 方形的高度</span><br><span class="hljs-comment"> * @Note 关联方法 drawFrame setDrawColor</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::drawBox</span><span class="hljs-params">(<span class="hljs-type">u8g2_uint_t</span> x, <span class="hljs-type">u8g2_uint_t</span> y, <span class="hljs-type">u8g2_uint_t</span> w, <span class="hljs-type">u8g2_uint_t</span> h)</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>如果支持绘制颜色（也就是不是单色显示器），那么由setDrawColor设置</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">u8g2.drawBox(<span class="hljs-number">3</span>,<span class="hljs-number">7</span>,<span class="hljs-number">25</span>,<span class="hljs-number">15</span>);<br></code></pre></td></tr></table></figure>
+
+<p><img src="/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128101242216.png" srcset="/img/loading.gif" lazyload></p>
+<p><strong>u8g2.drawCircle() —— 画空心圆</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 画空心圆，圆心坐标为(x0,y0),半径为rad</span><br><span class="hljs-comment"> * @param x0 圆点的x坐标</span><br><span class="hljs-comment"> * @param y0 圆点的y坐标</span><br><span class="hljs-comment"> * @param rad 圆形的半径</span><br><span class="hljs-comment"> * @param opt 圆形选项</span><br><span class="hljs-comment"> *        U8G_DRAW_ALL 整个圆</span><br><span class="hljs-comment"> *        U8G2_DRAW_UPPER_RIGHT 右上部分的圆弧</span><br><span class="hljs-comment"> *        U8G2_DRAW_UPPER_LEFT  左上部分的圆弧</span><br><span class="hljs-comment"> *        U8G2_DRAW_LOWER_LEFT  左下部分的圆弧</span><br><span class="hljs-comment"> *        U8G2_DRAW_LOWER_RIGHT 右下部分的圆弧</span><br><span class="hljs-comment"> *        选项可以通过 | 操作符来组合</span><br><span class="hljs-comment"> * @Note 关联方法 drawDisc setDrawColor</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::drawCircle</span><span class="hljs-params">(<span class="hljs-type">u8g2_uint_t</span> x0, <span class="hljs-type">u8g2_uint_t</span> y0, <span class="hljs-type">u8g2_uint_t</span> rad, <span class="hljs-type">uint8_t</span> opt = U8G2_DRAW_ALL)</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>如果支持绘制颜色（也就是不是单色显示器），那么由setDrawColor设置；</li>
+<li>直径等于2rad + 1；</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">u8g2.drawCircle(<span class="hljs-number">20</span>, <span class="hljs-number">25</span>, <span class="hljs-number">10</span>, U8G2_DRAW_ALL);<br></code></pre></td></tr></table></figure>
+
+<p><img src="/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128101335532.png" srcset="/img/loading.gif" lazyload></p>
+<p><strong>u8g2.drawDisc() —— 画实心圆</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 画实心圆，圆心坐标为(x0,y0),半径为rad</span><br><span class="hljs-comment"> * @param x0 圆点的x坐标</span><br><span class="hljs-comment"> * @param y0 圆点的y坐标</span><br><span class="hljs-comment"> * @param rad 圆形的半径</span><br><span class="hljs-comment"> * @param opt 圆形选项</span><br><span class="hljs-comment"> *        U8G_DRAW_ALL 整个圆</span><br><span class="hljs-comment"> *        U8G2_DRAW_UPPER_RIGHT 右上部分的圆弧</span><br><span class="hljs-comment"> *        U8G2_DRAW_UPPER_LEFT  左上部分的圆弧</span><br><span class="hljs-comment"> *        U8G2_DRAW_LOWER_LEFT  左下部分的圆弧</span><br><span class="hljs-comment"> *        U8G2_DRAW_LOWER_RIGHT 右下部分的圆弧</span><br><span class="hljs-comment"> *       选项可以通过 | 操作符来组合</span><br><span class="hljs-comment"> * @Note 关联方法 drawCircle setDrawColor</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::drawDisc</span><span class="hljs-params">(<span class="hljs-type">u8g2_uint_t</span> x0, <span class="hljs-type">u8g2_uint_t</span> y0, <span class="hljs-type">u8g2_uint_t</span> rad, <span class="hljs-type">uint8_t</span> opt = U8G_DRAW_ALL)</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>如果支持绘制颜色（也就是不是单色显示器），那么由setDrawColor设置；</li>
+<li>直径等于2rad + 1；</li>
+</ul>
+<p><strong>u8g2.drawEllipse() —— 画空心椭圆</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 画空心椭圆，圆心坐标为(x0,y0),半径为rad</span><br><span class="hljs-comment"> * @param x0 圆点的x坐标</span><br><span class="hljs-comment"> * @param y0 圆点的y坐标</span><br><span class="hljs-comment"> * @param rx 椭圆形水平x方向的半径</span><br><span class="hljs-comment"> * @param ry 椭圆形竖直y方向的半径</span><br><span class="hljs-comment"> * @param opt 圆形选项</span><br><span class="hljs-comment"> *        U8G_DRAW_ALL 整个椭圆</span><br><span class="hljs-comment"> *        U8G2_DRAW_UPPER_RIGHT 右上部分的圆弧</span><br><span class="hljs-comment"> *        U8G2_DRAW_UPPER_LEFT  左上部分的圆弧</span><br><span class="hljs-comment"> *        U8G2_DRAW_LOWER_LEFT  左下部分的圆弧</span><br><span class="hljs-comment"> *        U8G2_DRAW_LOWER_RIGHT 右下部分的圆弧</span><br><span class="hljs-comment"> *        选项可以通过 | 操作符来组合</span><br><span class="hljs-comment"> * @Note 关联方法 drawCircle</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::drawEllipse</span><span class="hljs-params">(<span class="hljs-type">u8g2_uint_t</span> x0, <span class="hljs-type">u8g2_uint_t</span> y0, <span class="hljs-type">u8g2_uint_t</span> rx, <span class="hljs-type">u8g2_uint_t</span> ry, <span class="hljs-type">uint8_t</span> opt)</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>rx*ry 在8位模式的u8g2必须小于512</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">u8g2.drawEllipse(<span class="hljs-number">20</span>, <span class="hljs-number">25</span>, <span class="hljs-number">15</span>, <span class="hljs-number">10</span>, U8G2_DRAW_ALL);<br></code></pre></td></tr></table></figure>
+
+<p><img src="/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128101514170.png" srcset="/img/loading.gif" lazyload></p>
+<p><strong>u8g2.drawFilledEllipse() —— 画实心椭圆</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 画实心椭圆，圆心坐标为(x0,y0),半径为rad</span><br><span class="hljs-comment"> * @param x0 圆点的x坐标</span><br><span class="hljs-comment"> * @param y0 圆点的y坐标</span><br><span class="hljs-comment"> * @param rx 椭圆形水平x方向的半径</span><br><span class="hljs-comment"> * @param ry 椭圆形竖直y方向的半径</span><br><span class="hljs-comment"> * @param opt 圆形选项</span><br><span class="hljs-comment"> *        U8G_DRAW_ALL 整个椭圆</span><br><span class="hljs-comment"> *        U8G2_DRAW_UPPER_RIGHT 右上部分的圆弧</span><br><span class="hljs-comment"> *        U8G2_DRAW_UPPER_LEFT  左上部分的圆弧</span><br><span class="hljs-comment"> *        U8G2_DRAW_LOWER_LEFT  左下部分的圆弧</span><br><span class="hljs-comment"> *        U8G2_DRAW_LOWER_RIGHT 右下部分的圆弧</span><br><span class="hljs-comment"> *        选项可以通过 | 操作符来组合</span><br><span class="hljs-comment"> * @Note 关联方法 drawCircle</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::drawFilledEllipse</span><span class="hljs-params">(<span class="hljs-type">u8g2_uint_t</span> x0, <span class="hljs-type">u8g2_uint_t</span> y0, <span class="hljs-type">u8g2_uint_t</span> rx, <span class="hljs-type">u8g2_uint_t</span> ry, <span class="hljs-type">uint8_t</span> opt)</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>rx*ry 在8位模式的u8g2必须小于512</li>
+</ul>
+<p><strong>u8g2.drawFrame() —— 画空心方形</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 画空心方形，左上角坐标为(x,y),宽度为w，高度为h</span><br><span class="hljs-comment"> * @param x 左上角的x坐标</span><br><span class="hljs-comment"> * @param y 左上角的y坐标</span><br><span class="hljs-comment"> * @param w 方形的宽度</span><br><span class="hljs-comment"> * @param h 方形的高度</span><br><span class="hljs-comment"> * @Note 关联方法 setDrawColor</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::drawFrame</span><span class="hljs-params">(<span class="hljs-type">u8g2_uint_t</span> x, <span class="hljs-type">u8g2_uint_t</span> y, <span class="hljs-type">u8g2_uint_t</span> w, <span class="hljs-type">u8g2_uint_t</span> h)</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>如果支持绘制颜色（也就是不是单色显示器），那么由setDrawColor设置</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">u8g2.drawFrame(<span class="hljs-number">3</span>,<span class="hljs-number">7</span>,<span class="hljs-number">25</span>,<span class="hljs-number">15</span>);<br></code></pre></td></tr></table></figure>
+
+<p><img src="/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128101653379.png" srcset="/img/loading.gif" lazyload></p>
+<p><strong>u8g2.drawGlyph() —— 绘制字体字集的符号</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 绘制字体字集里面定义的符号</span><br><span class="hljs-comment"> * @param x 左上角的x坐标</span><br><span class="hljs-comment"> * @param y 左上角的y坐标</span><br><span class="hljs-comment"> * @param encoding 字符的unicode值</span><br><span class="hljs-comment"> * @Note 关联方法 setFont</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::drawGlyph</span><span class="hljs-params">(<span class="hljs-type">u8g2_uint_t</span> x, <span class="hljs-type">u8g2_uint_t</span> y, <span class="hljs-type">uint16_t</span> encoding)</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>U8g2支持16位以内的unicode字符集，也就是说encoding的范围为0-65535，drawGlyph方法只能绘制存在于所使用的字体字集中的unicode值；</li>
+<li>这个绘制方法依赖于当前的字体模式和绘制颜色</li>
+</ul>
+<p> <strong>u8g2.drawHLine() —— 绘制水平线</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 绘制水平线</span><br><span class="hljs-comment"> * @param x 左上角的x坐标</span><br><span class="hljs-comment"> * @param y 左上角的y坐标</span><br><span class="hljs-comment"> * @param w 水平线的长度</span><br><span class="hljs-comment"> * @Note 关联方法 setDrawColor</span><br><span class="hljs-comment"> */</span><br> <span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::drawHLine</span><span class="hljs-params">(<span class="hljs-type">u8g2_uint_t</span> x, <span class="hljs-type">u8g2_uint_t</span> y, <span class="hljs-type">u8g2_uint_t</span> w)</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>如果支持绘制颜色（也就是不是单色显示器），那么由setDrawColor设置</li>
+</ul>
+<p><strong>u8g2.drawLine() —— 两点之间绘制线</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 绘制线，从坐标(x0,y0) 到(x1,y1)</span><br><span class="hljs-comment"> * @param x0 端点0的x坐标</span><br><span class="hljs-comment"> * @param y0 端点0的y坐标</span><br><span class="hljs-comment"> * @param x1 端点1的x坐标</span><br><span class="hljs-comment"> * @param y1 端点1的y坐标</span><br><span class="hljs-comment"> * @Note 关联方法 setDrawColor</span><br><span class="hljs-comment"> */</span><br> <span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::drawLine</span><span class="hljs-params">(<span class="hljs-type">u8g2_uint_t</span> x0, <span class="hljs-type">u8g2_uint_t</span> y0, <span class="hljs-type">u8g2_uint_t</span> x1, <span class="hljs-type">u8g2_uint_t</span> y1)</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>如果支持绘制颜色（也就是不是单色显示器），那么由setDrawColor设置；</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">u8g2.drawLine(<span class="hljs-number">20</span>, <span class="hljs-number">5</span>, <span class="hljs-number">5</span>, <span class="hljs-number">32</span>);<br></code></pre></td></tr></table></figure>
+
+<p><img src="/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128101856376.png" srcset="/img/loading.gif" lazyload></p>
+<p><strong>u8g2.drawPixel() —— 绘制像素点</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 绘制像素点，坐标(x,y)</span><br><span class="hljs-comment"> * @param x 像素点的x坐标</span><br><span class="hljs-comment"> * @param y 像素点的y坐标</span><br><span class="hljs-comment"> * @Note 关联方法 setDrawColor</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::drawPixel</span><span class="hljs-params">(<span class="hljs-type">u8g2_uint_t</span> x, <span class="hljs-type">u8g2_uint_t</span> y)</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>如果支持绘制颜色（也就是不是单色显示器），那么由setDrawColor设置；</li>
+<li>你会发现很多绘制方法的底层都是调用drawPixel，毕竟像素属于最小颗粒度；</li>
+<li>我们可以利用这个绘制方法自定义自己的图形显示；</li>
+</ul>
+<p><strong>u8g2.drawRBox() —— 绘制圆角实心方形</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 绘制圆角实心方形，左上角坐标为(x,y),宽度为w，高度为h，圆角半径为r</span><br><span class="hljs-comment"> * @param x 左上角的x坐标</span><br><span class="hljs-comment"> * @param y 左上角的y坐标</span><br><span class="hljs-comment"> * @param w 方形的宽度</span><br><span class="hljs-comment"> * @param h 方形的高度</span><br><span class="hljs-comment"> * @param r 圆角半径</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::drawRBox</span><span class="hljs-params">(<span class="hljs-type">u8g2_uint_t</span> x, <span class="hljs-type">u8g2_uint_t</span> y, <span class="hljs-type">u8g2_uint_t</span> w, <span class="hljs-type">u8g2_uint_t</span> h, <span class="hljs-type">u8g2_uint_t</span> r)</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>如果支持绘制颜色（也就是不是单色显示器），那么由setDrawColor设置；</li>
+<li>要求，w &gt;&#x3D; 2*(r+1) 并且 h &gt;&#x3D; 2*(r+1)，这是显而易见的限制；</li>
+</ul>
+<p><strong>u8g2.drawRFrame() —— 绘制圆角空心方形</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 绘制圆角空心方形，左上角坐标为(x,y),宽度为w，高度为h，圆角半径为r</span><br><span class="hljs-comment"> * @param x 左上角的x坐标</span><br><span class="hljs-comment"> * @param y 左上角的y坐标</span><br><span class="hljs-comment"> * @param w 方形的宽度</span><br><span class="hljs-comment"> * @param h 方形的高度</span><br><span class="hljs-comment"> * @param r 圆角半径</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::drawRFrame</span><span class="hljs-params">(<span class="hljs-type">u8g2_uint_t</span> x, <span class="hljs-type">u8g2_uint_t</span> y, <span class="hljs-type">u8g2_uint_t</span> w, <span class="hljs-type">u8g2_uint_t</span> h, <span class="hljs-type">u8g2_uint_t</span> r)</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>如果支持绘制颜色（也就是不是单色显示器），那么由setDrawColor设置；</li>
+<li>要求，w &gt;&#x3D; 2*(r+1) 并且 h &gt;&#x3D; 2*(r+1)，这是显而易见的限制</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">u8g2.drawRFrame(<span class="hljs-number">20</span>,<span class="hljs-number">15</span>,<span class="hljs-number">30</span>,<span class="hljs-number">22</span>,<span class="hljs-number">7</span>);<br></code></pre></td></tr></table></figure>
+
+<p><img src="/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128102053087.png" srcset="/img/loading.gif" lazyload></p>
+<p><strong>u8g2.drawStr() —— 绘制字符串</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 绘制字符串</span><br><span class="hljs-comment"> * @param x 左上角的x坐标</span><br><span class="hljs-comment"> * @param y 左上角的y坐标</span><br><span class="hljs-comment"> * @param s 绘制字符串内容</span><br><span class="hljs-comment"> * @return 字符串的长度</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">u8g2_uint_t</span> <span class="hljs-title function_">U8g2::drawStr</span><span class="hljs-params">(<span class="hljs-type">u8g2_uint_t</span> x, <span class="hljs-type">u8g2_uint_t</span> y, <span class="hljs-type">const</span> <span class="hljs-type">char</span> *s)</span> <br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>需要先设置字体，调用setFont方法；</li>
+<li>这个方法不能绘制encoding超过256的，超过256需要用drawUTF8或者drawGlyph；说白了就是一般用来显示英文字符；</li>
+<li>x，y属于字符串左下角的坐标；</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c">u8g2.setFont(u8g2_font_ncenB14_tr);<br>u8g2.drawStr(<span class="hljs-number">0</span>,<span class="hljs-number">15</span>,<span class="hljs-string">&quot;Hello World!&quot;</span>);<br></code></pre></td></tr></table></figure>
+
+<p><img src="/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128102210927.png" srcset="/img/loading.gif" lazyload></p>
+<p> <strong>u8g2.drawTriangle() —— 绘制实心三角形</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 绘制实心三角形，定点坐标分别为(x0,y0),(x1,y1),(x2,y2)</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::drawTriangle</span><span class="hljs-params">(<span class="hljs-type">int16_t</span> x0, <span class="hljs-type">int16_t</span> y0, <span class="hljs-type">int16_t</span> x1, <span class="hljs-type">int16_t</span> y1, <span class="hljs-type">int16_t</span> x2, <span class="hljs-type">int16_t</span> y2)</span> <br></code></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">u8g2.drawTriangle(<span class="hljs-number">20</span>,<span class="hljs-number">5</span>, <span class="hljs-number">27</span>,<span class="hljs-number">50</span>, <span class="hljs-number">5</span>,<span class="hljs-number">32</span>);<br></code></pre></td></tr></table></figure>
+
+<p><img src="/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128102312040.png" srcset="/img/loading.gif" lazyload></p>
+<p><strong>u8g2.drawUTF8() —— 绘制UTF8编码的字符</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 绘制UTF8编码的字符串</span><br><span class="hljs-comment"> * @param x 字符串在屏幕上的左下角x坐标</span><br><span class="hljs-comment"> * @param y 字符串在屏幕上的左下角y坐标</span><br><span class="hljs-comment"> * @param s 需要绘制的UTF-8编码字符串</span><br><span class="hljs-comment"> * @return 返回字符串的长度</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">u8g2_uint_t</span> <span class="hljs-title function_">U8g2::drawUTF8</span><span class="hljs-params">(<span class="hljs-type">u8g2_uint_t</span> x, <span class="hljs-type">u8g2_uint_t</span> y, <span class="hljs-type">const</span> <span class="hljs-type">char</span> *s)</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>使用该方法，有两个前提。首先是你的编译器需要支持UTF-8编码，对于绝大部分Arduino板子已经支持；其次，显示的字符串需要存为“UTF-8”编码，Arduino IDE上默认支持；</li>
+<li>该方法需要依赖于fontMode（setFont）以及drawing Color，也就是说如果你传进来的字符串编码必须在font定义里面；</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c">u8g2.setFont(u8g2_font_unifont_t_symbols);<br>u8g2.drawUTF8(<span class="hljs-number">5</span>, <span class="hljs-number">20</span>, <span class="hljs-string">&quot;Snowman: ☃&quot;</span>);<br></code></pre></td></tr></table></figure>
+
+<p><img src="/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128102428232.png" srcset="/img/loading.gif" lazyload></p>
+<p><strong>u8g2.drawVLine() —— 绘制竖直线</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 绘制竖直线</span><br><span class="hljs-comment"> * @param x 左上角坐标x</span><br><span class="hljs-comment"> * @param y 左上角坐标y</span><br><span class="hljs-comment"> * @param h 高度</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::drawVLine</span><span class="hljs-params">(<span class="hljs-type">u8g2_uint_t</span> x, <span class="hljs-type">u8g2_uint_t</span> y, <span class="hljs-type">u8g2_uint_t</span> h)</span> <br></code></pre></td></tr></table></figure>
+
+
+
+<p><strong>u8g2.drawXBM()&#x2F;drawXBMP() —— 绘制图像</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 绘制图像</span><br><span class="hljs-comment"> * @param x 左上角坐标x</span><br><span class="hljs-comment"> * @param y 左上角坐标y</span><br><span class="hljs-comment"> * @param w 图形宽度</span><br><span class="hljs-comment"> * @param h 图形高度</span><br><span class="hljs-comment"> * @param bitmap 图形内容</span><br><span class="hljs-comment"> * @Note 关联方法 setBitmapMode</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::drawXBM</span><span class="hljs-params">(<span class="hljs-type">u8g2_uint_t</span> x, <span class="hljs-type">u8g2_uint_t</span> y, <span class="hljs-type">u8g2_uint_t</span> w, <span class="hljs-type">u8g2_uint_t</span> h, <span class="hljs-type">const</span> <span class="hljs-type">uint8_t</span> *bitmap)</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::drawXBMP</span><span class="hljs-params">(<span class="hljs-type">u8g2_uint_t</span> x, <span class="hljs-type">u8g2_uint_t</span> y, <span class="hljs-type">u8g2_uint_t</span> w, <span class="hljs-type">u8g2_uint_t</span> h, <span class="hljs-type">const</span> <span class="hljs-type">uint8_t</span> *bitmap)</span> <br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>drawXBM和drawXBMP区别在于 XBMP支持PROGMEM</li>
+</ul>
+<p><strong>u8g2.firstPage()&#x2F;nextPage() —— 绘制命令</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 绘制图像</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::firstPage</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br><span class="hljs-type">uint8_t</span> <span class="hljs-title function_">U8G2::nextPage</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><p>firstPage方法会把当前页码位置变成0；</p>
+</li>
+<li><p>修改内容处于firstPage和nextPage之间，每次都是重新渲染所有内容；</p>
+</li>
+<li><p>该方法消耗的ram空间，比sendBuffer消耗的ram空间要少；</p>
+</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c">u8g2.firstPage();<br><span class="hljs-keyword">do</span> &#123;<br>  <span class="hljs-comment">/* all graphics commands have to appear within the loop body. */</span>    <br>  u8g2.setFont(u8g2_font_ncenB14_tr);<br>  u8g2.drawStr(<span class="hljs-number">0</span>,<span class="hljs-number">20</span>,<span class="hljs-string">&quot;Hello World!&quot;</span>);<br>&#125; <span class="hljs-keyword">while</span> ( u8g2.nextPage() );<br></code></pre></td></tr></table></figure>
+
+
+
+<p><strong>u8g2.print() —— 绘制内容</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 绘制内容</span><br><span class="hljs-comment"> * @Note 关联方法  setFont setCursor enableUTF8Print</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::print</span><span class="hljs-params">(...)</span><br></code></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c">u8g2.setFont(u8g2_font_ncenB14_tr);<br>u8g2.setCursor(<span class="hljs-number">0</span>, <span class="hljs-number">15</span>);<br>u8g2.print(<span class="hljs-string">&quot;Hello World!&quot;</span>);<br></code></pre></td></tr></table></figure>
+
+<p><img src="/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128102714955.png" srcset="/img/loading.gif" lazyload></p>
+<p><strong>u8g2.sendBuffer() —— 绘制缓冲区的内容</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 绘制缓冲区的内容</span><br><span class="hljs-comment"> * @Note 关联方法  clearBuffer</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::sendBuffer</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>sendBuffer的RAM占用空间大，需要结合构造器的buffer选项使用；</li>
+<li>不管是fistPage、nextPage还是sendBuffer，都涉及到一个叫做 current page position的概念；</li>
+</ul>
+<hr>
+<p><strong>显示配置相关函数</strong></p>
+<p> <strong>u8g2.getAscent() —— 获取基准线以上的高度</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 获取基准线以上的高度</span><br><span class="hljs-comment"> * @return 返回高度值</span><br><span class="hljs-comment"> * @Note 关联方法  setFont getDescent setFontRefHeightAll</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">int8_t</span> <span class="hljs-title function_">U8G2::getAscent</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>跟字体有关（setFont）</li>
+</ul>
+<p><img src="/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128102918760.png" srcset="/img/loading.gif" lazyload></p>
+<p> <strong>u8g2.getDescent() —— 获取基准线以下的高度</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 获取基准线以下的高度</span><br><span class="hljs-comment"> * @return 返回高度值</span><br><span class="hljs-comment"> * @Note 关联方法  setFont setFontRefHeightAll</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">int8_t</span> <span class="hljs-title function_">U8G2::getDescent</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>跟字体有关（setFont）；</li>
+</ul>
+<p><img src="/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128103042786.png" srcset="/img/loading.gif" lazyload></p>
+<p><strong>u8g2.getDisplayHeight() —— 获取显示器的高度</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 获取显示器的高度</span><br><span class="hljs-comment"> * @return 返回高度值</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">u8g2_uint_t</span> <span class="hljs-title function_">getDisplayHeight</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br></code></pre></td></tr></table></figure>
+
+
+
+<p><strong>u8g2.getDisplayWidth() —— 获取显示器的宽度</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 获取显示器的宽度</span><br><span class="hljs-comment"> * @return 返回宽度值</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">u8g2_uint_t</span> <span class="hljs-title function_">getDisplayWidth</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br></code></pre></td></tr></table></figure>
+
+
+
+<p><strong>u8g2.getMaxCharHeight() —— 获取当前字体里的最大字符的高度</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 获取当前字体里的最大字符的高度</span><br><span class="hljs-comment"> * @return 返回高度值</span><br><span class="hljs-comment"> * @Note 关联方法 setFont</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">u8g2_uint_t</span> <span class="hljs-title function_">getMaxCharHeight</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>每一个字符在font字集中都是一个位图，位图有高度和宽度；</li>
+</ul>
+<p><strong>u8g2.getMaxCharWidth() —— 获取当前字体里的最大字符的宽度</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 获取当前字体里的最大字符的宽度</span><br><span class="hljs-comment"> * @return 返回宽度值</span><br><span class="hljs-comment"> * @Note 关联方法 setFont</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">u8g2_uint_t</span> <span class="hljs-title function_">getMaxCharWidth</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br></code></pre></td></tr></table></figure>
+
+
+
+<p><strong>u8g2.getStrWidth() —— 获取字符串的像素宽度</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 获取字符串的像素宽度</span><br><span class="hljs-comment"> * @param s 绘制字符串</span><br><span class="hljs-comment"> * @return 返回字符串的像素宽度值</span><br><span class="hljs-comment"> * @Note 关联方法 setFont drawStr</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">u8g2_uint_t</span> <span class="hljs-title function_">U8G2::getStrWidth</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *s)</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>像素宽度和当前font字体有关；</li>
+</ul>
+<p><strong>u8g2.getUTF8Width() —— 获取UTF-8字符串的像素宽度</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 获取UTF-8字符串的像素宽度</span><br><span class="hljs-comment"> * @param s 绘制字符串</span><br><span class="hljs-comment"> * @return 返回字符串的像素宽度值</span><br><span class="hljs-comment"> * @Note 关联方法 setFont drawStr</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">u8g2_uint_t</span> <span class="hljs-title function_">U8G2::getUTF8Width</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *s)</span><br></code></pre></td></tr></table></figure>
+
+
+
+<p><strong>u8g2.setAutoPageClear() —— 设置自动清除缓冲区</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 是否自动清除缓冲区</span><br><span class="hljs-comment"> * @param mode 0 表示关闭</span><br><span class="hljs-comment"> *             1 表示开启，默认是开启</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::setAutoPageClear</span><span class="hljs-params">(<span class="hljs-type">uint8_t</span> mode)</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>该方法用于 firstPage 和 nextPage；</li>
+<li>建议该方法保持默认就好，如果用户禁止了，那么需要自己维护缓冲区的状态或者手动调用clearBuffer；</li>
+</ul>
+<p><strong>u8g2.setBitmapMode() —— 设置位图模式</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 设置位图模式（定义drawXBM方法是否绘制背景颜色）</span><br><span class="hljs-comment"> * @param is_transparent</span><br><span class="hljs-comment"> *         0 绘制背景颜色，不透明，默认是该值</span><br><span class="hljs-comment"> *         1 不绘制背景颜色，透明</span><br><span class="hljs-comment"> * @Note 关联方法 drawXBM</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::setBitmapMode</span><span class="hljs-params">(<span class="hljs-type">uint8_t</span> is_transparent)</span><br></code></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c">u8g2.setDrawColor(<span class="hljs-number">1</span>);<br>u8g2.setBitmapMode(<span class="hljs-number">0</span>);<br>u8g2.drawXBM(<span class="hljs-number">4</span>,<span class="hljs-number">3</span>, u8g2_logo_97x51_width, u8g2_logo_97x51_height,  u8g2_logo_97x51_bits);<br>u8g2.drawXBM(<span class="hljs-number">12</span>,<span class="hljs-number">11</span>, u8g2_logo_97x51_width, u8g2_logo_97x51_height,  u8g2_logo_97x51_bits);<br></code></pre></td></tr></table></figure>
+
+<p><img src="/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128155738230.png" srcset="/img/loading.gif" lazyload></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c">u8g2.setDrawColor(<span class="hljs-number">1</span>);<br>u8g2.setBitmapMode(<span class="hljs-number">1</span>);<br>u8g2.drawXBM(<span class="hljs-number">4</span>,<span class="hljs-number">3</span>, u8g2_logo_97x51_width, u8g2_logo_97x51_height,  u8g2_logo_97x51_bits);<br>u8g2.drawXBM(<span class="hljs-number">12</span>,<span class="hljs-number">11</span>, u8g2_logo_97x51_width, u8g2_logo_97x51_height,  u8g2_logo_97x51_bits);<br></code></pre></td></tr></table></figure>
+
+<p><img src="/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128155823179.png" srcset="/img/loading.gif" lazyload></p>
+<p><strong>u8g2.setBusClock() —— 设置总线时钟</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 设置总线时钟(I2C SPI)</span><br><span class="hljs-comment"> * @param mode clock_speed 总线时钟频率(Hz)</span><br><span class="hljs-comment"> * @Note 关联方法 begin</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::setBusClock</span><span class="hljs-params">(<span class="hljs-type">uint32_t</span> clock_speed)</span>;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>仅仅Arduino平台支持；</li>
+<li>必须在u8g2.begin() 或者 u8g2.initDisplay()之前调用；</li>
+</ul>
+<p><strong>u8g2.setClipWindow() —— 设置采集窗口大小</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 设置采集窗口，窗口范围从左上角(x0,y0)到右下角(x1,y1)</span><br><span class="hljs-comment"> * 也就是我们绘制的内容只能在规范范围内显示</span><br><span class="hljs-comment"> * @param x0 左上角x坐标</span><br><span class="hljs-comment"> * @param y0 左上角y坐标</span><br><span class="hljs-comment"> * @param x1 右上角x坐标</span><br><span class="hljs-comment"> * @param y1 右上角y坐标</span><br><span class="hljs-comment"> * @Note 关联方法 begin</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::setClipWindow</span><span class="hljs-params">(<span class="hljs-type">u8g2_uint_t</span> x0, <span class="hljs-type">u8g2_uint_t</span> y0, <span class="hljs-type">u8g2_uint_t</span> x1, <span class="hljs-type">u8g2_uint_t</span> y1 )</span>;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>可以通过 setMaxClipWindow 去掉该限制</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::setMaxClipWindow</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br></code></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c">u8g2.setClipWindow(<span class="hljs-number">10</span>, <span class="hljs-number">10</span>, <span class="hljs-number">85</span>, <span class="hljs-number">30</span>);<br>u8g2.setDrawColor(<span class="hljs-number">1</span>);<br>u8g2.drawStr(<span class="hljs-number">3</span>, <span class="hljs-number">32</span>, <span class="hljs-string">&quot;U8g2&quot;</span>);<br></code></pre></td></tr></table></figure>
+
+<p><img src="/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128160031656.png" srcset="/img/loading.gif" lazyload></p>
+<p><strong>u8g2.setCursor() —— 设置绘制光标位置</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 设置绘制光标位置(x,y)</span><br><span class="hljs-comment"> * @Note 关联方法 print</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::setCursor</span><span class="hljs-params">(<span class="hljs-type">u8g2_uint_t</span> x, <span class="hljs-type">u8g2_uint_t</span> y)</span><br></code></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c">u8g2.setFont(u8g2_font_ncenB14_tr);<br>u8g2.setCursor(<span class="hljs-number">0</span>, <span class="hljs-number">15</span>);<br>u8g2.print(<span class="hljs-string">&quot;Hello World!&quot;</span>);<br></code></pre></td></tr></table></figure>
+
+<p><img src="/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128160123258.png" srcset="/img/loading.gif" lazyload></p>
+<p><strong>u8g2.setDisplayRotation() —— 设置显示器的旋转角度</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 设置显示器的旋转角度</span><br><span class="hljs-comment"> * @param u8g2_cb 旋转选项</span><br><span class="hljs-comment"> *        U8G2_R0 不做旋转 水平</span><br><span class="hljs-comment"> *        U8G2_R1 旋转90度</span><br><span class="hljs-comment"> *        U8G2_R2 旋转180度</span><br><span class="hljs-comment"> *        U8G2_R3 旋转270度</span><br><span class="hljs-comment"> *        U8G2_MIRROR 不做旋转 水平，显示内容是镜像的，暂时不理解</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">setDisplayRotation</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">u8g2_cb_t</span> *u8g2_cb)</span><br></code></pre></td></tr></table></figure>
+
+
+
+<p><strong>u8g2.setDrawColor() —— 设置绘制颜色</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 设置绘制颜色（暂时还没有具体去了解用法）</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::setDrawColor</span><span class="hljs-params">(<span class="hljs-type">uint8_t</span> color)</span><br></code></pre></td></tr></table></figure>
+
+
+
+<p><strong>u8g2.setFont() —— 设置字体集</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 设置字体集（字体集用于字符串绘制方法或者glyph绘制方法）</span><br><span class="hljs-comment"> * @param font 具体的字体集</span><br><span class="hljs-comment"> * @Note 关联方法  drawUTF8 drawStr drawGlyph print</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::setFont</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">uint8_t</span> *font)</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>中文字符集消耗内存大，请谨慎使用，可以用在Arduino 101等ram空间比较大的板子上；</li>
+</ul>
+<p><strong>u8g2.setFontDirection() —— 设置字体方向</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 定义字符串绘制或者图形绘制的方向</span><br><span class="hljs-comment"> * @param dir 方向</span><br><span class="hljs-comment"> * @param 关联方法 drawStr</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::setFontDirection</span><span class="hljs-params">(<span class="hljs-type">uint8_t</span> dir)</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>dir参数</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Argument</th>
+<th>String Rotation</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td>0 degree</td>
+<td>Left to right</td>
+</tr>
+<tr>
+<td>1</td>
+<td>90 degree</td>
+<td>Top to down</td>
+</tr>
+<tr>
+<td>2</td>
+<td>180 degree</td>
+<td>Right to left</td>
+</tr>
+<tr>
+<td>3</td>
+<td>270 degree</td>
+<td>Down to top</td>
+</tr>
+</tbody></table>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c">u8g2.setFont(u8g2_font_ncenB14_tf);<br>u8g2.setFontDirection(<span class="hljs-number">0</span>);<br>u8g2.drawStr(<span class="hljs-number">15</span>, <span class="hljs-number">20</span>, <span class="hljs-string">&quot;Abc&quot;</span>);<br>u8g2.setFontDirection(<span class="hljs-number">1</span>);<br>u8g2.drawStr(<span class="hljs-number">15</span>, <span class="hljs-number">20</span>, <span class="hljs-string">&quot;Abc&quot;</span>);<br></code></pre></td></tr></table></figure>
+
+<p><img src="/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128161138011.png" srcset="/img/loading.gif" lazyload></p>
+<hr>
+<p><strong>缓存相关函数</strong></p>
+<p>缓存相关函数，一般不会去操作</p>
+<p><strong>u8g2.getBufferPtr() —— 获取缓存空间的地址</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 获取缓存空间的地址</span><br><span class="hljs-comment"> * @return 返回缓存空间起始地址</span><br><span class="hljs-comment"> * @Note 关联方法 getBufferTileHeight, getBufferTileWidth, clearBuffer</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">uint8_t</span> *<span class="hljs-title function_">U8G2::getBufferPtr</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>缓存大小等于 8 * u8g2.getBufferTileHeight() * u8g2.getBufferTileWidth().</li>
+</ul>
+<p><strong>u8g2.getBufferTileHeight() —— 获取缓冲区的Tile高度</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 获取缓冲区的Tile高度</span><br><span class="hljs-comment"> * @return 返回高度值</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">uint8_t</span> <span class="hljs-title function_">U8G2::getBufferTileHeight</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>一个tile等于8个像素点.</li>
+</ul>
+<p><strong>u8g2.getBufferTileWidth() —— 获取缓冲区的Tile宽度</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 获取缓冲区的Tile宽度</span><br><span class="hljs-comment"> * @return 返回宽度值</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">uint8_t</span> <span class="hljs-title function_">U8G2::getBufferTileWidth</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br></code></pre></td></tr></table></figure>
+
+
+
+<p><strong>u8g2.getBufferCurrTileRow() —— 获取缓冲区的当前Tile row</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 获取缓冲区的当前Tile row行数</span><br><span class="hljs-comment"> * @return 返回当前的tilerow</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">uint8_t</span> <span class="hljs-title function_">U8G2::getBufferCurrTileRow</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br></code></pre></td></tr></table></figure>
+
+
+
+<p> <strong>u8g2.setBufferCurrTileRow() —— 设置缓冲区的当前Tile row</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 设置缓冲区的当前Tile row</span><br><span class="hljs-comment"> * @param 当前的tilerow</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">U8G2::setBufferCurrTileRow</span><span class="hljs-params">(<span class="hljs-type">uint8_t</span>  row)</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>在 firstPage&#x2F;nextPage 循环时，由于底层调用了setBufferCurrTileRow，所以尽量不要自己手动调用该方法</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c">u8g2.setBufferCurrTileRow(<span class="hljs-number">0</span>);       <span class="hljs-comment">// let y=0 be the topmost row of the buffer</span><br>u8g2.clearBuffer();<br>u8g2.setFont(u8g2_font_helvB08_tr);<br>u8g2.drawStr(<span class="hljs-number">2</span>, <span class="hljs-number">8</span>, <span class="hljs-string">&quot;abcdefg&quot;</span>);<br><br>u8g2.setBufferCurrTileRow(<span class="hljs-number">2</span>);	<span class="hljs-comment">// write the buffer to tile row 2 (y=16) on the display</span><br>u8g2.sendBuffer();<br>u8g2.setBufferCurrTileRow(<span class="hljs-number">4</span>);	<span class="hljs-comment">// write the same buffer to tile row 4 (y=32) on the display</span><br>u8g2.sendBuffer();<br></code></pre></td></tr></table></figure>
+
+<p><img src="/imgs/u8g2%E5%AD%A6%E4%B9%A0/image-20241128162439123.png" srcset="/img/loading.gif" lazyload></p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Embedded/" class="category-chain-item">Embedded</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/u8g2/" class="print-no-link">#u8g2</a>
+      
+    </div>
+  
+</div>
+
+
+              
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2024/12/21/cross_domain/" title="跨域问题">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">跨域问题</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2024/11/27/data_struct_memory_alignment/" title="结构体内存对齐">
+                        <span class="hidden-mobile">结构体内存对齐</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
