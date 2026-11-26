@@ -1,0 +1,686 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/imgs/ava/fluid.png">
+  <link rel="icon" href="/imgs/ava/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Chris">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="学链表最好的检验，是去读一份跑了亿万设备的真实内核源码。FreeRTOS 的 list.c 只有 300 行出头，却支撑着整个调度器——它就是一个双向循环 + 哨兵 + 按 xItemValue 排序的链表。本篇用前几篇学到的手艺逐行解读它（源码已核对 v11 main 分支）。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="数据结构（十一）：真工程实战 —— 解读 FreeRTOS list.c">
+<meta property="og:url" content="https://lu-six-star.github.io/2026/11/25/data_struct_11_freertos_list/index.html">
+<meta property="og:site_name" content="星橙点点">
+<meta property="og:description" content="学链表最好的检验，是去读一份跑了亿万设备的真实内核源码。FreeRTOS 的 list.c 只有 300 行出头，却支撑着整个调度器——它就是一个双向循环 + 哨兵 + 按 xItemValue 排序的链表。本篇用前几篇学到的手艺逐行解读它（源码已核对 v11 main 分支）。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://lu-six-star.github.io/images/data_struct-11-list.png">
+<meta property="article:published_time" content="2026-11-25T12:00:00.000Z">
+<meta property="article:modified_time" content="2026-11-26T09:10:17.857Z">
+<meta property="article:author" content="Chris">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="数据结构">
+<meta property="article:tag" content="链表">
+<meta property="article:tag" content="FreeRTOS">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://lu-six-star.github.io/images/data_struct-11-list.png">
+  
+  
+  
+  <title>数据结构（十一）：真工程实战 —— 解读 FreeRTOS list.c - 星橙点点</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"lu-six-star.github.io","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>星橙点点</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/images/data_struct-11-list.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="数据结构（十一）：真工程实战 —— 解读 FreeRTOS list.c"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-11-25 20:00" pubdate>
+          2026年11月25日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          2.9k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          25 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">数据结构（十一）：真工程实战 —— 解读 FreeRTOS list.c</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <blockquote>
+<p>学链表最好的检验，是去读一份跑了亿万设备的真实内核源码。FreeRTOS 的 list.c 只有 300 行出头，却支撑着整个调度器——它就是一个<strong>双向循环 + 哨兵 + 按 xItemValue 排序</strong>的链表。本篇用前几篇学到的手艺逐行解读它（源码已核对 v11 main 分支）。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="系列目录"><a href="#系列目录" class="headerlink" title="系列目录"></a>系列目录</h2><ol>
+<li><a href="/2026/11/26/data_struct_01_memory_map/">C 程序的内存地图</a></li>
+<li><a href="/2026/11/26/data_struct_02_stack_frames/">栈与函数调用</a></li>
+<li><a href="/2026/11/26/data_struct_03_heap/">堆与动态内存</a></li>
+<li><a href="/2026/11/26/data_struct_04_alignment/">结构体内存对齐</a></li>
+<li><a href="/2026/11/26/data_struct_05_struct_advanced/">结构体进阶：union、位域与柔性数组</a></li>
+<li><a href="/2026/11/26/data_struct_06_vector/">数组与动态数组：手写简易 vector</a></li>
+<li><a href="/2026/11/26/data_struct_07_slist/">单链表：指针串起来的散装节点</a></li>
+<li><a href="/2026/11/26/data_struct_08_dlist/">双向链表与循环链表：哨兵节点</a></li>
+<li><a href="/2026/11/26/data_struct_09_stack_queue/">栈与队列：LIFO 与 FIFO 的工程实现</a></li>
+<li><a href="/2026/11/26/data_struct_10_hash/">哈希表：数组与链表的合体</a></li>
+<li><strong>真工程实战：解读 FreeRTOS list.c（本篇）</strong></li>
+<li><a href="/2026/11/26/data_struct_12_tsqueue/">手写线程安全队列：竞态与临界区</a></li>
+<li><a href="/2026/11/26/data_struct_13_appendix/">附录：全部实验代码与复现指南</a></li>
+</ol>
+<h2 id="一、两个结构体，三根”后门”指针"><a href="#一、两个结构体，三根”后门”指针" class="headerlink" title="一、两个结构体，三根”后门”指针"></a>一、两个结构体，三根”后门”指针</h2><p>源码（<code>include/list.h</code>，已核对）：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">xLIST_ITEM</span></span><br><span class="hljs-class">&#123;</span><br>    configLIST_VOLATILE TickType_t xItemValue;   <span class="hljs-comment">/* 排序键：多用唤醒时刻 */</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">xLIST_ITEM</span> * <span class="hljs-title">pxNext</span>;</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">xLIST_ITEM</span> * <span class="hljs-title">pxPrevious</span>;</span><br>    <span class="hljs-type">void</span> * pvOwner;                              <span class="hljs-comment">/* 指回任务 TCB */</span><br>    <span class="hljs-type">void</span> * pvContainer;                          <span class="hljs-comment">/* 指回所属列表 */</span><br>&#125; ListItem_t;<br><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">xMINI_LIST_ITEM</span>      /* 哨兵的迷你版 */</span><br><span class="hljs-class">&#123;</span><br>    configLIST_VOLATILE TickType_t xItemValue;   <span class="hljs-comment">/* 初始化为最大值 */</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">xLIST_ITEM</span> * <span class="hljs-title">pxNext</span>;</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">xLIST_ITEM</span> * <span class="hljs-title">pxPrevious</span>;</span><br>&#125; MiniListItem_t;<br><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">xLIST</span></span><br><span class="hljs-class">&#123;</span><br>    configLIST_VOLATILE UBaseType_t uxNumberOfItems;  <span class="hljs-comment">/* 当前节点数 */</span><br>    ListItem_t * pxIndex;                             <span class="hljs-comment">/* 遍历游标 */</span><br>    MiniListItem_t xListEnd;                          <span class="hljs-comment">/* 哨兵节点 */</span><br>&#125; List_t;<br></code></pre></td></tr></table></figure>
+
+<p>对照第 7、8 篇学过的结构，三个设计亮点一眼看穿：</p>
+<ol>
+<li><strong>ListItem_t 反向引用</strong>：<code>pvOwner</code> 指回任务 TCB、<code>pvContainer</code> 指回所属列表——从节点 O(1) 找到任务、任务 O(1) 知道自己在哪个列表。<strong>任务切换状态根本不需要遍历查找</strong>；</li>
+<li><strong>哨兵的迷你版</strong>：xListEnd 不存数据，所以连 pvOwner&#x2F;pvContainer 都省了（第 8 篇的哨兵思想 + 内存抠到极限）；</li>
+<li><strong>pxIndex 游标</strong>：遍历”从上次走到的地方”继续——时间片轮转的实现基础。</li>
+</ol>
+<h2 id="二、vListInsert：按值排序插入"><a href="#二、vListInsert：按值排序插入" class="headerlink" title="二、vListInsert：按值排序插入"></a>二、vListInsert：按值排序插入</h2><p><code>list.c</code> 的排序插入（节选逻辑）：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">vListInsert</span><span class="hljs-params">( List_t * <span class="hljs-type">const</span> pxList, ListItem_t * pxNewListItem )</span><br>&#123;<br>    <span class="hljs-comment">/* 找插入点：从 xListEnd 的 pxNext（最小端）开始，</span><br><span class="hljs-comment">       直到遇到第一个 xItemValue 比新节点大的节点 */</span><br>    <span class="hljs-keyword">for</span>( pxIterator = ( ListItem_t * ) &amp;( pxList-&gt;xListEnd );<br>         pxIterator-&gt;pxNext-&gt;xItemValue &lt;= xValueOfInserting;<br>         pxIterator = pxIterator-&gt;pxNext )<br>    &#123;<br>    &#125;<br>    pxNewListItem-&gt;pxNext = pxIterator-&gt;pxNext;<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>结合第 8 篇的知识读它：</p>
+<ul>
+<li>哨兵 <code>xListEnd</code> 的 <code>xItemValue</code> 被初始化为 <strong>0xFFFFFFFF（最大值）</strong>，永远兜底——循环必然终止，没有特判；</li>
+<li>插入后列表<strong>按值升序</strong>排列。延时列表里 xItemValue 是任务的唤醒时刻，所以<strong>第一个节点永远是”最早到期”的任务</strong>——tick 中断只需看第一个节点：没到期，全列表都不用看（第 4 篇讲的心跳联动）；</li>
+<li>这就是”双向循环 + 哨兵 + 排序”三种特性的一次组合运用。</li>
+</ul>
+<h2 id="三、vListInsertEnd-与-uxListRemove"><a href="#三、vListInsertEnd-与-uxListRemove" class="headerlink" title="三、vListInsertEnd 与 uxListRemove"></a>三、vListInsertEnd 与 uxListRemove</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">vListInsertEnd</span><span class="hljs-params">( List_t * <span class="hljs-type">const</span> pxList, ListItem_t * pxNewListItem )</span><br>&#123;<br>    <span class="hljs-comment">/* 直接插在 pxIndex 的前面 —— O(1)，不排序 */</span><br>&#125;<br><br>UBaseType_t <span class="hljs-title function_">uxListRemove</span><span class="hljs-params">( ListItem_t * <span class="hljs-type">const</span> pxItemToRemove )</span><br>&#123;<br>    <span class="hljs-comment">/* 双向链表标准摘除：前后互指，O(1) */</span><br>    pxItemToRemove-&gt;pxNext-&gt;pxPrevious = pxItemToRemove-&gt;pxPrevious;<br>    pxItemToRemove-&gt;pxPrevious-&gt;pxNext = pxItemToRemove-&gt;pxNext;<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><code>vListInsertEnd</code> 插在 pxIndex <strong>前</strong>——这就是<strong>时间片轮转</strong>的写法：同优先级任务用”插到游标前”实现”下次轮到我”（第 8 篇循环链表的知识点）；</li>
+<li><code>uxListRemove</code> 是标准的双向摘除（第 8 篇的 <code>pxPrev-&gt;pxNext = pxNext; pxNext-&gt;pxPrev = pxPrev</code>），并顺带把 <code>pvContainer</code> 清空——<strong>节点的记忆被抹掉，可以插入别的列表</strong>。</li>
+</ul>
+<h2 id="四、这套设计为什么优雅"><a href="#四、这套设计为什么优雅" class="headerlink" title="四、这套设计为什么优雅"></a>四、这套设计为什么优雅</h2><table>
+<thead>
+<tr>
+<th>需求</th>
+<th>链表机制</th>
+<th>复杂度</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>找最早到期的任务</td>
+<td>排序列表第一个节点</td>
+<td>O(1)</td>
+</tr>
+<tr>
+<td>任务状态迁移（就绪↔延时）</td>
+<td>uxListRemove + vListInsert</td>
+<td>O(1)（位置已知，无需查找）</td>
+</tr>
+<tr>
+<td>从节点找回任务</td>
+<td>pvOwner</td>
+<td>O(1)</td>
+</tr>
+<tr>
+<td>时间片轮转</td>
+<td>pxIndex + vListInsertEnd</td>
+<td>O(1)</td>
+</tr>
+</tbody></table>
+<p>注意一个反直觉的点：<code>uxListRemove</code> 是 O(1)——因为参数是<strong>节点指针</strong>而不是值，根本不需要查找。FreeRTOS 的任务 TCB 里直接嵌着 ListItem_t，”任务在哪个列表”由节点自己记录。<strong>数据结构选对了，很多操作根本没有”查找”这一步</strong>。</p>
+<h2 id="五、小结与下一篇预告"><a href="#五、小结与下一篇预告" class="headerlink" title="五、小结与下一篇预告"></a>五、小结与下一篇预告</h2><ul>
+<li>list.c &#x3D; 双向循环链表 + 哨兵（xListEnd）+ 按 xItemValue 排序 + 双向引用（pvOwner&#x2F;pvContainer）+ 遍历游标（pxIndex）；</li>
+<li>300 行支撑整个调度器：就绪表、延时表、事件等待列表全是同一结构的实例；</li>
+<li>用系列前几篇的知识读真实内核源码，300 行读出了 5 个设计决策——这就是”结构体 + 指针”学到家的样子。</li>
+</ul>
+<p>下一篇是本系列的压轴实战：<strong>手写线程安全队列</strong>——用链表队列 + 临界区保护，在 FreeRTOS 里跑两个任务收发 500 条数据，和内置 xQueue 同台对比，实测”竞态”到底是什么、临界区怎么救。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/FreeRTOS/FreeRTOS-Kernel/blob/main/list.c">FreeRTOS-Kernel list.c 源码</a>（本系列内核 commit <code>54c60e7</code>）</li>
+<li>本系列 FreeRTOS 笔记：<a href="/2026/11/26/freertos-03-task-management/">（三）任务管理</a></li>
+<li>本系列附录（<a href="/2026/11/26/data_struct_13_appendix/">第 13 篇</a>）收录全部实验代码</li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/DATA-STRUCT/" class="category-chain-item">DATA_STRUCT</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/C/" class="print-no-link">#C</a>
+      
+        <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" class="print-no-link">#数据结构</a>
+      
+        <a href="/tags/%E9%93%BE%E8%A1%A8/" class="print-no-link">#链表</a>
+      
+        <a href="/tags/FreeRTOS/" class="print-no-link">#FreeRTOS</a>
+      
+    </div>
+  
+</div>
+
+
+              
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2026/11/26/data_struct_12_tsqueue/" title="数据结构（十二）：手写线程安全队列 —— 竞态与临界区">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">数据结构（十二）：手写线程安全队列 —— 竞态与临界区</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/11/25/data_struct_10_hash/" title="数据结构（十）：哈希表 —— 数组与链表的合体">
+                        <span class="hidden-mobile">数据结构（十）：哈希表 —— 数组与链表的合体</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

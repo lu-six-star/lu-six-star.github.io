@@ -1,0 +1,905 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/imgs/ava/fluid.png">
+  <link rel="icon" href="/imgs/ava/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Chris">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="上一篇把一次登录从头到尾跑了一遍，最后配好了公钥登录。但真把公钥登录用起来，问题才刚开始：这把钥匙能不能只管一件事——比如只允许跑 rsync、不许开 shell？能不能只允许某台机器用它？私钥设了 passphrase 之后，难道每次都要输一遍？ 这些问题的答案，全部藏在 authorized_keys 那一行文本里，以及一个叫 ssh-agent 的小进程里。本篇继续用同一套本机靶机，5 个">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SSH 学习笔记（二）：authorized_keys 的门禁、ssh-agent 与真正的免密登录">
+<meta property="og:url" content="https://lu-six-star.github.io/2026/11/26/ssh-02-keys/index.html">
+<meta property="og:site_name" content="星橙点点">
+<meta property="og:description" content="上一篇把一次登录从头到尾跑了一遍，最后配好了公钥登录。但真把公钥登录用起来，问题才刚开始：这把钥匙能不能只管一件事——比如只允许跑 rsync、不许开 shell？能不能只允许某台机器用它？私钥设了 passphrase 之后，难道每次都要输一遍？ 这些问题的答案，全部藏在 authorized_keys 那一行文本里，以及一个叫 ssh-agent 的小进程里。本篇继续用同一套本机靶机，5 个">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://lu-six-star.github.io/images/ssh-02-cover.png">
+<meta property="article:published_time" content="2026-11-26T08:00:00.000Z">
+<meta property="article:modified_time" content="2026-11-26T09:10:17.859Z">
+<meta property="article:author" content="Chris">
+<meta property="article:tag" content="SSH">
+<meta property="article:tag" content="OpenSSH">
+<meta property="article:tag" content="authorized_keys">
+<meta property="article:tag" content="ssh-agent">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://lu-six-star.github.io/images/ssh-02-cover.png">
+  
+  
+  
+  <title>SSH 学习笔记（二）：authorized_keys 的门禁、ssh-agent 与真正的免密登录 - 星橙点点</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"lu-six-star.github.io","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>星橙点点</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/images/ssh-02-cover.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="SSH 学习笔记（二）：authorized_keys 的门禁、ssh-agent 与真正的免密登录"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-11-26 16:00" pubdate>
+          2026年11月26日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          12k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          104 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">SSH 学习笔记（二）：authorized_keys 的门禁、ssh-agent 与真正的免密登录</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <blockquote>
+<p>上一篇把一次登录从头到尾跑了一遍，最后配好了公钥登录。但真把公钥登录用起来，问题才刚开始：这把钥匙能不能只管一件事——比如只允许跑 <code>rsync</code>、不许开 shell？能不能只允许某台机器用它？私钥设了 passphrase 之后，难道每次都要输一遍？</p>
+<p>这些问题的答案，全部藏在 <code>authorized_keys</code> 那一行文本里，以及一个叫 <code>ssh-agent</code> 的小进程里。本篇继续用同一套本机靶机，5 个场景 + 1 组 agent 实验，全部实测。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="这个系列会写什么"><a href="#这个系列会写什么" class="headerlink" title="这个系列会写什么"></a>这个系列会写什么</h2><table>
+<thead>
+<tr>
+<th>#</th>
+<th>主题</th>
+<th>状态</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>一次 ssh 登录到底发生了什么（握手 &#x2F; 认证 &#x2F; 第一个命令）</td>
+<td><a href="/ssh-01-handshake/">已发布</a></td>
+</tr>
+<tr>
+<td>2</td>
+<td>密钥与免密登录：authorized_keys、ssh-agent、权限那点事</td>
+<td><strong>本篇</strong></td>
+</tr>
+<tr>
+<td>3</td>
+<td>ssh config：别名、多主机与跳板机</td>
+<td><a href="/ssh-03-config/">已发布</a></td>
+</tr>
+<tr>
+<td>4</td>
+<td>端口转发：-L &#x2F; -R &#x2F; -D 到底转发的是什么</td>
+<td><a href="/ssh-04-forwarding/">已发布</a></td>
+</tr>
+<tr>
+<td>5</td>
+<td>登录故障排查清单：从 -vvv 日志定位问题</td>
+<td><a href="/ssh-05-troubleshooting/">已发布</a></td>
+</tr>
+</tbody></table>
+<h2 id="一、痛点：免密登录之后的三道新问题"><a href="#一、痛点：免密登录之后的三道新问题" class="headerlink" title="一、痛点：免密登录之后的三道新问题"></a>一、痛点：免密登录之后的三道新问题</h2><p>上一篇结束时，服务端的 <code>authorized_keys</code> 里躺着一行公钥，客户端 <code>ssh -i key chris@host</code> 就能直接进去，不输密码。看起来”免密”已经完成了，但实际部署时会立刻遇到三个问题：</p>
+<p><strong>第一，权限太大。</strong> 我把公钥放进服务器，就等于给了对方一个完整 shell。可我的需求可能只是”让备份脚本能 <code>rsync</code> 一份目录”。万一这行公钥对应的私钥泄露，攻击者拿到的是完整控制权，不是一条只读命令。</p>
+<p><strong>第二，来源不受控。</strong> 同一把钥匙，昨天在一台办公机上用，今天被拷到别的地方也能用。能不能限定”只允许来自 10.0.0.0&#x2F;8 的连接”？</p>
+<p><strong>第三，passphrase 与便利性冲突。</strong> 给私钥加了口令，安全性很好，但每次登录都要输一遍——自动化脚本就直接卡死了。这正是 <code>ssh-agent</code> 存在的理由。</p>
+<p>这三个问题，前两个由 <code>authorized_keys</code> 的行首选项解决，第三个由 <code>ssh-agent</code> 解决。</p>
+<h2 id="二、原理：authorized-keys-不是一行公钥，而是一条规则"><a href="#二、原理：authorized-keys-不是一行公钥，而是一条规则" class="headerlink" title="二、原理：authorized_keys 不是一行公钥，而是一条规则"></a>二、原理：authorized_keys 不是一行公钥，而是一条规则</h2><p>很多人以为 <code>authorized_keys</code> 就是把 <code>.pub</code> 文件内容粘进去。其实每一行都是一个完整的规则：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">[选项1,选项2,...] 密钥算法 公钥base64 注释<br></code></pre></td></tr></table></figure>
+
+<p>只有中间的”算法 + 公钥”是必填的，前面的选项和后面的注释都可省略。<code>sshd</code> 收到连接后，会把客户端出示的公钥指纹逐行比对；<strong>一旦在某一行的公钥上命中，就按这一行行首的选项来处理后续</strong>，而不是继续往下找。</p>
+<p><img src="/images/ssh-02-authkeys-options.png" srcset="/img/loading.gif" lazyload alt="authorized_keys 行首选项：一把公钥能附加多少道闸门"></p>
+<p>常用选项速查：</p>
+<table>
+<thead>
+<tr>
+<th>选项</th>
+<th>作用</th>
+<th>典型场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>command=&quot;...&quot;</code></td>
+<td>强制用指定命令替换客户端请求的命令</td>
+<td>只允许备份 &#x2F; 只允许查询</td>
+</tr>
+<tr>
+<td><code>from=&quot;...&quot;</code></td>
+<td>只接受指定来源（IP、网段、域名，逗号分隔）</td>
+<td>限定办公网、限定固定跳板机</td>
+</tr>
+<tr>
+<td><code>no-pty</code></td>
+<td>不分配伪终端，禁止交互式 shell</td>
+<td>纯自动化账号</td>
+</tr>
+<tr>
+<td><code>no-port-forwarding</code></td>
+<td>禁止端口转发</td>
+<td>收紧权限</td>
+</tr>
+<tr>
+<td><code>no-agent-forwarding</code></td>
+<td>禁止 agent 转发</td>
+<td>防止钥匙被借道</td>
+</tr>
+<tr>
+<td><code>restrict</code></td>
+<td>关掉以上所有”额外能力”（新版推荐）</td>
+<td>最严格基线</td>
+</tr>
+</tbody></table>
+<p>一个值得记住的细节：选项里的引号和逗号是有语法意义的，<code>command=&quot;a,b&quot;</code> 和 <code>command=&quot;a&quot;,command=&quot;b&quot;</code> 完全不是一回事。写错就直接拒绝加载整行。</p>
+<h2 id="三、准备：一台便携版-sshd-和四把钥匙"><a href="#三、准备：一台便携版-sshd-和四把钥匙" class="headerlink" title="三、准备：一台便携版 sshd 和四把钥匙"></a>三、准备：一台便携版 sshd 和四把钥匙</h2><p>这次不用 paramiko 模拟，直接拿 <strong>Win32-OpenSSH 便携版</strong>（<code>OpenSSH_for_Windows_9.5p1, LibreSSL 3.8.2</code>）在本机起一个真实 <code>sshd</code>，监听 <code>127.0.0.1:2222</code>。这样 <code>authorized_keys</code> 的解析、日志、拒绝原因，全都是 OpenSSH 服务端的原生行为，不是我自己模拟出来的。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs text">&gt; .\sshd.exe -f sshd_config -E sshd.log<br><br># sshd_config 核心项<br>Port 2222<br>ListenAddress 127.0.0.1<br>HostKey .../sshd_host_ed25519<br>AuthorizedKeysFile .../authorized_keys<br>PasswordAuthentication no<br>PubkeyAuthentication yes<br>PermitRootLogin no<br>StrictModes no<br>LogLevel DEBUG3<br>MaxAuthTries 6<br></code></pre></td></tr></table></figure>
+
+<p>两个说明：</p>
+<ul>
+<li><code>PasswordAuthentication no</code>——把密码通道关掉，逼着只能走公钥，这样每个场景成没成功，只取决于公钥这一条路径。</li>
+<li><code>StrictModes no</code>——Windows 的 ACL 检查在实验目录里容易误伤（目录被 <code>Users</code> 组可读），先关掉；**生产环境应该保持默认的 <code>yes</code>**，让 sshd 去校验 <code>authorized_keys</code> 和家目录的属主权限。</li>
+</ul>
+<p>四把钥匙分工明确，指纹都是 <code>ssh-keygen -lf</code> 现场算出来的：</p>
+<table>
+<thead>
+<tr>
+<th>密钥</th>
+<th>用途</th>
+<th>指纹</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>sshd_host_ed25519</code></td>
+<td>服务端主机密钥</td>
+<td><code>SHA256:dSqKimyXs7VKRWKp6oHpxI7br/qaI1mz+QNaevJmWl8</code></td>
+</tr>
+<tr>
+<td><code>client_normal</code></td>
+<td>无选项正常登录</td>
+<td><code>SHA256:3ONDKtwSVdpP5NeVT1ivRnPFi9tzLY+mPfGu5FZOecY</code></td>
+</tr>
+<tr>
+<td><code>client_cmd</code></td>
+<td>验证 <code>command=</code></td>
+<td><code>SHA256:w5j+NTYwjRU2vRzMkQN9VzsL8tidbCBXrIWjQgedJrM</code></td>
+</tr>
+<tr>
+<td><code>client_from</code></td>
+<td>验证 <code>from=</code></td>
+<td><code>SHA256:D1QuoCEojeQsOXU67wvg5bdEHdDP9yErgGaoAd7W+8s</code></td>
+</tr>
+<tr>
+<td><code>intruder_ed25519</code></td>
+<td>不在白名单的”闯入者”</td>
+<td><code>SHA256:aYzU73zV30q5HHPgFZ3mzI59KRlE7Qea0UecsZD1weI</code></td>
+</tr>
+</tbody></table>
+<p>客户端命令统一长这样，用 <code>-i</code> 指定钥匙、<code>IdentitiesOnly=yes</code> 禁止它四处乱试别的钥匙：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs text">ssh -p 2222 -i &lt;key&gt; \<br>    -o UserKnownHostsFile=.../kh_test \<br>    -o StrictHostKeyChecking=accept-new \<br>    -o IdentitiesOnly=yes -o BatchMode=yes \<br>    Chris@127.0.0.1 &quot;&lt;command&gt;&quot;<br></code></pre></td></tr></table></figure>
+
+<blockquote>
+<p>这里的 <code>IdentitiesOnly=yes</code> 是<strong>配合 <code>-i</code> 使用</strong>的正确姿势：只许用我指定的这把。它在第五节的 agent 场景里会反过来坑人，先记住这个伏笔。</p>
+</blockquote>
+<h2 id="四、五个场景：把勾选项一个个跑给你看"><a href="#四、五个场景：把勾选项一个个跑给你看" class="headerlink" title="四、五个场景：把勾选项一个个跑给你看"></a>四、五个场景：把勾选项一个个跑给你看</h2><h3 id="4-1-无选项：一行纯公钥，照单执行"><a href="#4-1-无选项：一行纯公钥，照单执行" class="headerlink" title="4.1 无选项：一行纯公钥，照单执行"></a>4.1 无选项：一行纯公钥，照单执行</h3><p><code>authorized_keys</code> 只放一行：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIE1JKxmZo96lRSQ6keUfIGYCUHDi1Tc+MysPioDteUtu normal@lab<br></code></pre></td></tr></table></figure>
+
+<p>客户端请求 <code>hostname &amp; whoami &amp; echo NORMAL-OK</code>，结果：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs text">&gt; ssh -p 2222 -i client_normal ... Chris@127.0.0.1 &quot;hostname &amp; whoami &amp; echo NORMAL-OK&quot;<br>DESKTOP-K81RELT<br>desktop-k81relt\chris<br>NORMAL-OK<br>[exit 0]<br></code></pre></td></tr></table></figure>
+
+<p>客户端 <code>-vvv</code> 里的关键三行：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">debug1: Offering public key: .../client_normal ED25519 SHA256:3ONDKtwSVdpP5NeVT1ivRnPFi9tzLY+mPfGu5FZOecY<br>debug1: Server accepts key: .../client_normal ED25519 SHA256:3ONDKtwSVdpP5NeVT1ivRnPFi9tzLY+mPfGu5FZOecY<br>Authenticated to 127.0.0.1 ([127.0.0.1]:2222) using &quot;publickey&quot;.<br></code></pre></td></tr></table></figure>
+
+<p>服务端日志对上了同一条指纹，并且明确告诉你它是在<strong>第几行</strong>命中的：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">Accepted key ED25519 SHA256:3ONDKtwSVdpP5NeVT1ivRnPFi9tzLY+mPfGu5FZOecY found at .../authorized_keys:1<br>Accepted publickey for Chris from 127.0.0.1 port 59168 ssh2: ED25519 SHA256:3ONDKtwSVdpP5NeVT1ivRnPFi9tzLY+mPfGu5FZOecY<br>Starting session: command for chris from 127.0.0.1 port 59168 id 0<br></code></pre></td></tr></table></figure>
+
+<p><code>authorized_keys:1</code> 这个行号在排障时非常值钱——它能直接告诉你”命中的是哪一行规则”，文件里堆了十几行公钥时尤其有用。</p>
+<h3 id="4-2-command-：客户端要的什么都给你换掉"><a href="#4-2-command-：客户端要的什么都给你换掉" class="headerlink" title="4.2 command=：客户端要的什么都给你换掉"></a>4.2 <code>command=</code>：客户端要的什么都给你换掉</h3><p>把 <code>client_cmd</code> 的公钥配上强制命令：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">command=&quot;echo FORCED_BY_COMMAND_OPTION&quot; ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBEM0CIhl3nqZphQd82/lCCHSSqbxLZcHO7QOdN8aYWX cmd-only@lab<br></code></pre></td></tr></table></figure>
+
+<p>客户端**故意请求 <code>hostname</code>**，想看它能不能绕过去：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">&gt; ssh -p 2222 -i client_cmd ... Chris@127.0.0.1 &quot;hostname&quot;<br>FORCED_BY_COMMAND_OPTION<br>[exit 0]<br></code></pre></td></tr></table></figure>
+
+<p><code>hostname</code> 一个字符都没执行，输出的是 <code>command=</code> 里写死的那句话。服务端日志把替换过程记得很清楚：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">debug1: .../authorized_keys:1: forced command: &quot;echo FORCED_BY_COMMAND_OPTION&quot;<br>debug1: active: forced command: &quot;echo FORCED_BY_COMMAND_OPTION&quot;<br>Starting session: forced-command (key-option) &#x27;echo FORCED_BY_COMMAND_OPTION&#x27; for chris from 127.0.0.1 port 59175 id 0<br></code></pre></td></tr></table></figure>
+
+<p>注意 <code>forced-command (key-option)</code> 这个标记：<code>(key-option)</code> 说明命令来自密钥选项，而不是全局的 <code>ForceCommand</code>。两者都会强制替换命令，但作用范围不同——<code>ForceCommand</code> 管整个 sshd，<code>command=</code> 只管这一行公钥。</p>
+<p>实际用法一般是把它包一层只读动作，比如只允许拉取备份：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">command=&quot;tar czf - /var/backup&quot;,no-pty,no-port-forwarding ssh-ed25519 AAAA... backup@host<br></code></pre></td></tr></table></figure>
+
+<p>不过要清醒一点：<code>command=</code> 限制的是”客户端请求被替换成什么”，<strong>它不限制这个命令内部能干什么</strong>。如果 <code>command=</code> 指向的是一个能执行任意输入的脚本，那限制就被绕过去了。真正的最小权限，是”被强制的命令本身不接受任何参数”。</p>
+<h3 id="4-3-from-：来源匹配，放行"><a href="#4-3-from-：来源匹配，放行" class="headerlink" title="4.3 from=：来源匹配，放行"></a>4.3 <code>from=</code>：来源匹配，放行</h3><p>把 <code>client_from</code> 的公钥限制为只接受本机来源：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">from=&quot;127.0.0.1&quot; ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMZI4wVEoEtmK+bq9STmslD1t/0it1BXk64rJEzcAA0r from-only@lab<br></code></pre></td></tr></table></figure>
+
+<p>本机发起连接，来源自然是 <code>127.0.0.1</code>：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">&gt; ssh -p 2222 -i client_from ... Chris@127.0.0.1 &quot;echo FROM-MATCH-OK&quot;<br>FROM-MATCH-OK<br>[exit 0]<br></code></pre></td></tr></table></figure>
+
+<p>服务端日志里多了一行 <code>Postponed publickey</code>，正好呼应上一篇讲过的”认证回调两次”：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">Accepted key ED25519 SHA256:D1QuoCEojeQsOXU67wvg5bdEHdDP9yErgGaoAd7W+8s found at .../authorized_keys:1<br>Postponed publickey for Chris from 127.0.0.1 port 59179 ssh2 [preauth]<br>Accepted publickey for Chris from 127.0.0.1 port 59179 ssh2: ED25519 SHA256:D1QuoCEojeQsOXU67wvg5bdEHdDP9yErgGaoAd7W+8s<br></code></pre></td></tr></table></figure>
+
+<p><code>Postponed</code> 的意思是”公钥没问题，但先不认证，等你拿私钥签名来”。第一次查询不带签名，第二次才正式通过——和上一篇的结论完全一致。</p>
+<h3 id="4-4-from-：来源不匹配，直接拒绝"><a href="#4-4-from-：来源不匹配，直接拒绝" class="headerlink" title="4.4 from=：来源不匹配，直接拒绝"></a>4.4 <code>from=</code>：来源不匹配，直接拒绝</h3><p>只改一个字符，把允许来源换成 <code>10.0.0.1</code>：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">from=&quot;10.0.0.1&quot; ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMZI4wVEoEtmK+bq9STmslD1t/0it1BXk64rJEzcAA0r from-only@lab<br></code></pre></td></tr></table></figure>
+
+<p>明明还是同一把钥匙、同一个服务端，结果：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">&gt; ssh -p 2222 -i client_from ... Chris@127.0.0.1 &quot;echo should-not-run&quot;<br>Chris@127.0.0.1: Permission denied (publickey,keyboard-interactive).<br>[exit 255]<br></code></pre></td></tr></table></figure>
+
+<p>客户端的报错和”公钥不在白名单”长得<strong>一模一样</strong>。区分它们只能看服务端日志，而 OpenSSH 给了一句非常诚实的解释：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">.../authorized_keys:1: Authentication tried for chris with correct key but not from a permitted host (host=127.0.0.1, ip=127.0.0.1, required=10.0.0.1).<br>Failed publickey for Chris from 127.0.0.1 port 59182 ssh2: ED25519 SHA256:D1QuoCEojeQsOXU67wvg5bdEHdDP9yErgGaoAd7W+8s<br></code></pre></td></tr></table></figure>
+
+<p>“correct key but not from a permitted host”——钥匙是对的，来源不对，<code>required=10.0.0.1</code> 直接点出你要求的来源。客户端收到的则是失败报文 <code>type 51</code>（<code>SSH2_MSG_USERAUTH_FAILURE</code>）。</p>
+<p>这里有个真实世界里极易踩的坑：**<code>from=</code> 校验的是 sshd 看到的对端地址<strong>。如果你的连接经过了 NAT、负载均衡或者跳板机，那 sshd 看到的是</strong>上一跳的地址**，不是你的原始 IP。服务器前面挂了 LB，所有人的来源都会变成 LB 的内网 IP，<code>from=</code> 就等于失效了。这种场景要看 <code>sshd_config</code> 里的 <code>UseDNS</code>、<code>X11Forwarding</code> 之类的转发头配置，或者干脆改用证书认证做来源控制。</p>
+<h3 id="4-5-公钥不在白名单：最朴素的那种失败"><a href="#4-5-公钥不在白名单：最朴素的那种失败" class="headerlink" title="4.5 公钥不在白名单：最朴素的那种失败"></a>4.5 公钥不在白名单：最朴素的那种失败</h3><p>最后一把 <code>intruder_ed25519</code>，它从来没进过 <code>authorized_keys</code>（白名单里只有 <code>normal</code>）：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">&gt; ssh -p 2222 -i intruder_ed25519 ... Chris@127.0.0.1 &quot;echo should-not-run&quot;<br>Chris@127.0.0.1: Permission denied (publickey,keyboard-interactive).<br>[exit 255]<br></code></pre></td></tr></table></figure>
+
+<p>服务端日志只有两件事：收到了一次”公钥查询”，然后拒绝了。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">debug1: userauth_pubkey: publickey test pkalg ssh-ed25519 pkblob ED25519 SHA256:aYzU73zV30q5HHPgFZ3mzI59KRlE7Qea0UecsZD1weI [preauth]<br>Failed publickey for Chris from 127.0.0.1 port 59183 ssh2: ED25519 SHA256:aYzU73zV30q5HHPgFZ3mzI59KRlE7Qea0UecsZD1weI<br></code></pre></td></tr></table></figure>
+
+<p>没有 <code>Accepted key</code>，也没有 <code>authorized_keys:N</code>——因为它一行都没命中。这就是最典型的”我密钥配了啊，怎么还是 Permission denied”：配的是 A 机器，连的是 B 机器；或者粘进去的是 <code>id_rsa.pub</code>，用的却是 <code>id_ed25519</code>。</p>
+<h2 id="五、ssh-agent：私钥不离开-agent，要签名就喊它"><a href="#五、ssh-agent：私钥不离开-agent，要签名就喊它" class="headerlink" title="五、ssh-agent：私钥不离开 agent，要签名就喊它"></a>五、ssh-agent：私钥不离开 agent，要签名就喊它</h2><h3 id="5-1-它到底解决什么问题"><a href="#5-1-它到底解决什么问题" class="headerlink" title="5.1 它到底解决什么问题"></a>5.1 它到底解决什么问题</h3><p>给私钥加 passphrase 是好事——私钥文件被拷走也用不了。但代价是每次登录都要输。<code>ssh-agent</code> 的思路很干净：<strong>私钥解密一次，放进 agent 的内存里，之后所有签名请求都交给 agent 做</strong>。私钥本身不再落到磁盘上被读取，也不需要在每条命令里 <code>-i</code> 指定。</p>
+<p><img src="/images/ssh-02-agent.png" srcset="/img/loading.gif" lazyload alt="ssh-agent：私钥不离开 agent，要签名就喊它"></p>
+<p>它的协议很窄，只有几个动作：</p>
+<table>
+<thead>
+<tr>
+<th>动作</th>
+<th>谁发起</th>
+<th>干什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>ssh-add &lt;key&gt;</code></td>
+<td>用户</td>
+<td>解密私钥、把私钥交给 agent 保管</td>
+</tr>
+<tr>
+<td><code>ssh-add -l</code></td>
+<td>用户</td>
+<td>列出 agent 里有哪些公钥（指纹）</td>
+</tr>
+<tr>
+<td><code>ssh-add -D</code></td>
+<td>用户</td>
+<td>清空全部</td>
+</tr>
+<tr>
+<td>签名请求</td>
+<td>ssh 客户端</td>
+<td>客户端只说”用这把公钥签个名”，签名由 agent 完成</td>
+</tr>
+</tbody></table>
+<p>关键在于最后的签名请求：<strong>客户端从头到尾没有读过私钥文件</strong>，它只拿着一份公钥清单去问 agent”你能不能签”。这就是为什么 agent 里的钥匙能同时服务十台服务器——十台机器的 <code>authorized_keys</code> 里放着同一把公钥，客户端只要在 agent 里签一次。</p>
+<h3 id="5-2-Windows-上，agent-是个系统服务"><a href="#5-2-Windows-上，agent-是个系统服务" class="headerlink" title="5.2 Windows 上，agent 是个系统服务"></a>5.2 Windows 上，agent 是个系统服务</h3><p>这一节是我踩坑踩出来的。Windows 的 OpenSSH 和 Linux 不一样：<code>ssh-agent</code> 不是普通后台进程，而是一个<strong>系统服务</strong>，客户端通过命名管道 <code>\\.\pipe\openssh-ssh-agent</code> 连它。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs text">&gt; Get-Service ssh-agent<br><br>Status   Name        DisplayName<br>------   ----        -----------<br>Running  ssh-agent   OpenSSH Authentication Agent<br></code></pre></td></tr></table></figure>
+
+<p>如果它是 <code>Stopped</code> + <code>Disabled</code>，一切 agent 操作都会失败。我最初直接调便携版的 <code>ssh-agent.exe</code>，得到的是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">unable to start ssh-agent service, error :1058<br></code></pre></td></tr></table></figure>
+
+<p><code>1058</code> &#x3D; “服务已被禁用”。便携版 <code>ssh-agent.exe</code> 并不自己起一个独立进程，而是尝试启动那个被禁用的系统服务。而便携版的 <code>ssh-add.exe</code> 更直接：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">&gt; .\ssh-add.exe -l<br>Error connecting to agent: Permission denied<br></code></pre></td></tr></table></figure>
+
+<p>同样的命令换成系统自带的 <code>C:\Windows\System32\OpenSSH\ssh-add.exe</code> 就通了：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">&gt; ssh-add -l<br>The agent has no identities.<br></code></pre></td></tr></table></figure>
+
+<p>所以结论很明确：**Windows 上就用系统服务 + 系统 <code>ssh-add</code>**。启用只需要管理员的一条命令：</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs powershell"><span class="hljs-built_in">Set-Service</span> ssh<span class="hljs-literal">-agent</span> <span class="hljs-literal">-StartupType</span> Automatic<br><span class="hljs-built_in">Start-Service</span> ssh<span class="hljs-literal">-agent</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="5-3-实测：加载-→-不指定-i-也能登录-→-清空-→-立刻失败"><a href="#5-3-实测：加载-→-不指定-i-也能登录-→-清空-→-立刻失败" class="headerlink" title="5.3 实测：加载 → 不指定 -i 也能登录 → 清空 → 立刻失败"></a>5.3 实测：加载 → 不指定 -i 也能登录 → 清空 → 立刻失败</h3><p>为了排除 <code>~/.ssh/config</code> 和默认密钥的干扰，客户端这次不设 <code>IdentitiesOnly</code>，并用 <code>-F</code> 指向一个空配置文件。服务端仍是那台 <code>127.0.0.1:2222</code>，<code>authorized_keys</code> 里只有 <code>normal</code> 一条。</p>
+<p>第一步，把私钥交给 agent：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs text">&gt; ssh-add client_normal<br>Identity added: C:\...\client_normal (normal@lab)<br><br>&gt; ssh-add -l<br>256 SHA256:3ONDKtwSVdpP5NeVT1ivRnPFi9tzLY+mPfGu5FZOecY normal@lab (ED25519)<br></code></pre></td></tr></table></figure>
+
+<p>第二步，**命令行里完全不写 <code>-i</code>**，直接连：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">&gt; ssh -v -F &lt;empty&gt; -p 2222 -o BatchMode=yes -o PreferredAuthentications=publickey Chris@127.0.0.1 &quot;echo AGENT-OK&quot;<br>AGENT-OK<br>[exit 0]<br></code></pre></td></tr></table></figure>
+
+<p><code>-v</code> 日志里有三行是决定性的，注意看每行末尾的 <code>agent</code>：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs text">debug1: Will attempt key: normal@lab ED25519 SHA256:3ONDKtwSVdpP5NeVT1ivRnPFi9tzLY+mPfGu5FZOecY agent<br>debug1: Offering public key: normal@lab ED25519 SHA256:3ONDKtwSVdpP5NeVT1ivRnPFi9tzLY+mPfGu5FZOecY agent<br>debug1: Server accepts key: normal@lab ED25519 SHA256:3ONDKtwSVdpP5NeVT1ivRnPFi9tzLY+mPfGu5FZOecY agent<br>Authenticated to 127.0.0.1 ([127.0.0.1]:2222) using &quot;publickey&quot;.<br></code></pre></td></tr></table></figure>
+
+<p>对比 4.1 节里带 <code>-i</code> 的那些行——同样是 <code>Offering public key</code>，但那次后面跟的是文件路径，这次跟的是 <code>agent</code>。<strong>一行日志就能看出这把钥匙是从文件来的还是从 agent 来的</strong>，排障时非常好用。</p>
+<p>第三步，清空 agent，再来一次：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs text">&gt; ssh-add -D<br>All identities removed.<br><br>&gt; ssh-add -l<br>The agent has no identities.<br>[exit 1]<br><br>&gt; ssh -v -F &lt;empty&gt; -p 2222 ... Chris@127.0.0.1 &quot;echo SHOULD-FAIL&quot;<br>Chris@127.0.0.1: Permission denied (publickey,keyboard-interactive).<br>[exit 255]<br></code></pre></td></tr></table></figure>
+
+<p>这次客户端只 offer 了本机 <code>~/.ssh/id_rsa</code> 那把无关的钥匙，自然被拒：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">debug1: Offering public key: C:\Users\Chris/.ssh/id_rsa RSA SHA256:3jGuGKw2PkdD2+uRuQ9wODpFS6RJhnG7+sF961AsmyQ<br>debug1: No more authentication methods to try.<br></code></pre></td></tr></table></figure>
+
+<p>服务端也对应地记了 <code>Failed publickey ... RSA SHA256:3jGuGKw2...</code>。</p>
+<p>结论闭环：<strong>agent 里有钥匙 → 不写 <code>-i</code> 也能进；agent 一清空 → 立刻进不去</strong>。免密登录的”密”，在 agent 模式下就保管在这个内存进程里。</p>
+<h3 id="5-4-一个真实的反向坑：IdentitiesOnly-yes-会把-agent-屏蔽掉"><a href="#5-4-一个真实的反向坑：IdentitiesOnly-yes-会把-agent-屏蔽掉" class="headerlink" title="5.4 一个真实的反向坑：IdentitiesOnly=yes 会把 agent 屏蔽掉"></a>5.4 一个真实的反向坑：<code>IdentitiesOnly=yes</code> 会把 agent 屏蔽掉</h3><p>我第一次跑这个实验时，顺手沿用了 4.x 节的 <code>-o IdentitiesOnly=yes</code>，心想”这样更严谨，只让 agent 提供”。结果连接失败，服务端日志显示客户端 offer 的是一把 <strong>RSA</strong> 钥匙：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">debug1: userauth_pubkey: publickey test pkalg rsa-sha2-512 pkblob RSA SHA256:3jGuGKw2PkdD2+uRuQ9wODpFS6RJhnG7+sF961AsmyQ [preauth]<br>Failed publickey for Chris from 127.0.0.1 port 62335 ssh2: RSA SHA256:3jGuGKw2PkdD2+uRuQ9wODpFS6RJhnG7+sF961AsmyQ<br></code></pre></td></tr></table></figure>
+
+<p>而 agent 里明明躺着 ED25519。翻了 <code>man ssh_config</code> 才明白：</p>
+<blockquote>
+<p><code>IdentitiesOnly</code> — Specifies that ssh should only use the authentication identity and certificate files explicitly configured in the ssh_config files or passed on the ssh command-line, <strong>even if ssh-agent offers more identities</strong>.</p>
+</blockquote>
+<p>也就是说，<code>IdentitiesOnly=yes</code> 的”only”指的是”only 配置文件&#x2F;命令行里的”，<strong>它会把 agent 里的钥匙排除在外</strong>。这个选项的正确用途是”我指定了 <code>-i</code>，不要让客户端再拿 agent 里的钥匙去乱试”，而不是”让客户端只用 agent”。</p>
+<p>去掉它之后，第三节的 <code>-v</code> 日志立刻变成 <code>Will attempt key: ... agent</code>，登录成功。</p>
+<h2 id="六、私钥权限：agent-也救不了”钥匙根本不加载”"><a href="#六、私钥权限：agent-也救不了”钥匙根本不加载”" class="headerlink" title="六、私钥权限：agent 也救不了”钥匙根本不加载”"></a>六、私钥权限：agent 也救不了”钥匙根本不加载”</h2><p>有一个前置条件必须成立：<strong>私钥得先能被读出来</strong>，才能交给 agent 或用于签名。上一篇已经实测过权限过宽的直接后果：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs text">@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@<br>@         WARNING: UNPROTECTED PRIVATE KEY FILE!          @<br>@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@<br>Permissions for &#x27;.../perm_open_key&#x27; are too open.<br>This private key will be ignored.<br>Load key &quot;.../perm_open_key&quot;: bad permissions<br></code></pre></td></tr></table></figure>
+
+<p>修法上一篇也给了：Linux <code>chmod 600</code>，Windows 收 ACL：</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs powershell">icacls client_normal /inheritance:<span class="hljs-built_in">r</span> /grant:<span class="hljs-built_in">r</span> <span class="hljs-string">&quot;<span class="hljs-variable">$</span>(<span class="hljs-variable">$env:USERNAME</span>):(R)&quot;</span><br></code></pre></td></tr></table></figure>
+
+<p>本篇补充一个和 agent 相关的判断顺序，能省掉大量来回：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">1. ssh-add -l 有输出吗？        → 没有：钥匙根本没进 agent（权限 / passphrase / 路径）<br>2. 有输出，但指纹对不上？        → 加错了钥匙，或者加载的是另一份同名文件<br>3. 指纹对上了还是 Permission denied？ → 去服务端看 authorized_keys 有没有这行、from= 有没有拦<br></code></pre></td></tr></table></figure>
+
+<h2 id="七、踩坑记录"><a href="#七、踩坑记录" class="headerlink" title="七、踩坑记录"></a>七、踩坑记录</h2><ol>
+<li><strong><code>IdentitiesOnly=yes</code> 与 agent 互斥</strong>：它只认配置文件和命令行里的 <code>IdentityFile</code>，会忽略 agent。带 <code>-i</code> 时用它防乱试是对的；想让 agent 生效，就必须去掉。</li>
+<li><strong>Windows 的 agent 是服务，不是进程</strong>：便携版 <code>ssh-agent.exe</code> 会去拉系统服务，服务 <code>Disabled</code> 时报 <code>error :1058</code>；<code>ssh-add</code> 报 <code>Error connecting to agent: Permission denied</code> 或 <code>No such file or directory</code>，都先查 <code>Get-Service ssh-agent</code>。</li>
+<li><strong><code>ssh-add -l</code> 退出码是 1 不等于出错</strong>：agent 空的时候它返回 1 并打印 <code>The agent has no identities.</code>，写脚本时别把这种情况当失败。</li>
+<li><strong><code>from=</code> 看的是 sshd 视角的对端地址</strong>：前面有 NAT &#x2F; LB &#x2F; 跳板时，看到的是上一跳 IP，原始来源会被抹掉。</li>
+<li><strong>客户端报错无法区分失败原因</strong>：”公钥不在白名单”和”来源不被允许”在客户端都是 <code>Permission denied (publickey,keyboard-interactive)</code>，必须看服务端日志里的 <code>correct key but not from a permitted host</code>。</li>
+<li><strong><code>command=</code> 不是万能锁</strong>：它替换的是客户端的请求，被强制的那条命令如果自己能读参数、能起子进程，限制就被绕过了。真正的限制要靠”命令本身不接受外部输入”。</li>
+<li><strong><code>StrictModes no</code> 只为实验方便</strong>：Windows 上 ACL 检查容易把实验目录判为不安全。生产环境保持默认 <code>yes</code>，并确保 <code>authorized_keys</code> 属于对应用户、其他用户不可写。</li>
+</ol>
+<h2 id="八、小结与下一篇预告"><a href="#八、小结与下一篇预告" class="headerlink" title="八、小结与下一篇预告"></a>八、小结与下一篇预告</h2><p>三句话收尾：</p>
+<ul>
+<li><strong><code>authorized_keys</code> 的每一行是一条规则</strong>：<code>[选项] 算法 公钥 注释</code>。命中哪一行，就按哪一行的选项走；<code>command=</code> 换掉你要执行的命令，<code>from=</code> 卡住你的来源地址。</li>
+<li>**<code>ssh-agent</code> 把”私钥文件”换成”内存里的签名服务”**：加载一次，多台机器共用；日志里 <code>... agent</code> 后缀就是它出手的标志。Windows 上它是系统服务，管好 <code>Get-Service ssh-agent</code>。</li>
+<li><strong>免密失败的排查顺序</strong>：钥匙进没进 agent → 指纹对不对 → 服务端有没有这行 → 来源选项拦没拦。客户端报错永远只是”Permission denied”，答案在服务端日志里。</li>
+</ul>
+<p>到这里，免密登录是真正跑通了。但命令也变长了：<code>ssh -i ... -p 2222 -o ... Chris@127.0.0.1</code>。下一篇把这些参数收进 <code>~/.ssh/config</code>，让一条 <code>ssh lab</code> 搞定，并顺手用 <code>ProxyJump</code> 打通”本机 → 跳板机 → 内网机器”的链路。<strong>同样全部本机实测，<code>ssh -G</code> 的解析结果和跳板机日志都会贴出来</strong>。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://man.openbsd.org/sshd">OpenSSH manual: sshd(8)</a> &#x2F; <a target="_blank" rel="noopener" href="https://man.openbsd.org/sshd_config">sshd_config(5)</a>（<code>AuthorizedKeysFile</code>、<code>authorized_keys</code> 选项）</li>
+<li><a target="_blank" rel="noopener" href="https://man.openbsd.org/ssh-add">OpenSSH manual: ssh-add(1)</a> &#x2F; <a target="_blank" rel="noopener" href="https://man.openbsd.org/ssh-agent">ssh-agent(1)</a></li>
+<li><a target="_blank" rel="noopener" href="https://man.openbsd.org/ssh_config">OpenSSH manual: ssh_config(5)</a>（<code>IdentitiesOnly</code> 的准确定义）</li>
+<li><a target="_blank" rel="noopener" href="https://github.com/PowerShell/Win32-OpenSSH">Win32-OpenSSH 仓库</a>（Windows 上 agent 以服务形式运行）</li>
+<li>RFC 4252（SSH 用户认证协议，<code>SSH2_MSG_USERAUTH_FAILURE</code> 即 type 51）</li>
+<li>本次实验代码与全部原始日志：<code>ssh-lab/sshd-portable/</code>（<code>sshd_lab.py</code>、<code>ssh_agent_lab.py</code>、<code>results_sshd/01~05</code>、<code>07-agent.log</code>）</li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/SSH-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" class="category-chain-item">SSH 学习笔记</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/SSH/" class="print-no-link">#SSH</a>
+      
+        <a href="/tags/OpenSSH/" class="print-no-link">#OpenSSH</a>
+      
+        <a href="/tags/authorized-keys/" class="print-no-link">#authorized_keys</a>
+      
+        <a href="/tags/ssh-agent/" class="print-no-link">#ssh-agent</a>
+      
+    </div>
+  
+</div>
+
+
+              
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2026/11/26/ssh-03-config/" title="SSH 学习笔记（三）：把一长串参数变成 ssh lab，顺带搞定跳板机">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">SSH 学习笔记（三）：把一长串参数变成 ssh lab，顺带搞定跳板机</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/11/26/ssh-01-handshake/" title="SSH 学习笔记（一）：一次 ssh 登录到底发生了什么">
+                        <span class="hidden-mobile">SSH 学习笔记（一）：一次 ssh 登录到底发生了什么</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

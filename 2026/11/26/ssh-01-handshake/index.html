@@ -1,0 +1,838 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/imgs/ava/fluid.png">
+  <link rel="icon" href="/imgs/ava/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Chris">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="每天敲 ssh user@host，回车之后一两秒就进去了。敲得多了，容易把 SSH 想成”加密版的 telnet”——反正就是连上、输密码、干活。可一旦报错：Permission denied、Host key verification failed、私钥”权限太开放”被拒绝加载——脑子里没有一张图，就只能靠搜关键词碰运气。 所以这个系列第一篇不背命令，而是把一次登录从头到尾跑一遍：在本机起一">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SSH 学习笔记（一）：一次 ssh 登录到底发生了什么">
+<meta property="og:url" content="https://lu-six-star.github.io/2026/11/26/ssh-01-handshake/index.html">
+<meta property="og:site_name" content="星橙点点">
+<meta property="og:description" content="每天敲 ssh user@host，回车之后一两秒就进去了。敲得多了，容易把 SSH 想成”加密版的 telnet”——反正就是连上、输密码、干活。可一旦报错：Permission denied、Host key verification failed、私钥”权限太开放”被拒绝加载——脑子里没有一张图，就只能靠搜关键词碰运气。 所以这个系列第一篇不背命令，而是把一次登录从头到尾跑一遍：在本机起一">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://lu-six-star.github.io/images/ssh-01-cover.png">
+<meta property="article:published_time" content="2026-11-26T07:45:00.000Z">
+<meta property="article:modified_time" content="2026-11-26T09:10:17.859Z">
+<meta property="article:author" content="Chris">
+<meta property="article:tag" content="SSH">
+<meta property="article:tag" content="OpenSSH">
+<meta property="article:tag" content="密钥">
+<meta property="article:tag" content="网络安全">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://lu-six-star.github.io/images/ssh-01-cover.png">
+  
+  
+  
+  <title>SSH 学习笔记（一）：一次 ssh 登录到底发生了什么 - 星橙点点</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"lu-six-star.github.io","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>星橙点点</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/images/ssh-01-cover.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="SSH 学习笔记（一）：一次 ssh 登录到底发生了什么"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-11-26 15:45" pubdate>
+          2026年11月26日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          11k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          92 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">SSH 学习笔记（一）：一次 ssh 登录到底发生了什么</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <blockquote>
+<p>每天敲 <code>ssh user@host</code>，回车之后一两秒就进去了。敲得多了，容易把 SSH 想成”加密版的 telnet”——反正就是连上、输密码、干活。可一旦报错：<code>Permission denied</code>、<code>Host key verification failed</code>、私钥”权限太开放”被拒绝加载——脑子里没有一张图，就只能靠搜关键词碰运气。</p>
+<p>所以这个系列第一篇不背命令，而是把<strong>一次登录从头到尾跑一遍</strong>：在本机起一个真实的 SSH 服务端，给客户端加上 <code>-vvv</code>，让它把每一步都喊出来。文中出现的指纹、字节数、耗时、报错，全部是本机实测抓的，不是抄的。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="这个系列会写什么"><a href="#这个系列会写什么" class="headerlink" title="这个系列会写什么"></a>这个系列会写什么</h2><table>
+<thead>
+<tr>
+<th>#</th>
+<th>主题</th>
+<th>状态</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>一次 ssh 登录到底发生了什么（握手 &#x2F; 认证 &#x2F; 第一个命令）</td>
+<td><strong>本篇</strong></td>
+</tr>
+<tr>
+<td>2</td>
+<td>密钥与免密登录：authorized_keys、ssh-agent、权限那点事</td>
+<td><a href="/ssh-02-keys/">已发布</a></td>
+</tr>
+<tr>
+<td>3</td>
+<td>ssh config：别名、多主机与跳板机</td>
+<td><a href="/ssh-03-config/">已发布</a></td>
+</tr>
+<tr>
+<td>4</td>
+<td>端口转发：-L &#x2F; -R &#x2F; -D 到底转发的是什么</td>
+<td><a href="/ssh-04-forwarding/">已发布</a></td>
+</tr>
+<tr>
+<td>5</td>
+<td>登录故障排查清单：从 -vvv 日志定位问题</td>
+<td><a href="/ssh-05-troubleshooting/">已发布</a></td>
+</tr>
+</tbody></table>
+<h2 id="一、先搭一个”能看见全程”的靶机"><a href="#一、先搭一个”能看见全程”的靶机" class="headerlink" title="一、先搭一个”能看见全程”的靶机"></a>一、先搭一个”能看见全程”的靶机</h2><h3 id="1-1-为什么不直接连一台云服务器"><a href="#1-1-为什么不直接连一台云服务器" class="headerlink" title="1.1 为什么不直接连一台云服务器"></a>1.1 为什么不直接连一台云服务器</h3><p>看握手过程，<code>-vvv</code> 是基本操作。但更关键的是：我想观察<strong>认证失败</strong>和<strong>主机密钥被换掉</strong>这两种场景，总不能真去动生产服务器。所以这次在本机造一个靶机——用 Python 3.12 + paramiko 5.1.0 写一个最小 SSH 服务端，监听 <code>127.0.0.1:2222</code>；客户端就用 Windows 自带的 OpenSSH。</p>
+<p>有一件事必须先讲清楚：<strong>服务端是 paramiko 实现，不是 Linux 上的 OpenSSH sshd</strong>，所以日志里会出现 <code>remote software version paramiko_5.1.0</code>。但版本串、<code>KEXINIT</code> 算法清单、密钥交换、用户认证、通道申请——这些都是 SSH 协议本身规定的报文，两边讲的是同一套协议。换成一台真实的 Linux 服务器，变化的只是 banner 文字和算法偏好的顺序，握手的流程一步都不会少。</p>
+<h3 id="1-2-准备两对钥匙"><a href="#1-2-准备两对钥匙" class="headerlink" title="1.2 准备两对钥匙"></a>1.2 准备两对钥匙</h3><p>先确认客户端版本，然后生成<strong>服务器主机密钥</strong>和<strong>客户端用户密钥</strong>：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">&gt; ssh -V<br>OpenSSH_for_Windows_9.5p1, LibreSSL 3.8.2<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs text">&gt; ssh-keygen -t ed25519 -f host_ed25519 -N &quot;&quot; -C &quot;sshlab-host@127.0.0.1&quot;<br>Generating public/private ed25519 key pair.<br>Your identification has been saved in host_ed25519<br>Your public key has been saved in host_ed25519.pub<br>The key fingerprint is:<br>SHA256:ohKg6lejnS9wfEOAWAJdGksyJuOips/TLxbTipnPSbE sshlab-host@127.0.0.1<br>The key&#x27;s randomart image is:<br>+--[ED25519 256]--+<br>|B+=oo            |<br>|+*o= .           |<br>|o.o   .          |<br>|+.     .         |<br>|o.. o.o S        |<br>|+  ooO.+         |<br>|o .=E++ .        |<br>|.o=*==           |<br>| .+++o+.         |<br>+----[SHA256]-----+<br></code></pre></td></tr></table></figure>
+
+<p>同理生成客户端那把，指纹是 <code>SHA256:wgDfxjm6tuXfZjanqwPKb9dEtaJH4pAIZEkSqWU3aaQ</code>。</p>
+<p>两把钥匙、两个指纹——记住这四个值，后面每一段日志都会反复用到它们。</p>
+<blockquote>
+<p>Windows PowerShell 里空口令要写成 <code>-N &#39;&quot;&quot;&#39;</code>，直接写 <code>-N &quot;&quot;</code> 会被参数解析吃掉，生成出来的密钥反而带了口令。</p>
+</blockquote>
+<h3 id="1-3-服务端只有三十行核心逻辑"><a href="#1-3-服务端只有三十行核心逻辑" class="headerlink" title="1.3 服务端只有三十行核心逻辑"></a>1.3 服务端只有三十行核心逻辑</h3><p>paramiko 的服务端骨架薄得像张纸：加载主机私钥 → 起监听 → 每个连接起一个 <code>Transport</code> → 在回调里回答”这个密码 &#x2F; 这把公钥行不行”。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">LabServer</span>(paramiko.ServerInterface):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">check_auth_publickey</span>(<span class="hljs-params">self, username, key</span>):<br>        <span class="hljs-keyword">if</span> key.asbytes() == self.authorized_blob:      <span class="hljs-comment"># 公钥在&quot;白名单&quot;里吗</span><br>            <span class="hljs-keyword">return</span> paramiko.AUTH_SUCCESSFUL<br>        <span class="hljs-keyword">return</span> paramiko.AUTH_FAILED<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">check_channel_request</span>(<span class="hljs-params">self, kind, chanid</span>):<br>        <span class="hljs-keyword">return</span> paramiko.OPEN_SUCCEEDED <span class="hljs-keyword">if</span> kind == <span class="hljs-string">&quot;session&quot;</span> <span class="hljs-keyword">else</span> paramiko.OPEN_FAILED<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">check_channel_exec_request</span>(<span class="hljs-params">self, channel, command</span>):<br>        self.command = command.decode()<br>        self.exec_event.<span class="hljs-built_in">set</span>()                          <span class="hljs-comment"># 客户端要执行命令</span><br>        <span class="hljs-keyword">return</span> <span class="hljs-literal">True</span><br><br>transport = paramiko.Transport(client_sock)<br>transport.add_server_key(paramiko.Ed25519Key(filename=<span class="hljs-string">&quot;host_ed25519&quot;</span>))<br>transport.start_server(server=LabServer(authorized_blob, password))<br></code></pre></td></tr></table></figure>
+
+<p>客户端连通后执行 <code>hostname &amp; whoami &amp; echo SSH-LAB-OK</code>，服务端用 <code>cmd.exe /c</code> 真跑，再把 stdout 和 exit-status 回送。完整的实验代码和全部原始日志都在 <code>ssh-lab/</code> 里。</p>
+<h2 id="二、原理：六步走完一次登录"><a href="#二、原理：六步走完一次登录" class="headerlink" title="二、原理：六步走完一次登录"></a>二、原理：六步走完一次登录</h2><p><img src="/images/ssh-01-handshake.png" srcset="/img/loading.gif" lazyload alt="一次 ssh 登录的完整时序"></p>
+<p>把 <code>-vvv</code> 日志按阶段切开，一次登录其实就干了六件事：</p>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>干什么</th>
+<th>此时数据是明文吗</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>① TCP 连接</td>
+<td>三次握手，连上 22（这里是 2222）端口</td>
+<td>是</td>
+</tr>
+<tr>
+<td>② 版本交换</td>
+<td>双方各报一句 <code>SSH-2.0-xxx</code>，只报身份不做认证</td>
+<td>是</td>
+</tr>
+<tr>
+<td>③ 算法协商</td>
+<td>各发一张 <code>KEXINIT</code> 清单（KEX &#x2F; 主机密钥 &#x2F; 加密 &#x2F; MAC），<strong>取交集</strong></td>
+<td>是</td>
+</tr>
+<tr>
+<td>④ 密钥交换</td>
+<td>ECDH 算出会话密钥；服务器用主机私钥签名，证明”我是这台机器”</td>
+<td>开始混合</td>
+</tr>
+<tr>
+<td>⑤ 切换加密</td>
+<td><code>NEWKEYS</code> 之后，所有报文走对称加密</td>
+<td>否</td>
+</tr>
+<tr>
+<td>⑥ 用户认证</td>
+<td>客户端声明公钥 + 用私钥签名，服务器在白名单里验证</td>
+<td>否（加密通道内）</td>
+</tr>
+</tbody></table>
+<p>六步走完，才轮到 <code>session</code> 通道、<code>exec</code> 请求、回传 stdout 和退出码。</p>
+<p>有一个结论值得钉在最前面：<strong>登录密码（或私钥）从来不”传”给服务器</strong>，它是在已经加密的通道里被验证的——这正是 SSH 和 telnet 的根本区别。telnet 是把口令明文送过去，SSH 是先把通道锁死，再在锁里验明正身。</p>
+<h2 id="三、实测：逐段读-vvv-日志"><a href="#三、实测：逐段读-vvv-日志" class="headerlink" title="三、实测：逐段读 -vvv 日志"></a>三、实测：逐段读 <code>-vvv</code> 日志</h2><h3 id="3-1-版本交换：先互相报名"><a href="#3-1-版本交换：先互相报名" class="headerlink" title="3.1 版本交换：先互相报名"></a>3.1 版本交换：先互相报名</h3><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">debug1: Local version string SSH-2.0-OpenSSH_for_Windows_9.5<br>debug1: Remote protocol version 2.0, remote software version paramiko_5.1.0<br>debug1: compat_banner: no match: paramiko_5.1.0<br></code></pre></td></tr></table></figure>
+
+<p>这一步是<strong>明文</strong>的。任何中间人都能看到”你在连哪台机器、对方跑的是什么软件”。也正因为它必须明文，SSH 才背上了历史包袱：有些老服务器会傻等版本串、有些实现的 banner 格式不规范，于是客户端积累了一堆 <code>compat_banner</code> 兼容规则——<code>no match</code> 只是说”没触发任何已知的兼容补丁”，不是报错。</p>
+<h3 id="3-2-算法协商：不是客户端说了算，是取交集"><a href="#3-2-算法协商：不是客户端说了算，是取交集" class="headerlink" title="3.2 算法协商：不是客户端说了算，是取交集"></a>3.2 算法协商：不是客户端说了算，是取交集</h3><p>客户端先亮出自己的清单（节选）：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">debug2: KEX algorithms: curve25519-sha256,curve25519-sha256@libssh.org,ecdh-sha2-nistp256,...,ext-info-c,kex-strict-c-v00@openssh.com<br>debug2: ciphers ctos: chacha20-poly1305@openssh.com,aes128-ctr,aes192-ctr,aes256-ctr,...<br></code></pre></td></tr></table></figure>
+
+<p>服务器也回一张（节选）：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">debug2: KEX algorithms: mlkem768x25519-sha256,curve25519-sha256@libssh.org,ecdh-sha2-nistp256,...<br>debug2: ciphers ctos: aes128-ctr,aes192-ctr,aes256-ctr,aes128-cbc,...<br></code></pre></td></tr></table></figure>
+
+<p>最终协商结果：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs text">debug3: kex_choose_conf: will use strict KEX ordering<br>debug1: kex: algorithm: curve25519-sha256@libssh.org<br>debug1: kex: host key algorithm: ssh-ed25519<br>debug1: kex: server-&gt;client cipher: aes128-ctr MAC: hmac-sha2-256-etm@openssh.com compression: none<br>debug1: kex: client-&gt;server cipher: aes128-ctr MAC: hmac-sha2-256-etm@openssh.com compression: none<br></code></pre></td></tr></table></figure>
+
+<p>三个细节，全是这次真实协商出来的，值得停下来看一眼：</p>
+<ol>
+<li>**客户端首选 <code>chacha20-poly1305@openssh.com</code>，最后却用了 <code>aes128-ctr</code>**——因为服务端（paramiko）的清单里根本没有 chacha20。算法的选择规则是”取客户端清单中、服务端也支持的第一项”，所以换一台服务器，这里用的密很可能就变了。</li>
+<li><strong>服务端其实提供了 <code>mlkem768x25519-sha256</code>（后量子混合密钥交换），但客户端 9.5 不认识它</strong>，只好退回到 <code>curve25519-sha256@libssh.org</code>。协议的双向兼容就是这么工作的：谁都别想单方面升级，得两边都点头才算数。</li>
+<li>**<code>will use strict KEX ordering</code>**：双方都支持 <code>kex-strict-*</code> 扩展，于是启用了严格 KEX 顺序，堵掉了 Terrapin 那类”在握手报文里动手脚”的攻击面。</li>
+</ol>
+<h3 id="3-3-密钥交换：主机密钥出场"><a href="#3-3-密钥交换：主机密钥出场" class="headerlink" title="3.3 密钥交换：主机密钥出场"></a>3.3 密钥交换：主机密钥出场</h3><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">debug1: Server host key: ssh-ed25519 SHA256:ohKg6lejnS9wfEOAWAJdGksyJuOips/TLxbTipnPSbE<br>debug1: Host &#x27;[127.0.0.1]:2222&#x27; is known and matches the ED25519 host key.<br>debug1: Found key in .../ssh-lab/known_hosts:1<br></code></pre></td></tr></table></figure>
+
+<p>这一步同时发生了<strong>两件事</strong>，别混为一谈：</p>
+<ul>
+<li>双方用 ECDH 各自算出同一份会话密钥——密钥本身<strong>不在网络上传输</strong>，只交换临时公钥；</li>
+<li>服务器额外用主机私钥对整个握手数据签名，客户端拿 <code>known_hosts</code> 里存的主机公钥来验签。</li>
+</ul>
+<p>验签通过，客户端才敢确认”对面确实是上次那台机器”。注意 <code>[127.0.0.1]:2222</code> 这种写法——<strong>端口不是默认的 22 时，<code>known_hosts</code> 的条目会带上端口</strong>，这也是为什么改了端口之后，客户端会”重新问一次 yes”。</p>
+<h3 id="3-4-用户认证：先问一句，再交签名"><a href="#3-4-用户认证：先问一句，再交签名" class="headerlink" title="3.4 用户认证：先问一句，再交签名"></a>3.4 用户认证：先问一句，再交签名</h3><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs text">debug1: Offering public key: .../client_ed25519 ED25519 SHA256:wgDfxjm6tuXfZjanqwPKb9dEtaJH4pAIZEkSqWU3aaQ<br>debug2: we sent a publickey packet, wait for reply<br>debug3: receive packet: type 60<br>debug1: Server accepts key: .../client_ed25519<br>debug3: sign_and_send_pubkey: signing using ssh-ed25519<br>debug3: receive packet: type 52<br>Authenticated to 127.0.0.1 ([127.0.0.1]:2222) using &quot;publickey&quot;.<br></code></pre></td></tr></table></figure>
+
+<p>公钥认证是<strong>两轮</strong>的：</p>
+<ul>
+<li>第一轮，客户端先发公钥问一句”这把钥匙你认不认”，服务器回 <code>type 60</code>（<code>PK_OK</code>）表示”认，你可以用它签名”；</li>
+<li>第二轮，客户端才用私钥对会话数据签名、正式提交，服务器回 <code>type 52</code> 表示认证成功。</li>
+</ul>
+<p>所以去看服务端日志，会发现 <code>auth PUBLICKEY accepted</code> 出现了两次——这不是 bug，是协议规定的两轮。</p>
+<p>很多人以为”公钥登录就是把公钥发给服务器校验一下”，其实服务器从头到尾只做一件事：<strong>用你提供的公钥，验证你用对应私钥做出的签名</strong>。私钥从始至终没离开过本机。</p>
+<h3 id="3-5-会话通道与第一个命令"><a href="#3-5-会话通道与第一个命令" class="headerlink" title="3.5 会话通道与第一个命令"></a>3.5 会话通道与第一个命令</h3><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs text">debug1: channel 0: new session [client-session]<br>debug1: Sending command: hostname &amp; whoami &amp; echo SSH-LAB-OK<br>debug2: exec request accepted on channel 0<br>debug1: client_input_channel_req: channel 0 rtype exit-status reply 0<br>debug1: Exit status 0<br>Transferred: sent 2104, received 1580 bytes, in 0.2 seconds<br></code></pre></td></tr></table></figure>
+
+<p>对照服务端同一时刻的日志，两边能严丝合缝地对上：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs text">[SERVER] TCP accepted from 127.0.0.1:56019<br>[SERVER] kex done, client version = SSH-2.0-OpenSSH_for_Windows_9.5<br>[SERVER] auth PUBLICKEY accepted for user &#x27;chris&#x27; (ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA...)<br>[SERVER] auth PUBLICKEY accepted for user &#x27;chris&#x27; (ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA...)<br>[SERVER] channel request: session (id=0)<br>[SERVER] exec request: hostname &amp; whoami &amp; echo SSH-LAB-OK<br>[SERVER] command finished, exit=0, bytes=52<br></code></pre></td></tr></table></figure>
+
+<p>客户端收到的 stdout：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">DESKTOP-K81RELT<br>desktop-k81relt\chris<br>SSH-LAB-OK<br></code></pre></td></tr></table></figure>
+
+<p>一次完整登录，加密通道上真正搬运的只有 <strong>2104 字节上行 + 1580 字节下行</strong>。SSH 之所以在慢网络上也”够快”，是因为握手只跑一次，之后所有命令都复用同一条加密通道（<code>ControlMaster</code> 还能让多次 <code>ssh</code> 复用一条连接，那是后话）。</p>
+<h2 id="四、两把钥匙、两个文件"><a href="#四、两把钥匙、两个文件" class="headerlink" title="四、两把钥匙、两个文件"></a>四、两把钥匙、两个文件</h2><p><img src="/images/ssh-01-keys.png" srcset="/img/loading.gif" lazyload alt="主机密钥与用户密钥、known_hosts 与 authorized_keys"></p>
+<p>这是最容易糊在一起的部分，用一张表钉死：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>主机密钥（host key）</th>
+<th>用户密钥（user key）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>证明谁</td>
+<td>服务器身份</td>
+<td>用户身份</td>
+</tr>
+<tr>
+<td>私钥在哪</td>
+<td>服务器上，绝不外发</td>
+<td>客户端本机</td>
+</tr>
+<tr>
+<td>公钥存到哪</td>
+<td>客户端的 <code>known_hosts</code></td>
+<td>服务器的 <code>authorized_keys</code></td>
+</tr>
+<tr>
+<td>作用</td>
+<td>防中间人：确认”连的是不是那台机器”</td>
+<td>免密登录：确认”你是不是那个用户”</td>
+</tr>
+<tr>
+<td>本次实测指纹</td>
+<td><code>SHA256:ohKg6le...PSbE</code></td>
+<td><code>SHA256:wgDfxjm...3aaQ</code></td>
+</tr>
+</tbody></table>
+<p>两个文件各管一件事，<strong>千万别混用</strong>：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs text"># known_hosts 里的一行（客户端保存的服务器公钥）<br>[127.0.0.1]:2222 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPCLn8dS4SekUZ7ohKAQTUmJoha2FrzRbeRxBAHlhTLq<br><br># authorized_keys 里的一行（服务器允许的用户公钥）<br>ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHDNrNbao5Ny4b6TuFgkZvKulxyAmepndJsTnXfzl5sb chris@ssh-lab<br></code></pre></td></tr></table></figure>
+
+<p>想主动抓一台服务器的公钥，不用登录，<code>ssh-keyscan</code> 直接问：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">&gt; ssh-keyscan -p 2222 -t ed25519 127.0.0.1<br># 127.0.0.1:2222 SSH-2.0-paramiko_5.1.0<br>[127.0.0.1]:2222 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPCLn8dS4SekUZ7ohKAQTUmJoha2FrzRbeRxBAHlhTLq<br></code></pre></td></tr></table></figure>
+
+<h3 id="4-1-配置到底从哪来：ssh-G"><a href="#4-1-配置到底从哪来：ssh-G" class="headerlink" title="4.1 配置到底从哪来：ssh -G"></a>4.1 配置到底从哪来：<code>ssh -G</code></h3><p>排查”为什么它连到那儿去了”，最有用的一条命令是 <code>ssh -G</code>（注意是大写 G，不是 <code>-g</code>）。它不发起连接，只把<strong>最终生效的配置</strong>全部打印出来：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs text">&gt; ssh -G -F ssh_config lab<br>host lab<br>user chris<br>hostname 127.0.0.1<br>port 2222<br>identitiesonly yes<br>stricthostkeychecking ask<br>identityfile C:/Users/Chris/Desktop/dsh_temp/博客/ssh-lab/client_ed25519<br></code></pre></td></tr></table></figure>
+
+<p>本机客户端支持的算法清单也能直接查，不用猜：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs text">&gt; ssh -Q kex      # 12 项<br>&gt; ssh -Q key      # 16 项<br>&gt; ssh -Q cipher   # 10 项<br>&gt; ssh -Q mac      # 16 项<br></code></pre></td></tr></table></figure>
+
+<p><code>ssh -Q key</code> 里既有 <code>ssh-ed25519</code>，也还留着 <code>ssh-rsa</code>、<code>ssh-dss</code>。但**”支持”不等于”会用”**——实际用哪个由协商决定，而 <code>ssh-rsa</code>（基于 SHA-1）在新版服务端默认已经被禁用了。</p>
+<h2 id="五、三个翻车现场（都是真跑出来的）"><a href="#五、三个翻车现场（都是真跑出来的）" class="headerlink" title="五、三个翻车现场（都是真跑出来的）"></a>五、三个翻车现场（都是真跑出来的）</h2><h3 id="5-1-私钥权限太开放：客户端直接拒绝加载"><a href="#5-1-私钥权限太开放：客户端直接拒绝加载" class="headerlink" title="5.1 私钥权限太开放：客户端直接拒绝加载"></a>5.1 私钥权限太开放：客户端直接拒绝加载</h3><p>把私钥复制一份，放开 ACL 给 Everyone，再连一次：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs text">@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@<br>@         WARNING: UNPROTECTED PRIVATE KEY FILE!          @<br>@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@<br>Permissions for &#x27;.../perm_open_key&#x27; are too open.<br>It is required that your private key files are NOT accessible by others.<br>This private key will be ignored.<br>Load key &quot;.../perm_open_key&quot;: bad permissions<br>debug2: we did not send a packet, disable method<br>debug1: No more authentication methods to try.<br>chris@127.0.0.1: Permission denied (publickey,password).<br></code></pre></td></tr></table></figure>
+
+<p>报错看着像”认证失败”，其实根因是<strong>客户端根本没把钥匙掏出来</strong>——它在加载阶段就把这把权限过宽的私钥判为不安全、直接忽略了。Linux 上靠 <code>chmod 600</code>，Windows 上要收 ACL：</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs powershell">icacls client_ed25519 /inheritance:<span class="hljs-built_in">r</span> /grant:<span class="hljs-built_in">r</span> <span class="hljs-string">&quot;<span class="hljs-variable">$</span>(<span class="hljs-variable">$env:USERNAME</span>):(R)&quot;</span><br></code></pre></td></tr></table></figure>
+
+<p>这次实验里第一次连接就栽在这上面：密钥生成在桌面目录下，继承了”Users 可读”的权限，客户端二话不说就拒收。<strong>从别的机器拷贝私钥过来，十有八九会踩这一脚。</strong></p>
+<h3 id="5-2-主机密钥变了：不是网络问题，是身份问题"><a href="#5-2-主机密钥变了：不是网络问题，是身份问题" class="headerlink" title="5.2 主机密钥变了：不是网络问题，是身份问题"></a>5.2 主机密钥变了：不是网络问题，是身份问题</h3><p>把服务端换成另一把主机密钥，客户端立刻炸：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs text">@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@<br>@    WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!     @<br>@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@<br>IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!<br>Someone could be eavesdropping on you right now (man-in-the-middle attack)!<br>It is also possible that a host key has just been changed.<br>The fingerprint for the ED25519 key sent by the remote host is<br>SHA256:iFx97r6N1ojobZcxVd6SdXHEWm2367fL+9QPSUDGebs.<br>Offending ED25519 key in .../known_hosts:1<br>Host key for [127.0.0.1]:2222 has changed and you have requested strict checking.<br>Host key verification failed.<br></code></pre></td></tr></table></figure>
+
+<p><strong>正确的处理顺序</strong>：先通过带外渠道（云控制台、运维同事、另一条可信网络）核对新指纹，确认是”真换了机器 &#x2F; 重装了系统”，再删旧条目：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">ssh-keygen -R &quot;[127.0.0.1]:2222&quot;<br></code></pre></td></tr></table></figure>
+
+<p>不核对就直接 <code>ssh-keygen -R</code> 然后重连，等于把中间人告警一键静音。这个告警存在的唯一意义，就是逼你停下来核对一下。</p>
+<h3 id="5-3-公钥不在白名单：服务端明确拒绝"><a href="#5-3-公钥不在白名单：服务端明确拒绝" class="headerlink" title="5.3 公钥不在白名单：服务端明确拒绝"></a>5.3 公钥不在白名单：服务端明确拒绝</h3><p>用一把没进 <code>authorized_keys</code> 的私钥（<code>intruder@lab</code>）连接：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs text">debug1: Offering public key: .../wrong_ed25519 ED25519 SHA256:b8bHQwgkEYHZ4P8qT7Rtx6JpzEkEEy9wg4sVjzg73v0<br>debug2: we sent a publickey packet, wait for reply<br>debug3: receive packet: type 51<br>debug1: Authentications that can continue: publickey,password<br>debug2: we did not send a packet, disable method<br>debug1: No more authentication methods to try.<br>chris@127.0.0.1: Permission denied (publickey,password).<br></code></pre></td></tr></table></figure>
+
+<p>服务端日志对应一行 <code>auth PUBLICKEY rejected for user &#39;chris&#39;</code>。<code>type 51</code> 的意思就是”这把不行，请继续尝试其它方式”。</p>
+<p>排这种问题，按顺序问自己三句：<strong>公钥真的写进服务器的 <code>~/.ssh/authorized_keys</code> 了吗？目录和文件的权限对吗？服务端允许公钥登录吗</strong>（<code>PubkeyAuthentication yes</code>）。三句里任何一句不成立，你看到的都是同一句 <code>Permission denied</code>。</p>
+<h2 id="六、耗时实测：握手到底占多少"><a href="#六、耗时实测：握手到底占多少" class="headerlink" title="六、耗时实测：握手到底占多少"></a>六、耗时实测：握手到底占多少</h2><p>本机回环，连续 5 次”连接 + 认证 + 执行 <code>echo tick</code>“的端到端耗时：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs text">run1: EXIT=0 132.4 ms<br>run2: EXIT=0 129.0 ms<br>run3: EXIT=0 123.5 ms<br>run4: EXIT=0 146.3 ms<br>run5: EXIT=0 131.2 ms<br></code></pre></td></tr></table></figure>
+
+<p>平均约 <strong>132 ms</strong>，波动 123~146 ms。这个数字里包含了进程启动、DLL 加载、握手、认证、通道建立和命令执行——回环网络本身几乎不花时间，所以它基本就是”SSH 客户端本身的固定开销”。</p>
+<p>这也解释了为什么连远程服务器感觉慢得多：真正的成本是 <strong>RTT × 握手往返次数</strong>。从一个 30 ms 延迟的机房连过去，光握手就要跑好几个 RTT，这是物理距离决定的，跟加密算法关系不大（curve25519 的运算在微秒级）。</p>
+<h2 id="七、踩坑记录"><a href="#七、踩坑记录" class="headerlink" title="七、踩坑记录"></a>七、踩坑记录</h2><ol>
+<li><strong>私钥权限</strong>：Windows 上用 <code>icacls</code> 收 ACL，Linux 上 <code>chmod 600</code>；从别处拷来的私钥几乎必然踩坑（本篇 5.1 现场）。</li>
+<li><strong>中文路径不影响 SSH，但会把日志搞花</strong>：<code>博客</code> 在 <code>-vvv</code> 里显示成 <code>\345\215\232\345\256\242</code>，那只是 UTF-8 的八进制转义，文件读取完全正常，不必改目录名。</li>
+<li><strong>服务端认证回调会被调用两次</strong>：第一次是”公钥查询”（不带签名），第二次才是带签名的正式认证。写自己的 SSH 服务端时，别把第一次当成”登录成功”。</li>
+<li><strong><code>no channel opened</code> 不是网络故障</strong>：客户端在认证阶段就退出（比如权限问题、公钥被拒），自然不会开 session 通道；服务端等 20 秒超时后才打印这句。</li>
+<li><strong><code>known_hosts</code> 不是授权文件</strong>：它只回答”这台服务器是不是上次那台”，跟”我能不能登录”毫无关系。把两者搞混，就会在”明明密钥配好了却连不上”里绕圈。</li>
+<li><strong>非 22 端口要带方括号</strong>：<code>[host]:port</code> 是 <code>known_hosts</code> 和 <code>ssh-keygen -R</code> 的标准写法，漏了括号会删不掉条目。</li>
+</ol>
+<h2 id="八、小结与下一篇预告"><a href="#八、小结与下一篇预告" class="headerlink" title="八、小结与下一篇预告"></a>八、小结与下一篇预告</h2><p>三句话收尾：</p>
+<ul>
+<li><strong>握手六步</strong>：TCP → 版本 → 算法协商（取交集）→ 密钥交换（主机密钥签名）→ NEWKEYS → 用户认证；之后才是通道和命令。</li>
+<li><strong>两把钥匙分工明确</strong>：host key 证明”机器是谁”，user key 证明”人是谁”；私钥永不出本机，公钥分别进 <code>known_hosts</code> 和 <code>authorized_keys</code>。</li>
+<li><strong>绝大多数登录失败只有三类</strong>：私钥没被加载（权限）、主机身份对不上（known_hosts）、公钥不在白名单（authorized_keys）。<code>-vvv</code> 一眼就能分清。</li>
+</ul>
+<p>下一篇进入实战：把”每次都要敲一长串参数”变成一条 <code>ssh lab</code>，讲清 <code>~/.ssh/config</code> 的优先级、<code>authorized_keys</code> 的选项（限制命令、限制来源），以及 <code>ssh-agent</code> 如何做到”一把钥匙开十台机器”。<strong>下一篇会用同一套本机靶机，把免密登录完整跑通并抓日志</strong>。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://man.openbsd.org/ssh">OpenSSH manual: ssh(1)</a> &#x2F; <a target="_blank" rel="noopener" href="https://man.openbsd.org/ssh_config">ssh_config(5)</a> &#x2F; <a target="_blank" rel="noopener" href="https://man.openbsd.org/sshd_config">sshd_config(5)</a></li>
+<li>RFC 4251–4254（SSH 协议架构、认证、传输层、连接层）</li>
+<li><a target="_blank" rel="noopener" href="https://www.paramiko.org/">Paramiko 文档</a>（本次实验的服务端实现）</li>
+<li>本次实验代码与全部原始日志：<code>ssh-lab/</code>（<code>ssh_server.py</code>、<code>lab_run.py</code>、<code>results/*.log</code>）</li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/SSH-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" class="category-chain-item">SSH 学习笔记</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/SSH/" class="print-no-link">#SSH</a>
+      
+        <a href="/tags/OpenSSH/" class="print-no-link">#OpenSSH</a>
+      
+        <a href="/tags/%E5%AF%86%E9%92%A5/" class="print-no-link">#密钥</a>
+      
+        <a href="/tags/%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8/" class="print-no-link">#网络安全</a>
+      
+    </div>
+  
+</div>
+
+
+              
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2026/11/26/ssh-02-keys/" title="SSH 学习笔记（二）：authorized_keys 的门禁、ssh-agent 与真正的免密登录">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">SSH 学习笔记（二）：authorized_keys 的门禁、ssh-agent 与真正的免密登录</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/11/26/data_struct_13_appendix/" title="数据结构（十三）：附录 —— 全部实验代码与复现指南">
+                        <span class="hidden-mobile">数据结构（十三）：附录 —— 全部实验代码与复现指南</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

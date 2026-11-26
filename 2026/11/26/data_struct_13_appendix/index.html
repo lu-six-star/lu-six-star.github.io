@@ -1,0 +1,693 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/imgs/ava/fluid.png">
+  <link rel="icon" href="/imgs/ava/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Chris">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="本篇收录系列全部 11 个实验程序的完整可编译源码。每个程序都是独立文件，gcc 一条命令编译运行；第 12 篇的 ds12 需要 FreeRTOS 内核源码参与编译（与 FreeRTOS 笔记系列的实验库共仓）。全部在本机 gcc 16.2.0 实测通过。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="数据结构（十三）：附录 —— 全部实验代码与复现指南">
+<meta property="og:url" content="https://lu-six-star.github.io/2026/11/26/data_struct_13_appendix/index.html">
+<meta property="og:site_name" content="星橙点点">
+<meta property="og:description" content="本篇收录系列全部 11 个实验程序的完整可编译源码。每个程序都是独立文件，gcc 一条命令编译运行；第 12 篇的 ds12 需要 FreeRTOS 内核源码参与编译（与 FreeRTOS 笔记系列的实验库共仓）。全部在本机 gcc 16.2.0 实测通过。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://lu-six-star.github.io/images/data_struct-13-code.png">
+<meta property="article:published_time" content="2026-11-26T04:00:00.000Z">
+<meta property="article:modified_time" content="2026-11-26T09:10:17.858Z">
+<meta property="article:author" content="Chris">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="数据结构">
+<meta property="article:tag" content="内存">
+<meta property="article:tag" content="链表">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://lu-six-star.github.io/images/data_struct-13-code.png">
+  
+  
+  
+  <title>数据结构（十三）：附录 —— 全部实验代码与复现指南 - 星橙点点</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"lu-six-star.github.io","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>星橙点点</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/images/data_struct-13-code.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="数据结构（十三）：附录 —— 全部实验代码与复现指南"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-11-26 12:00" pubdate>
+          2026年11月26日 中午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          17k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          145 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">数据结构（十三）：附录 —— 全部实验代码与复现指南</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <blockquote>
+<p>本篇收录系列全部 <strong>11 个实验程序的完整可编译源码</strong>。每个程序都是独立文件，gcc 一条命令编译运行；第 12 篇的 ds12 需要 FreeRTOS 内核源码参与编译（与 FreeRTOS 笔记系列的实验库共仓）。全部在本机 gcc 16.2.0 实测通过。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="系列目录"><a href="#系列目录" class="headerlink" title="系列目录"></a>系列目录</h2><ol>
+<li><a href="/2026/11/26/data_struct_01_memory_map/">C 程序的内存地图</a></li>
+<li><a href="/2026/11/26/data_struct_02_stack_frames/">栈与函数调用</a></li>
+<li><a href="/2026/11/26/data_struct_03_heap/">堆与动态内存</a></li>
+<li><a href="/2026/11/26/data_struct_04_alignment/">结构体内存对齐</a></li>
+<li><a href="/2026/11/26/data_struct_05_struct_advanced/">结构体进阶：union、位域与柔性数组</a></li>
+<li><a href="/2026/11/26/data_struct_06_vector/">数组与动态数组：手写简易 vector</a></li>
+<li><a href="/2026/11/26/data_struct_07_slist/">单链表</a></li>
+<li><a href="/2026/11/26/data_struct_08_dlist/">双向链表与循环链表</a></li>
+<li><a href="/2026/11/26/data_struct_09_stack_queue/">栈与队列</a></li>
+<li><a href="/2026/11/26/data_struct_10_hash/">哈希表</a></li>
+<li><a href="/2026/11/26/data_struct_11_freertos_list/">真工程实战：解读 FreeRTOS list.c</a></li>
+<li><a href="/2026/11/26/data_struct_12_tsqueue/">手写线程安全队列</a></li>
+<li><strong>附录：全部实验代码与复现指南（本篇）</strong></li>
+</ol>
+<h2 id="一、目录结构与编译命令"><a href="#一、目录结构与编译命令" class="headerlink" title="一、目录结构与编译命令"></a>一、目录结构与编译命令</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs text">ds-lab/<br>├── ds01_memory_map.c … ds10_hash.c   # 纯 C 实验：gcc 直接编译<br>├── ds12_tsqueue.c                    # FreeRTOS 实验：需内核源码<br>└── (FreeRTOS-Kernel 在 ../freertos-lab/FreeRTOS-Kernel)<br></code></pre></td></tr></table></figure>
+
+<p>纯 C 实验的编译命令（以 ds01 为例，其余同构）：</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs powershell">gcc <span class="hljs-literal">-O0</span> <span class="hljs-literal">-g</span> <span class="hljs-literal">-Wall</span> <span class="hljs-literal">-Wextra</span> ds01_memory_map.c <span class="hljs-literal">-o</span> ds01_memory_map.exe<br>.\ds01_memory_map.exe<br></code></pre></td></tr></table></figure>
+
+<p>ds02 有两种运行模式：<code>.\ds02_stack_frames.exe frames</code>（观察栈帧）与 <code>.\ds02_stack_frames.exe boom</code>（故意爆栈，退出码 0xC00000FD）。</p>
+<p>ds12（FreeRTOS）的编译命令：</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs powershell">gcc <span class="hljs-literal">-O0</span> <span class="hljs-literal">-g</span> <span class="hljs-literal">-Wall</span> <span class="hljs-literal">-Wextra</span> <span class="hljs-literal">-D_WIN32_WINNT</span>=<span class="hljs-number">0</span>x0601 `<br>    <span class="hljs-literal">-I</span> ..\freertos<span class="hljs-literal">-lab</span>\FreeRTOS<span class="hljs-literal">-Kernel</span>\include `<br>    <span class="hljs-literal">-I</span> ..\freertos<span class="hljs-literal">-lab</span>\FreeRTOS<span class="hljs-literal">-Kernel</span>\portable\MSVC<span class="hljs-literal">-MingW</span> `<br>    <span class="hljs-literal">-I</span> ..\freertos<span class="hljs-literal">-lab</span>\demo01 `<br>    ds12_tsqueue.c `<br>    ..\freertos<span class="hljs-literal">-lab</span>\FreeRTOS<span class="hljs-literal">-Kernel</span>\tasks.c ..\freertos<span class="hljs-literal">-lab</span>\FreeRTOS<span class="hljs-literal">-Kernel</span>\list.c `<br>    ..\freertos<span class="hljs-literal">-lab</span>\FreeRTOS<span class="hljs-literal">-Kernel</span>\queue.c ..\freertos<span class="hljs-literal">-lab</span>\FreeRTOS<span class="hljs-literal">-Kernel</span>\timers.c `<br>    ..\freertos<span class="hljs-literal">-lab</span>\FreeRTOS<span class="hljs-literal">-Kernel</span>\event_groups.c ..\freertos<span class="hljs-literal">-lab</span>\FreeRTOS<span class="hljs-literal">-Kernel</span>\stream_buffer.c `<br>    ..\freertos<span class="hljs-literal">-lab</span>\FreeRTOS<span class="hljs-literal">-Kernel</span>\portable\MSVC<span class="hljs-literal">-MingW</span>\port.c `<br>    ..\freertos<span class="hljs-literal">-lab</span>\FreeRTOS<span class="hljs-literal">-Kernel</span>\portable\MemMang\heap_4.c `<br>    <span class="hljs-literal">-o</span> ds12_tsqueue.exe <span class="hljs-literal">-lwinmm</span><br></code></pre></td></tr></table></figure>
+
+<p><code>-I ..\freertos-lab\demo01</code> 借用了 FreeRTOS 笔记系列的 <code>FreeRTOSConfig.h</code>（<code>configUSE_TASK_NOTIFICATIONS=1</code> 等已配好）。</p>
+<h2 id="二、实验-1：C-程序的内存地图（ds01-memory-map-c）"><a href="#二、实验-1：C-程序的内存地图（ds01-memory-map-c）" class="headerlink" title="二、实验 1：C 程序的内存地图（ds01_memory_map.c）"></a>二、实验 1：C 程序的内存地图（<code>ds01_memory_map.c</code>）</h2><blockquote>
+<p>预期现象：.text&#x2F;.rdata&#x2F;.data&#x2F;.bss 地址同族、堆另起一段、栈在更高处；.bss 自动清零。</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdlib.h&gt;</span></span><br><br><span class="hljs-type">int</span> g_initialized = <span class="hljs-number">42</span>;      <span class="hljs-comment">/* .data：已初始化的全局变量 */</span><br><span class="hljs-type">int</span> g_zeroed[ <span class="hljs-number">100</span> ];         <span class="hljs-comment">/* .bss：未初始化（零值）全局变量 */</span><br><span class="hljs-type">static</span> <span class="hljs-type">int</span> s_static = <span class="hljs-number">7</span>;     <span class="hljs-comment">/* .data：静态变量 */</span><br><span class="hljs-type">const</span> <span class="hljs-type">int</span> g_const = <span class="hljs-number">123</span>;     <span class="hljs-comment">/* .rdata：只读数据段 */</span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">( <span class="hljs-type">void</span> )</span><br>&#123;<br>    <span class="hljs-type">static</span> <span class="hljs-type">int</span> s_local_static = <span class="hljs-number">9</span>;      <span class="hljs-comment">/* .data：局部静态变量 */</span><br>    <span class="hljs-type">int</span> l_stack = <span class="hljs-number">1</span>;                    <span class="hljs-comment">/* 栈 */</span><br>    <span class="hljs-type">char</span> l_buf[ <span class="hljs-number">16</span> ] = <span class="hljs-string">&quot;stack&quot;</span>;         <span class="hljs-comment">/* 栈 */</span><br>    <span class="hljs-type">int</span> * p_heap1 = ( <span class="hljs-type">int</span> * ) <span class="hljs-built_in">malloc</span>( <span class="hljs-number">64</span> );   <span class="hljs-comment">/* 堆 */</span><br>    <span class="hljs-type">int</span> * p_heap2 = ( <span class="hljs-type">int</span> * ) <span class="hljs-built_in">malloc</span>( <span class="hljs-number">64</span> );   <span class="hljs-comment">/* 堆 */</span><br>    <span class="hljs-type">const</span> <span class="hljs-type">char</span> * p_literal = <span class="hljs-string">&quot;hello, rodata&quot;</span>; <span class="hljs-comment">/* .rdata：字符串字面量 */</span><br><br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;== C 程序内存地图 ==\r\n&quot;</span> );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;.text  代码段 main 函数        : %p\r\n&quot;</span>, ( <span class="hljs-type">void</span> * ) main );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;.rdata 字符串字面量            : %p -&gt; \&quot;%s\&quot;\r\n&quot;</span>, ( <span class="hljs-type">void</span> * ) p_literal, p_literal );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;.rdata 常量 g_const            : %p (值=%d)\r\n&quot;</span>, ( <span class="hljs-type">const</span> <span class="hljs-type">void</span> * ) &amp;g_const, g_const );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;.data  已初始化全局 g_init     : %p (值=%d)\r\n&quot;</span>, ( <span class="hljs-type">void</span> * ) &amp;g_initialized, g_initialized );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;.data  静态变量 s_static       : %p (值=%d)\r\n&quot;</span>, ( <span class="hljs-type">void</span> * ) &amp;s_static, s_static );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;.data  局部静态 s_local_static : %p (值=%d)\r\n&quot;</span>, ( <span class="hljs-type">void</span> * ) &amp;s_local_static, s_local_static );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;.bss   零值全局 g_zeroed[0]    : %p (值=%d，自动清零)\r\n&quot;</span>, ( <span class="hljs-type">void</span> * ) &amp;g_zeroed[ <span class="hljs-number">0</span> ], g_zeroed[ <span class="hljs-number">0</span> ] );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;堆     第 1 次 malloc(64)      : %p\r\n&quot;</span>, ( <span class="hljs-type">void</span> * ) p_heap1 );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;堆     第 2 次 malloc(64)      : %p\r\n&quot;</span>, ( <span class="hljs-type">void</span> * ) p_heap2 );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;栈     局部变量 l_stack        : %p\r\n&quot;</span>, ( <span class="hljs-type">void</span> * ) &amp;l_stack );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;栈     局部数组 l_buf          : %p\r\n&quot;</span>, ( <span class="hljs-type">void</span> * ) l_buf );<br><br>    <span class="hljs-built_in">free</span>( p_heap1 );<br>    <span class="hljs-built_in">free</span>( p_heap2 );<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="三、实验-2：栈与函数调用（ds02-stack-frames-c）"><a href="#三、实验-2：栈与函数调用（ds02-stack-frames-c）" class="headerlink" title="三、实验 2：栈与函数调用（ds02_stack_frames.c）"></a>三、实验 2：栈与函数调用（<code>ds02_stack_frames.c</code>）</h2><blockquote>
+<p>预期现象：frames 模式栈帧地址每层下降约 80 字节；boom 模式爆栈退出码 0xC00000FD。</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdlib.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;string.h&gt;</span></span><br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vRecurse</span><span class="hljs-params">( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ulDepth, <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ulMax )</span><br>&#123;<br>    <span class="hljs-keyword">volatile</span> <span class="hljs-type">char</span> cFrame[ <span class="hljs-number">32</span> ];   <span class="hljs-comment">/* 每层栈帧里放一点东西 */</span><br>    cFrame[ <span class="hljs-number">0</span> ] = ( <span class="hljs-type">char</span> ) ulDepth;<br><br>    <span class="hljs-keyword">if</span>( ( ulDepth == <span class="hljs-number">1</span> ) || ( ( ulDepth % <span class="hljs-number">2500</span> ) == <span class="hljs-number">0</span> ) )<br>    &#123;<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;depth %6lu, frame address = %p\r\n&quot;</span>,<br>                ulDepth, ( <span class="hljs-type">void</span> * ) cFrame );<br>    &#125;<br><br>    <span class="hljs-keyword">if</span>( ( ulMax != <span class="hljs-number">0</span> ) &amp;&amp; ( ulDepth &gt;= ulMax ) )<br>    &#123;<br>        <span class="hljs-keyword">return</span>;<br>    &#125;<br>    vRecurse( ulDepth + <span class="hljs-number">1</span>, ulMax );<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">( <span class="hljs-type">int</span> argc, <span class="hljs-type">char</span> ** argv )</span><br>&#123;<br>    <span class="hljs-keyword">if</span>( ( argc &gt; <span class="hljs-number">1</span> ) &amp;&amp; ( <span class="hljs-built_in">strcmp</span>( argv[ <span class="hljs-number">1</span> ], <span class="hljs-string">&quot;boom&quot;</span> ) == <span class="hljs-number">0</span> ) )<br>    &#123;<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;mode: overflow —— 无上限递归，直到栈溢出...\r\n&quot;</span> );<br>        vRecurse( <span class="hljs-number">1</span>, <span class="hljs-number">0</span> );   <span class="hljs-comment">/* ulMax=0 表示不设限 */</span><br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;survived?!\r\n&quot;</span> );   <span class="hljs-comment">/* 理论上到不了这里 */</span><br>    &#125;<br>    <span class="hljs-keyword">else</span><br>    &#123;<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;mode: frames —— 递归 20000 层观察栈帧地址\r\n&quot;</span> );<br>        vRecurse( <span class="hljs-number">1</span>, <span class="hljs-number">20000</span> );<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;done.\r\n&quot;</span> );<br>    &#125;<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="四、实验-3：堆与动态内存（ds03-heap-c）"><a href="#四、实验-3：堆与动态内存（ds03-heap-c）" class="headerlink" title="四、实验 3：堆与动态内存（ds03_heap.c）"></a>四、实验 3：堆与动态内存（<code>ds03_heap.c</code>）</h2><blockquote>
+<p>预期现象：p1&#x2F;p2 地址相同（free 复用）；泄漏 128MB 后可用物理内存减少约 132MB。</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdlib.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;string.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;windows.h&gt;</span></span><br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">print_avail</span><span class="hljs-params">( <span class="hljs-type">const</span> <span class="hljs-type">char</span> * pcTag )</span><br>&#123;<br>    MEMORYSTATUSEX xM;<br>    xM.dwLength = <span class="hljs-keyword">sizeof</span>( xM );<br>    GlobalMemoryStatusEx( &amp;xM );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;%s 可用物理内存 = %lu MB\r\n&quot;</span>, pcTag,<br>            ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) ( xM.ullAvailPhys / ( <span class="hljs-number">1024</span> * <span class="hljs-number">1024</span> ) ) );<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">( <span class="hljs-type">void</span> )</span><br>&#123;<br>    <span class="hljs-type">int</span> * p1 = ( <span class="hljs-type">int</span> * ) <span class="hljs-built_in">malloc</span>( <span class="hljs-number">100</span> );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;p1 = malloc(100)      -&gt; %p\r\n&quot;</span>, ( <span class="hljs-type">void</span> * ) p1 );<br>    <span class="hljs-built_in">free</span>( p1 );<br>    <span class="hljs-type">int</span> * p2 = ( <span class="hljs-type">int</span> * ) <span class="hljs-built_in">malloc</span>( <span class="hljs-number">100</span> );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;p2 = malloc(100)      -&gt; %p  (和 p1 一样：刚释放的块被复用)\r\n&quot;</span>, ( <span class="hljs-type">void</span> * ) p2 );<br><br>    print_avail( <span class="hljs-string">&quot;泄漏前&quot;</span> );<br>    <span class="hljs-keyword">for</span>( <span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">128</span>; i++ )<br>    &#123;<br>        <span class="hljs-type">char</span> * pLeak = ( <span class="hljs-type">char</span> * ) <span class="hljs-built_in">malloc</span>( <span class="hljs-number">1024</span> * <span class="hljs-number">1024</span> );  <span class="hljs-comment">/* 1 MB，绝不 free */</span><br>        <span class="hljs-keyword">if</span>( pLeak != <span class="hljs-literal">NULL</span> )<br>        &#123;<br>            <span class="hljs-built_in">memset</span>( pLeak, <span class="hljs-number">1</span>, <span class="hljs-number">1024</span> * <span class="hljs-number">1024</span> );<br>        &#125;<br>    &#125;<br>    print_avail( <span class="hljs-string">&quot;泄漏 128 MB 后&quot;</span> );<br><br>    <span class="hljs-type">char</span> * pGood = ( <span class="hljs-type">char</span> * ) <span class="hljs-built_in">malloc</span>( <span class="hljs-number">1024</span> );<br>    <span class="hljs-keyword">if</span>( pGood != <span class="hljs-literal">NULL</span> )<br>    &#123;<br>        <span class="hljs-built_in">memset</span>( pGood, <span class="hljs-number">0</span>, <span class="hljs-number">1024</span> );<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;正常流程：malloc -&gt; 使用 -&gt; free，地址 %p\r\n&quot;</span>, ( <span class="hljs-type">void</span> * ) pGood );<br>        <span class="hljs-built_in">free</span>( pGood );<br>        pGood = <span class="hljs-literal">NULL</span>;<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;free 后指针置 NULL：野指针的第一道防线\r\n&quot;</span> );<br>    &#125;<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="五、实验-4：结构体内存对齐（ds04-alignment-c）"><a href="#五、实验-4：结构体内存对齐（ds04-alignment-c）" class="headerlink" title="五、实验 4：结构体内存对齐（ds04_alignment.c）"></a>五、实验 4：结构体内存对齐（<code>ds04_alignment.c</code>）</h2><blockquote>
+<p>预期现象：sizeof &#x3D; 1 &#x2F; 8 &#x2F; 24 &#x2F; 8 &#x2F; 16 &#x2F; pack(1)&#x3D;5；offsetof(B, i) &#x3D; 4。</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stddef.h&gt;</span></span><br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">A</span> &#123;</span> <span class="hljs-type">char</span> c; &#125;;<br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">B</span> &#123;</span> <span class="hljs-type">char</span> c; <span class="hljs-type">int</span> i; &#125;;<br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">C</span> &#123;</span> <span class="hljs-type">char</span> c; <span class="hljs-type">double</span> d; <span class="hljs-type">char</span> c2; &#125;;<br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">D</span> &#123;</span> <span class="hljs-type">int</span> i; <span class="hljs-type">char</span> c; <span class="hljs-type">short</span> s; &#125;;<br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">E</span> &#123;</span> <span class="hljs-type">char</span> c1; <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">B</span> <span class="hljs-title">b</span>;</span> <span class="hljs-type">char</span> c2; &#125;;<br><br><span class="hljs-meta">#<span class="hljs-keyword">pragma</span> pack(push, 1)</span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">Packed</span> &#123;</span> <span class="hljs-type">char</span> c; <span class="hljs-type">int</span> i; &#125;;<br><span class="hljs-meta">#<span class="hljs-keyword">pragma</span> pack(pop)</span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">( <span class="hljs-type">void</span> )</span><br>&#123;<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;sizeof(struct A) = %2zu\r\n&quot;</span>, <span class="hljs-keyword">sizeof</span>( <span class="hljs-keyword">struct</span> A ) );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;sizeof(struct B) = %2zu\r\n&quot;</span>, <span class="hljs-keyword">sizeof</span>( <span class="hljs-keyword">struct</span> B ) );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;sizeof(struct C) = %2zu\r\n&quot;</span>, <span class="hljs-keyword">sizeof</span>( <span class="hljs-keyword">struct</span> C ) );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;sizeof(struct D) = %2zu\r\n&quot;</span>, <span class="hljs-keyword">sizeof</span>( <span class="hljs-keyword">struct</span> D ) );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;sizeof(struct E) = %2zu\r\n&quot;</span>, <span class="hljs-keyword">sizeof</span>( <span class="hljs-keyword">struct</span> E ) );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;sizeof(struct Packed) pack(1) = %zu\r\n&quot;</span>, <span class="hljs-keyword">sizeof</span>( <span class="hljs-keyword">struct</span> Packed ) );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;offsetof(B, c) = %zu\r\n&quot;</span>, offsetof( <span class="hljs-keyword">struct</span> B, c ) );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;offsetof(B, i) = %zu\r\n&quot;</span>, offsetof( <span class="hljs-keyword">struct</span> B, i ) );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;struct B arr[2] 总大小 = %zu\r\n&quot;</span>, <span class="hljs-keyword">sizeof</span>( <span class="hljs-keyword">struct</span> B ) * <span class="hljs-number">2</span> );<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="六、实验-5：union、位域与柔性数组（ds05-struct-advanced-c）"><a href="#六、实验-5：union、位域与柔性数组（ds05-struct-advanced-c）" class="headerlink" title="六、实验 5：union、位域与柔性数组（ds05_struct_advanced.c）"></a>六、实验 5：union、位域与柔性数组（<code>ds05_struct_advanced.c</code>）</h2><blockquote>
+<p>预期现象：字节序 04 03 02 01（小端）；位域 0xEAAD；柔性数组 malloc(13) 装下 10 字符。</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdint.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;string.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdlib.h&gt;</span></span><br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">Bits</span></span><br><span class="hljs-class">&#123;</span><br>    <span class="hljs-type">uint32_t</span> a : <span class="hljs-number">3</span>;<br>    <span class="hljs-type">uint32_t</span> b : <span class="hljs-number">5</span>;<br>    <span class="hljs-type">uint32_t</span> c : <span class="hljs-number">6</span>;<br>    <span class="hljs-type">uint32_t</span> d : <span class="hljs-number">2</span>;<br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">Msg</span></span><br><span class="hljs-class">&#123;</span><br>    <span class="hljs-type">uint16_t</span> usLen;<br>    <span class="hljs-type">char</span> data[];<br>&#125;;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">( <span class="hljs-type">void</span> )</span><br>&#123;<br>    <span class="hljs-class"><span class="hljs-keyword">union</span></span><br><span class="hljs-class">    &#123;</span><br>        <span class="hljs-type">uint32_t</span> ulValue;<br>        <span class="hljs-type">unsigned</span> <span class="hljs-type">char</span> ucBytes[ <span class="hljs-number">4</span> ];<br>    &#125; uEndian;<br>    uEndian.ulValue = <span class="hljs-number">0x01020304</span>;<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;sizeof(union) = %zu\r\n&quot;</span>, <span class="hljs-keyword">sizeof</span>( uEndian ) );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;按字节读 = %02X %02X %02X %02X\r\n&quot;</span>,<br>            uEndian.ucBytes[ <span class="hljs-number">0</span> ], uEndian.ucBytes[ <span class="hljs-number">1</span> ],<br>            uEndian.ucBytes[ <span class="hljs-number">2</span> ], uEndian.ucBytes[ <span class="hljs-number">3</span> ] );<br><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">Bits</span> <span class="hljs-title">xBits</span>;</span><br>    <span class="hljs-built_in">memset</span>( &amp;xBits, <span class="hljs-number">0</span>, <span class="hljs-keyword">sizeof</span>( xBits ) );<br>    xBits.a = <span class="hljs-number">5</span>; xBits.b = <span class="hljs-number">21</span>; xBits.c = <span class="hljs-number">42</span>; xBits.d = <span class="hljs-number">3</span>;<br>    <span class="hljs-type">uint32_t</span> ulRaw;<br>    <span class="hljs-built_in">memcpy</span>( &amp;ulRaw, &amp;xBits, <span class="hljs-keyword">sizeof</span>( ulRaw ) );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;位域原始 uint32 = 0x%04X\r\n&quot;</span>, ulRaw );<br><br>    <span class="hljs-type">const</span> <span class="hljs-type">char</span> * pcPayload = <span class="hljs-string">&quot;hello flex&quot;</span>;<br>    <span class="hljs-type">size_t</span> xNeed = <span class="hljs-keyword">sizeof</span>( <span class="hljs-keyword">struct</span> Msg ) + <span class="hljs-built_in">strlen</span>( pcPayload ) + <span class="hljs-number">1</span>;<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">Msg</span> * <span class="hljs-title">pxMsg</span> =</span> ( <span class="hljs-keyword">struct</span> Msg * ) <span class="hljs-built_in">malloc</span>( xNeed );<br>    pxMsg-&gt;usLen = ( <span class="hljs-type">uint16_t</span> ) <span class="hljs-built_in">strlen</span>( pcPayload );<br>    <span class="hljs-built_in">memcpy</span>( pxMsg-&gt;data, pcPayload, <span class="hljs-built_in">strlen</span>( pcPayload ) + <span class="hljs-number">1</span> );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;sizeof(struct Msg) = %zu, malloc(%zu), data = \&quot;%s\&quot;\r\n&quot;</span>,<br>            <span class="hljs-keyword">sizeof</span>( <span class="hljs-keyword">struct</span> Msg ), xNeed, pxMsg-&gt;data );<br>    <span class="hljs-built_in">free</span>( pxMsg );<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="七、实验-6：动态数组（ds06-vector-c）"><a href="#七、实验-6：动态数组（ds06-vector-c）" class="headerlink" title="七、实验 6：动态数组（ds06_vector.c）"></a>七、实验 6：动态数组（<code>ds06_vector.c</code>）</h2><blockquote>
+<p>预期现象：容量 0→4→8→16→32，四次扩容地址全变，17 条数据完好。</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdlib.h&gt;</span></span><br><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span></span><br><span class="hljs-class">&#123;</span><br>    <span class="hljs-type">int</span> * pData;<br>    <span class="hljs-type">size_t</span> xSize;<br>    <span class="hljs-type">size_t</span> xCap;<br>&#125; Vector;<br><br><span class="hljs-type">static</span> <span class="hljs-type">int</span> <span class="hljs-title function_">iPushBack</span><span class="hljs-params">( Vector * pxV, <span class="hljs-type">int</span> iValue )</span><br>&#123;<br>    <span class="hljs-keyword">if</span>( pxV-&gt;xSize == pxV-&gt;xCap )<br>    &#123;<br>        <span class="hljs-type">size_t</span> xNewCap = ( pxV-&gt;xCap == <span class="hljs-number">0</span> ) ? <span class="hljs-number">4</span> : pxV-&gt;xCap * <span class="hljs-number">2</span>;<br>        <span class="hljs-type">int</span> * pNew = ( <span class="hljs-type">int</span> * ) <span class="hljs-built_in">realloc</span>( pxV-&gt;pData, xNewCap * <span class="hljs-keyword">sizeof</span>( <span class="hljs-type">int</span> ) );<br>        <span class="hljs-keyword">if</span>( pNew == <span class="hljs-literal">NULL</span> )<br>        &#123;<br>            <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>        &#125;<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;  [扩容] 容量 %zu -&gt; %zu, 数据区 %p -&gt; %p\r\n&quot;</span>,<br>                pxV-&gt;xCap, xNewCap, ( <span class="hljs-type">void</span> * ) pxV-&gt;pData, ( <span class="hljs-type">void</span> * ) pNew );<br>        pxV-&gt;pData = pNew;<br>        pxV-&gt;xCap = xNewCap;<br>    &#125;<br>    pxV-&gt;pData[ pxV-&gt;xSize++ ] = iValue;<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">( <span class="hljs-type">void</span> )</span><br>&#123;<br>    Vector xV = &#123; <span class="hljs-number">0</span> &#125;;<br>    <span class="hljs-keyword">for</span>( <span class="hljs-type">int</span> i = <span class="hljs-number">1</span>; i &lt;= <span class="hljs-number">17</span>; i++ )<br>    &#123;<br>        iPushBack( &amp;xV, i * <span class="hljs-number">10</span> );<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;push %2d -&gt; size=%2zu cap=%2zu data=%p\r\n&quot;</span>,<br>                i, xV.xSize, xV.xCap, ( <span class="hljs-type">void</span> * ) xV.pData );<br>    &#125;<br>    <span class="hljs-built_in">free</span>( xV.pData );<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="八、实验-7：单链表（ds07-slist-c）"><a href="#八、实验-7：单链表（ds07-slist-c）" class="headerlink" title="八、实验 7：单链表（ds07_slist.c）"></a>八、实验 7：单链表（<code>ds07_slist.c</code>）</h2><blockquote>
+<p>预期现象：建链 1→3→7、查找命中、删除 7、反转 3→1，全部正确。</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdlib.h&gt;</span></span><br><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">Node</span></span><br><span class="hljs-class">&#123;</span><br>    <span class="hljs-type">int</span> iValue;<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">Node</span> * <span class="hljs-title">pxNext</span>;</span><br>&#125; Node;<br><br><span class="hljs-type">static</span> Node * <span class="hljs-title function_">pxMakeNode</span><span class="hljs-params">( <span class="hljs-type">int</span> iValue )</span><br>&#123;<br>    Node * pxN = ( Node * ) <span class="hljs-built_in">malloc</span>( <span class="hljs-keyword">sizeof</span>( Node ) );<br>    pxN-&gt;iValue = iValue;<br>    pxN-&gt;pxNext = <span class="hljs-literal">NULL</span>;<br>    <span class="hljs-keyword">return</span> pxN;<br>&#125;<br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vPrintList</span><span class="hljs-params">( <span class="hljs-type">const</span> <span class="hljs-type">char</span> * pcTag, Node * pxHead )</span><br>&#123;<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;%-14s: &quot;</span>, pcTag );<br>    <span class="hljs-keyword">for</span>( Node * p = pxHead; p != <span class="hljs-literal">NULL</span>; p = p-&gt;pxNext )<br>    &#123;<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;%d -&gt; &quot;</span>, p-&gt;iValue );<br>    &#125;<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;NULL\r\n&quot;</span> );<br>&#125;<br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vPushFront</span><span class="hljs-params">( Node ** ppxHead, <span class="hljs-type">int</span> iValue )</span><br>&#123;<br>    Node * pxN = pxMakeNode( iValue );<br>    pxN-&gt;pxNext = *ppxHead;<br>    *ppxHead = pxN;<br>&#125;<br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vPushBack</span><span class="hljs-params">( Node ** ppxHead, <span class="hljs-type">int</span> iValue )</span><br>&#123;<br>    Node * pxN = pxMakeNode( iValue );<br>    <span class="hljs-keyword">if</span>( *ppxHead == <span class="hljs-literal">NULL</span> ) &#123; *ppxHead = pxN; <span class="hljs-keyword">return</span>; &#125;<br>    Node * p = *ppxHead;<br>    <span class="hljs-keyword">while</span>( p-&gt;pxNext != <span class="hljs-literal">NULL</span> ) &#123; p = p-&gt;pxNext; &#125;<br>    p-&gt;pxNext = pxN;<br>&#125;<br><br><span class="hljs-type">static</span> Node * <span class="hljs-title function_">pxFind</span><span class="hljs-params">( Node * pxHead, <span class="hljs-type">int</span> iValue )</span><br>&#123;<br>    <span class="hljs-keyword">for</span>( Node * p = pxHead; p != <span class="hljs-literal">NULL</span>; p = p-&gt;pxNext )<br>        <span class="hljs-keyword">if</span>( p-&gt;iValue == iValue ) &#123; <span class="hljs-keyword">return</span> p; &#125;<br>    <span class="hljs-keyword">return</span> <span class="hljs-literal">NULL</span>;<br>&#125;<br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vDeleteByValue</span><span class="hljs-params">( Node ** ppxHead, <span class="hljs-type">int</span> iValue )</span><br>&#123;<br>    Node * pxPrev = <span class="hljs-literal">NULL</span>;<br>    Node * p = *ppxHead;<br>    <span class="hljs-keyword">while</span>( p != <span class="hljs-literal">NULL</span> &amp;&amp; p-&gt;iValue != iValue )<br>    &#123;<br>        pxPrev = p;<br>        p = p-&gt;pxNext;<br>    &#125;<br>    <span class="hljs-keyword">if</span>( p == <span class="hljs-literal">NULL</span> ) &#123; <span class="hljs-keyword">return</span>; &#125;<br>    <span class="hljs-keyword">if</span>( pxPrev == <span class="hljs-literal">NULL</span> ) &#123; *ppxHead = p-&gt;pxNext; &#125;<br>    <span class="hljs-keyword">else</span>                 &#123; pxPrev-&gt;pxNext = p-&gt;pxNext; &#125;<br>    <span class="hljs-built_in">free</span>( p );<br>&#125;<br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vReverse</span><span class="hljs-params">( Node ** ppxHead )</span><br>&#123;<br>    Node * pxPrev = <span class="hljs-literal">NULL</span>;<br>    Node * p = *ppxHead;<br>    <span class="hljs-keyword">while</span>( p != <span class="hljs-literal">NULL</span> )<br>    &#123;<br>        Node * pxNext = p-&gt;pxNext;<br>        p-&gt;pxNext = pxPrev;<br>        pxPrev = p;<br>        p = pxNext;<br>    &#125;<br>    *ppxHead = pxPrev;<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">( <span class="hljs-type">void</span> )</span><br>&#123;<br>    Node * pxHead = <span class="hljs-literal">NULL</span>;<br>    vPushBack( &amp;pxHead, <span class="hljs-number">3</span> );<br>    vPushBack( &amp;pxHead, <span class="hljs-number">7</span> );<br>    vPushFront( &amp;pxHead, <span class="hljs-number">1</span> );<br>    vPrintList( <span class="hljs-string">&quot;建链后&quot;</span>, pxHead );<br>    Node * pxFound = pxFind( pxHead, <span class="hljs-number">7</span> );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;查找 7: %s\r\n&quot;</span>, pxFound ? <span class="hljs-string">&quot;命中&quot;</span> : <span class="hljs-string">&quot;未找到&quot;</span> );<br>    vDeleteByValue( &amp;pxHead, <span class="hljs-number">7</span> );<br>    vPrintList( <span class="hljs-string">&quot;删除 7 后&quot;</span>, pxHead );<br>    vReverse( &amp;pxHead );<br>    vPrintList( <span class="hljs-string">&quot;反转后&quot;</span>, pxHead );<br>    <span class="hljs-keyword">while</span>( pxHead != <span class="hljs-literal">NULL</span> )<br>    &#123;<br>        Node * pxNext = pxHead-&gt;pxNext;<br>        <span class="hljs-built_in">free</span>( pxHead );<br>        pxHead = pxNext;<br>    &#125;<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="九、实验-8：双向链表与循环链表（ds08-dlist-c）"><a href="#九、实验-8：双向链表与循环链表（ds08-dlist-c）" class="headerlink" title="九、实验 8：双向链表与循环链表（ds08_dlist.c）"></a>九、实验 8：双向链表与循环链表（<code>ds08_dlist.c</code>）</h2><blockquote>
+<p>预期现象：哨兵方案下删除不存在的 5 安全返回；循环链表走 12 步回绕。</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdlib.h&gt;</span></span><br><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">DNode</span></span><br><span class="hljs-class">&#123;</span><br>    <span class="hljs-type">int</span> iValue;<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">DNode</span> * <span class="hljs-title">pxPrev</span>;</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">DNode</span> * <span class="hljs-title">pxNext</span>;</span><br>&#125; DNode;<br><br><span class="hljs-type">static</span> DNode * pxSentinel;<br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vDListInit</span><span class="hljs-params">( <span class="hljs-type">void</span> )</span><br>&#123;<br>    pxSentinel = ( DNode * ) <span class="hljs-built_in">malloc</span>( <span class="hljs-keyword">sizeof</span>( DNode ) );<br>    pxSentinel-&gt;iValue = <span class="hljs-number">0</span>;<br>    pxSentinel-&gt;pxPrev = pxSentinel;<br>    pxSentinel-&gt;pxNext = pxSentinel;<br>&#125;<br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vDListPushBack</span><span class="hljs-params">( <span class="hljs-type">int</span> iValue )</span><br>&#123;<br>    DNode * pxN = ( DNode * ) <span class="hljs-built_in">malloc</span>( <span class="hljs-keyword">sizeof</span>( DNode ) );<br>    pxN-&gt;iValue = iValue;<br>    pxN-&gt;pxPrev = pxSentinel-&gt;pxPrev;<br>    pxN-&gt;pxNext = pxSentinel;<br>    pxSentinel-&gt;pxPrev-&gt;pxNext = pxN;<br>    pxSentinel-&gt;pxPrev = pxN;<br>&#125;<br><br><span class="hljs-type">static</span> <span class="hljs-type">int</span> <span class="hljs-title function_">iDListDelete</span><span class="hljs-params">( <span class="hljs-type">int</span> iValue )</span><br>&#123;<br>    <span class="hljs-keyword">for</span>( DNode * p = pxSentinel-&gt;pxNext; p != pxSentinel; p = p-&gt;pxNext )<br>    &#123;<br>        <span class="hljs-keyword">if</span>( p-&gt;iValue == iValue )<br>        &#123;<br>            p-&gt;pxPrev-&gt;pxNext = p-&gt;pxNext;<br>            p-&gt;pxNext-&gt;pxPrev = p-&gt;pxPrev;<br>            <span class="hljs-built_in">free</span>( p );<br>            <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;<br>        &#125;<br>    &#125;<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vDListPrint</span><span class="hljs-params">( <span class="hljs-type">void</span> )</span><br>&#123;<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;  正向: 哨兵 &lt;-&gt; &quot;</span> );<br>    <span class="hljs-keyword">for</span>( DNode * p = pxSentinel-&gt;pxNext; p != pxSentinel; p = p-&gt;pxNext )<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;%d &lt;-&gt; &quot;</span>, p-&gt;iValue );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;哨兵\r\n&quot;</span> );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;  反向: 哨兵 &lt;-&gt; &quot;</span> );<br>    <span class="hljs-keyword">for</span>( DNode * p = pxSentinel-&gt;pxPrev; p != pxSentinel; p = p-&gt;pxPrev )<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;%d &lt;-&gt; &quot;</span>, p-&gt;iValue );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;哨兵\r\n&quot;</span> );<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">( <span class="hljs-type">void</span> )</span><br>&#123;<br>    vDListInit();<br>    vDListPushBack( <span class="hljs-number">3</span> );<br>    vDListPushBack( <span class="hljs-number">9</span> );<br>    vDListPushBack( <span class="hljs-number">1</span> );<br>    vDListPrint();<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;  删除 9: %s\r\n&quot;</span>, iDListDelete( <span class="hljs-number">9</span> ) ? <span class="hljs-string">&quot;成功&quot;</span> : <span class="hljs-string">&quot;未找到&quot;</span> );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;  删除 5: %s\r\n&quot;</span>, iDListDelete( <span class="hljs-number">5</span> ) ? <span class="hljs-string">&quot;成功&quot;</span> : <span class="hljs-string">&quot;未找到&quot;</span> );<br>    vDListPrint();<br><br>    <span class="hljs-comment">/* 循环单链表：头插建环，走 12 步 */</span><br>    <span class="hljs-type">int</span> aiData[ <span class="hljs-number">5</span> ] = &#123; <span class="hljs-number">5</span>, <span class="hljs-number">4</span>, <span class="hljs-number">3</span>, <span class="hljs-number">2</span>, <span class="hljs-number">1</span> &#125;;<br>    DNode * pxCur = <span class="hljs-literal">NULL</span>;<br>    <span class="hljs-keyword">for</span>( <span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">5</span>; i++ )<br>    &#123;<br>        DNode * pxN = ( DNode * ) <span class="hljs-built_in">malloc</span>( <span class="hljs-keyword">sizeof</span>( DNode ) );<br>        pxN-&gt;iValue = aiData[ i ];<br>        pxN-&gt;pxNext = pxCur;<br>        pxCur = pxN;<br>    &#125;<br>    DNode * p = pxCur;<br>    <span class="hljs-keyword">while</span>( p-&gt;pxNext != <span class="hljs-literal">NULL</span> ) &#123; p = p-&gt;pxNext; &#125;<br>    p-&gt;pxNext = pxCur;<br><br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;  循环走 12 步: &quot;</span> );<br>    DNode * pxWalk = pxCur;<br>    <span class="hljs-keyword">for</span>( <span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">12</span>; i++ )<br>    &#123;<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;%d &quot;</span>, pxWalk-&gt;iValue );<br>        pxWalk = pxWalk-&gt;pxNext;<br>    &#125;<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;\r\n&quot;</span> );<br><br>    <span class="hljs-keyword">while</span>( pxSentinel-&gt;pxNext != pxSentinel )<br>    &#123;<br>        DNode * pxN = pxSentinel-&gt;pxNext;<br>        pxSentinel-&gt;pxNext = pxN-&gt;pxNext;<br>        <span class="hljs-built_in">free</span>( pxN );<br>    &#125;<br>    <span class="hljs-built_in">free</span>( pxSentinel );<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="十、实验-9：栈与队列（ds09-stack-queue-c）"><a href="#十、实验-9：栈与队列（ds09-stack-queue-c）" class="headerlink" title="十、实验 9：栈与队列（ds09_stack_queue.c）"></a>十、实验 9：栈与队列（<code>ds09_stack_queue.c</code>）</h2><blockquote>
+<p>预期现象：栈 LIFO；循环队列 tail 回绕（60 落在物理下标 0）；head&#x3D;tail&#x3D;2 且 count&#x3D;5 判满。</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdlib.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> QUEUE_CAP 5</span><br><br><span class="hljs-type">static</span> <span class="hljs-type">int</span> aiStack[ <span class="hljs-number">8</span> ];<br><span class="hljs-type">static</span> <span class="hljs-type">int</span> iTop = <span class="hljs-number">-1</span>;<br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vStackPush</span><span class="hljs-params">( <span class="hljs-type">int</span> v )</span> &#123; aiStack[ ++iTop ] = v; &#125;<br><span class="hljs-type">static</span> <span class="hljs-type">int</span>  <span class="hljs-title function_">iStackPop</span><span class="hljs-params">( <span class="hljs-type">void</span> )</span>   &#123; <span class="hljs-keyword">return</span> aiStack[ iTop-- ]; &#125;<br><br><span class="hljs-type">static</span> <span class="hljs-type">int</span> aiQ[ QUEUE_CAP ];<br><span class="hljs-type">static</span> <span class="hljs-type">int</span> iQHead = <span class="hljs-number">0</span>, iQTail = <span class="hljs-number">0</span>, iQCount = <span class="hljs-number">0</span>;<br><span class="hljs-type">static</span> <span class="hljs-type">int</span> <span class="hljs-title function_">iQEnqueue</span><span class="hljs-params">( <span class="hljs-type">int</span> v )</span><br>&#123;<br>    <span class="hljs-keyword">if</span>( iQCount == QUEUE_CAP ) &#123; <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>; &#125;<br>    aiQ[ iQTail ] = v;<br>    iQTail = ( iQTail + <span class="hljs-number">1</span> ) % QUEUE_CAP;<br>    iQCount++;<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br><span class="hljs-type">static</span> <span class="hljs-type">int</span> <span class="hljs-title function_">iQDequeue</span><span class="hljs-params">( <span class="hljs-type">int</span> * pv )</span><br>&#123;<br>    <span class="hljs-keyword">if</span>( iQCount == <span class="hljs-number">0</span> ) &#123; <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>; &#125;<br>    *pv = aiQ[ iQHead ];<br>    iQHead = ( iQHead + <span class="hljs-number">1</span> ) % QUEUE_CAP;<br>    iQCount--;<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">( <span class="hljs-type">void</span> )</span><br>&#123;<br>    <span class="hljs-keyword">for</span>( <span class="hljs-type">int</span> i = <span class="hljs-number">1</span>; i &lt;= <span class="hljs-number">5</span>; i++ ) &#123; vStackPush( i ); &#125;<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;栈: push 1~5, iTop=%d\r\n&quot;</span>, iTop );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;栈: pop -&gt; %d, pop -&gt; %d, iTop=%d\r\n&quot;</span>, iStackPop(), iStackPop(), iTop );<br><br>    <span class="hljs-keyword">for</span>( <span class="hljs-type">int</span> i = <span class="hljs-number">1</span>; i &lt;= <span class="hljs-number">5</span>; i++ ) &#123; iQEnqueue( i * <span class="hljs-number">10</span> ); &#125;<br>    <span class="hljs-type">int</span> v;<br>    iQDequeue( &amp;v ); <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;队列: 出队 %d, head=%d tail=%d count=%d\r\n&quot;</span>, v, iQHead, iQTail, iQCount );<br>    iQDequeue( &amp;v ); <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;队列: 出队 %d, head=%d tail=%d count=%d\r\n&quot;</span>, v, iQHead, iQTail, iQCount );<br>    iQEnqueue( <span class="hljs-number">60</span> ); <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;队列: 入队 60, head=%d tail=%d count=%d\r\n&quot;</span>, iQHead, iQTail, iQCount );<br>    iQEnqueue( <span class="hljs-number">70</span> ); <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;队列: 入队 70(满), head=%d tail=%d count=%d\r\n&quot;</span>, iQHead, iQTail, iQCount );<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="十一、实验-10：哈希表（ds10-hash-c）"><a href="#十一、实验-10：哈希表（ds10-hash-c）" class="headerlink" title="十一、实验 10：哈希表（ds10_hash.c）"></a>十一、实验 10：哈希表（<code>ds10_hash.c</code>）</h2><blockquote>
+<p>预期现象：10 键 8 桶，桶 0&#x2F;6&#x2F;7 链长 2（碰撞），桶 3 为空，查找全部正确。</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdlib.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;string.h&gt;</span></span><br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> BUCKET_COUNT 8</span><br><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">Entry</span></span><br><span class="hljs-class">&#123;</span><br>    <span class="hljs-type">char</span> pcKey[ <span class="hljs-number">32</span> ];<br>    <span class="hljs-type">int</span> iValue;<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">Entry</span> * <span class="hljs-title">pxNext</span>;</span><br>&#125; Entry;<br><br><span class="hljs-type">static</span> Entry * apxBuckets[ BUCKET_COUNT ];<br><br><span class="hljs-type">static</span> <span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> <span class="hljs-title function_">ulHash</span><span class="hljs-params">( <span class="hljs-type">const</span> <span class="hljs-type">char</span> * pcKey )</span><br>&#123;<br>    <span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> h = <span class="hljs-number">5381</span>;<br>    <span class="hljs-keyword">while</span>( *pcKey )<br>    &#123;<br>        h = ( ( h &lt;&lt; <span class="hljs-number">5</span> ) + h ) + ( <span class="hljs-type">unsigned</span> <span class="hljs-type">char</span> ) *pcKey++;<br>    &#125;<br>    <span class="hljs-keyword">return</span> h % BUCKET_COUNT;<br>&#125;<br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vPut</span><span class="hljs-params">( <span class="hljs-type">const</span> <span class="hljs-type">char</span> * pcKey, <span class="hljs-type">int</span> iValue )</span><br>&#123;<br>    <span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> b = ulHash( pcKey );<br>    <span class="hljs-keyword">for</span>( Entry * e = apxBuckets[ b ]; e != <span class="hljs-literal">NULL</span>; e = e-&gt;pxNext )<br>    &#123;<br>        <span class="hljs-keyword">if</span>( <span class="hljs-built_in">strcmp</span>( e-&gt;pcKey, pcKey ) == <span class="hljs-number">0</span> ) &#123; e-&gt;iValue = iValue; <span class="hljs-keyword">return</span>; &#125;<br>    &#125;<br>    Entry * e = ( Entry * ) <span class="hljs-built_in">malloc</span>( <span class="hljs-keyword">sizeof</span>( Entry ) );<br>    <span class="hljs-built_in">strncpy</span>( e-&gt;pcKey, pcKey, <span class="hljs-keyword">sizeof</span>( e-&gt;pcKey ) - <span class="hljs-number">1</span> );<br>    e-&gt;pcKey[ <span class="hljs-keyword">sizeof</span>( e-&gt;pcKey ) - <span class="hljs-number">1</span> ] = <span class="hljs-number">0</span>;<br>    e-&gt;iValue = iValue;<br>    e-&gt;pxNext = apxBuckets[ b ];<br>    apxBuckets[ b ] = e;<br>&#125;<br><br><span class="hljs-type">static</span> <span class="hljs-type">int</span> <span class="hljs-title function_">iGet</span><span class="hljs-params">( <span class="hljs-type">const</span> <span class="hljs-type">char</span> * pcKey, <span class="hljs-type">int</span> * pv )</span><br>&#123;<br>    <span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> b = ulHash( pcKey );<br>    <span class="hljs-keyword">for</span>( Entry * e = apxBuckets[ b ]; e != <span class="hljs-literal">NULL</span>; e = e-&gt;pxNext )<br>    &#123;<br>        <span class="hljs-keyword">if</span>( <span class="hljs-built_in">strcmp</span>( e-&gt;pcKey, pcKey ) == <span class="hljs-number">0</span> ) &#123; *pv = e-&gt;iValue; <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>; &#125;<br>    &#125;<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">( <span class="hljs-type">void</span> )</span><br>&#123;<br>    <span class="hljs-type">const</span> <span class="hljs-type">char</span> * apcKeys[] = &#123; <span class="hljs-string">&quot;apple&quot;</span>, <span class="hljs-string">&quot;banana&quot;</span>, <span class="hljs-string">&quot;grape&quot;</span>, <span class="hljs-string">&quot;cherry&quot;</span>,<br>                               <span class="hljs-string">&quot;pear&quot;</span>, <span class="hljs-string">&quot;peach&quot;</span>, <span class="hljs-string">&quot;melon&quot;</span>, <span class="hljs-string">&quot;kiwi&quot;</span>, <span class="hljs-string">&quot;lemon&quot;</span>, <span class="hljs-string">&quot;mango&quot;</span> &#125;;<br>    <span class="hljs-keyword">for</span>( <span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">10</span>; i++ )<br>    &#123;<br>        vPut( apcKeys[ i ], ( i + <span class="hljs-number">1</span> ) * <span class="hljs-number">100</span> );<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;put %-7s -&gt; 桶 %u\r\n&quot;</span>, apcKeys[ i ], ulHash( apcKeys[ i ] ) );<br>    &#125;<br>    <span class="hljs-keyword">for</span>( <span class="hljs-type">int</span> b = <span class="hljs-number">0</span>; b &lt; BUCKET_COUNT; b++ )<br>    &#123;<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;桶 %d: &quot;</span>, b );<br>        <span class="hljs-keyword">for</span>( Entry * e = apxBuckets[ b ]; e != <span class="hljs-literal">NULL</span>; e = e-&gt;pxNext )<br>            <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;%s(%d) -&gt; &quot;</span>, e-&gt;pcKey, e-&gt;iValue );<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;NULL\r\n&quot;</span> );<br>    &#125;<br>    <span class="hljs-type">int</span> v;<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;get(\&quot;grape\&quot;) = %s%d\r\n&quot;</span>, iGet( <span class="hljs-string">&quot;grape&quot;</span>, &amp;v ) ? <span class="hljs-string">&quot;&quot;</span> : <span class="hljs-string">&quot;未找到&quot;</span>, iGet( <span class="hljs-string">&quot;grape&quot;</span>, &amp;v ) ? v : <span class="hljs-number">0</span> );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;get(\&quot;nope\&quot;)  = %s\r\n&quot;</span>, iGet( <span class="hljs-string">&quot;nope&quot;</span>, &amp;v ) ? <span class="hljs-string">&quot;命中&quot;</span> : <span class="hljs-string">&quot;未找到&quot;</span> );<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="十二、实验-12：手写线程安全队列（ds12-tsqueue-c）"><a href="#十二、实验-12：手写线程安全队列（ds12-tsqueue-c）" class="headerlink" title="十二、实验 12：手写线程安全队列（ds12_tsqueue.c）"></a>十二、实验 12：手写线程安全队列（<code>ds12_tsqueue.c</code>）</h2><blockquote>
+<p>预期现象：手写队列（临界区保护）与内置 xQueue 各收发 500 条，全部按序零丢失。编译命令见第一节。完整源码较长（含内置对照组），此处收录手写队列核心；完整文件见仓库 ds-lab。</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdlib.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;FreeRTOS.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;task.h&quot;</span></span><br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> TOTAL_ITEMS 500</span><br><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">QNode</span></span><br><span class="hljs-class">&#123;</span><br>    <span class="hljs-type">int</span> iValue;<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">QNode</span> * <span class="hljs-title">pxNext</span>;</span><br>&#125; QNode;<br><br><span class="hljs-type">static</span> QNode * pxQHead = <span class="hljs-literal">NULL</span>;<br><span class="hljs-type">static</span> QNode * pxQTail = <span class="hljs-literal">NULL</span>;<br><span class="hljs-type">static</span> <span class="hljs-keyword">volatile</span> <span class="hljs-type">int</span> iQCount = <span class="hljs-number">0</span>;<br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vTsPush</span><span class="hljs-params">( <span class="hljs-type">int</span> iValue )</span><br>&#123;<br>    taskENTER_CRITICAL();<br>    &#123;<br>        QNode * pxN = ( QNode * ) <span class="hljs-built_in">malloc</span>( <span class="hljs-keyword">sizeof</span>( QNode ) );<br>        pxN-&gt;iValue = iValue;<br>        pxN-&gt;pxNext = <span class="hljs-literal">NULL</span>;<br>        <span class="hljs-keyword">if</span>( pxQTail != <span class="hljs-literal">NULL</span> ) &#123; pxQTail-&gt;pxNext = pxN; &#125;<br>        <span class="hljs-keyword">else</span>                  &#123; pxQHead = pxN; &#125;<br>        pxQTail = pxN;<br>        iQCount++;<br>    &#125;<br>    taskEXIT_CRITICAL();<br>&#125;<br><br><span class="hljs-type">static</span> <span class="hljs-type">int</span> <span class="hljs-title function_">iTsPop</span><span class="hljs-params">( <span class="hljs-type">int</span> * piOut )</span><br>&#123;<br>    <span class="hljs-type">int</span> iResult = <span class="hljs-number">-1</span>;<br>    taskENTER_CRITICAL();<br>    &#123;<br>        <span class="hljs-keyword">if</span>( pxQHead != <span class="hljs-literal">NULL</span> )<br>        &#123;<br>            *piOut = pxQHead-&gt;iValue;<br>            QNode * pxN = pxQHead;<br>            pxQHead = pxQHead-&gt;pxNext;<br>            <span class="hljs-keyword">if</span>( pxQHead == <span class="hljs-literal">NULL</span> ) &#123; pxQTail = <span class="hljs-literal">NULL</span>; &#125;<br>            iQCount--;<br>            <span class="hljs-built_in">free</span>( pxN );<br>            iResult = <span class="hljs-number">0</span>;<br>        &#125;<br>    &#125;<br>    taskEXIT_CRITICAL();<br>    <span class="hljs-keyword">return</span> iResult;<br>&#125;<br><span class="hljs-comment">/* 生产者/消费者任务与内置 xQueue 对照组：完整代码见 ds12_tsqueue.c */</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="十三、收个尾"><a href="#十三、收个尾" class="headerlink" title="十三、收个尾"></a>十三、收个尾</h2><p>到这里，数据结构系列 13 篇全部完成：<strong>内存地图（1<del>3）→ 结构体（4</del>5）→ 线性结构（6<del>10）→ 内核实战与并发（11</del>12）</strong>，加上本篇代码附录。与本系列配合使用的还有隔壁的 <strong>FreeRTOS 学习笔记 12 篇</strong>——两边互相引用，一个讲内核，一个讲内核脚下的地基。</p>
+<p>复现遇到问题先核对：gcc 是否在 PATH、工作目录是否正确、ds12 的内核路径是否匹配。祝折腾愉快！</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li>《深入理解计算机系统》《算法导论》相关章节</li>
+<li><a target="_blank" rel="noopener" href="https://github.com/FreeRTOS/FreeRTOS-Kernel">FreeRTOS-Kernel 源码仓库</a></li>
+<li>本系列全部前篇（目录见文首）</li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/DATA-STRUCT/" class="category-chain-item">DATA_STRUCT</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/C/" class="print-no-link">#C</a>
+      
+        <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" class="print-no-link">#数据结构</a>
+      
+        <a href="/tags/%E5%86%85%E5%AD%98/" class="print-no-link">#内存</a>
+      
+        <a href="/tags/%E9%93%BE%E8%A1%A8/" class="print-no-link">#链表</a>
+      
+    </div>
+  
+</div>
+
+
+              
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2026/11/26/ssh-01-handshake/" title="SSH 学习笔记（一）：一次 ssh 登录到底发生了什么">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">SSH 学习笔记（一）：一次 ssh 登录到底发生了什么</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/11/26/data_struct_12_tsqueue/" title="数据结构（十二）：手写线程安全队列 —— 竞态与临界区">
+                        <span class="hidden-mobile">数据结构（十二）：手写线程安全队列 —— 竞态与临界区</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

@@ -1,0 +1,723 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/imgs/ava/fluid.png">
+  <link rel="icon" href="/imgs/ava/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Chris">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="系列收官。前三篇我们攒齐了所有积木——周期采样、队列、事件组、软件定时器——这一篇把它们拼成一台完整的多任务数据采集系统：传感器任务每秒采样，处理任务做滑动均值滤波并触发超限报警，显示任务输出统计，软件定时器打心跳。13 秒实测日志 + 一次真实翻车复盘，然后给整个系列收个尾。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="FreeRTOS 学习笔记（十一）：综合实战 —— 把 11 篇知识拼成一台采集系统">
+<meta property="og:url" content="https://lu-six-star.github.io/2026/11/21/freertos-11-project/index.html">
+<meta property="og:site_name" content="星橙点点">
+<meta property="og:description" content="系列收官。前三篇我们攒齐了所有积木——周期采样、队列、事件组、软件定时器——这一篇把它们拼成一台完整的多任务数据采集系统：传感器任务每秒采样，处理任务做滑动均值滤波并触发超限报警，显示任务输出统计，软件定时器打心跳。13 秒实测日志 + 一次真实翻车复盘，然后给整个系列收个尾。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://lu-six-star.github.io/images/freertos-11-cover.png">
+<meta property="article:published_time" content="2026-11-21T06:00:00.000Z">
+<meta property="article:modified_time" content="2026-11-26T09:10:17.846Z">
+<meta property="article:author" content="Chris">
+<meta property="article:tag" content="FreeRTOS">
+<meta property="article:tag" content="RTOS">
+<meta property="article:tag" content="嵌入式">
+<meta property="article:tag" content="C语言">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://lu-six-star.github.io/images/freertos-11-cover.png">
+  
+  
+  
+  <title>FreeRTOS 学习笔记（十一）：综合实战 —— 把 11 篇知识拼成一台采集系统 - 星橙点点</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"lu-six-star.github.io","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>星橙点点</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/images/freertos-11-cover.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="FreeRTOS 学习笔记（十一）：综合实战 —— 把 11 篇知识拼成一台采集系统"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-11-21 14:00" pubdate>
+          2026年11月21日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          3.4k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          29 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">FreeRTOS 学习笔记（十一）：综合实战 —— 把 11 篇知识拼成一台采集系统</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <blockquote>
+<p>系列收官。前三篇我们攒齐了所有积木——周期采样、队列、事件组、软件定时器——这一篇把它们拼成一台完整的多任务数据采集系统：传感器任务每秒采样，处理任务做滑动均值滤波并触发超限报警，显示任务输出统计，软件定时器打心跳。13 秒实测日志 + 一次真实翻车复盘，然后给整个系列收个尾。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="系列目录"><a href="#系列目录" class="headerlink" title="系列目录"></a>系列目录</h2><ol>
+<li><a href="/2026/11/25/freertos-01-introduction/">初识 FreeRTOS：从裸机到多任务</a></li>
+<li><a href="/2026/11/26/freertos-02-setup/">在 Windows 上跑起 FreeRTOS：环境搭建与第一个任务</a></li>
+<li><a href="/2026/11/26/freertos-03-task-management/">任务管理：状态机、优先级与空闲任务</a></li>
+<li><a href="/2026/11/26/freertos-04-scheduler/">调度器与时间管理：tick 心跳与周期任务的正确写法</a></li>
+<li><a href="/2026/11/26/freertos-05-queue/">队列：任务间通信的第一选择</a></li>
+<li><a href="/2026/11/26/freertos-06-interrupts/">中断管理：FromISR 与延迟中断处理</a></li>
+<li><a href="/2026/11/26/freertos-07-semaphores/">信号量与互斥量：同步的艺术</a></li>
+<li><a href="/2026/11/26/freertos-08-events-notifications/">事件组与任务通知：更轻量的同步方式</a></li>
+<li><a href="/2026/11/26/freertos-09-timers/">软件定时器：让回调按时到达</a></li>
+<li><a href="/2026/11/26/freertos-10-memory/">内存管理：heap_1 ~ heap_5 五种方案怎么选</a></li>
+<li><strong>综合实战：多任务传感器采集系统（本篇 · 收官）</strong></li>
+</ol>
+<h2 id="一、系统架构：四个角色，两条数据流"><a href="#一、系统架构：四个角色，两条数据流" class="headerlink" title="一、系统架构：四个角色，两条数据流"></a>一、系统架构：四个角色，两条数据流</h2><p><img src="/images/freertos-11-project.png" srcset="/img/loading.gif" lazyload alt="综合实战：多任务数据采集系统的架构"></p>
+<table>
+<thead>
+<tr>
+<th>角色</th>
+<th>优先级</th>
+<th>职责</th>
+<th>用到的机制</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>传感器任务 Sensor</td>
+<td>1</td>
+<td>每 1s 采样一次模拟 ADC</td>
+<td><code>xTaskDelayUntil</code> 严格周期（第 4 篇）</td>
+</tr>
+<tr>
+<td>处理任务 Process</td>
+<td>2</td>
+<td>4 点滑动均值滤波，超限置报警位</td>
+<td>队列（第 5 篇）+ 事件组（第 8 篇）</td>
+</tr>
+<tr>
+<td>显示任务 Display</td>
+<td>1</td>
+<td>打印统计与报警状态</td>
+<td>队列 + 事件组读位</td>
+</tr>
+<tr>
+<td>心跳定时器</td>
+<td>—</td>
+<td>500ms 打一条”系统活着”</td>
+<td>软件定时器（第 9 篇）</td>
+</tr>
+</tbody></table>
+<p>数据流两条：<strong>采样值</strong>走 <code>qADC</code> 队列进处理任务，处理结果走 <code>qStats</code> 队列给显示任务；<strong>报警</strong>不走路的数据流，而是处理任务往事件组 <code>BIT0</code> 上置位，显示任务随时查——数据与状态分离，这是多任务系统设计的第一个感觉。</p>
+<h2 id="二、代码走读：每个角色都很小"><a href="#二、代码走读：每个角色都很小" class="headerlink" title="二、代码走读：每个角色都很小"></a>二、代码走读：每个角色都很小</h2><p><strong>传感器任务</strong>——第 4 篇的最佳实践 + 模拟 ADC 的波动（三角波 + 方向翻转）：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vSensorTask</span><span class="hljs-params">( <span class="hljs-type">void</span> * pv )</span><br>&#123;<br>    <span class="hljs-type">int32_t</span> lRaw = <span class="hljs-number">1000</span>, lDir = <span class="hljs-number">37</span>;<br>    TickType_t xLastWake = xTaskGetTickCount();<br><br>    xTimerStart( xHeartbeat, <span class="hljs-number">0</span> );            <span class="hljs-comment">/* 定时器在这里启动（原因见第四节） */</span><br><br>    <span class="hljs-keyword">for</span>( ; ; )<br>    &#123;<br>        xTaskDelayUntil( &amp;xLastWake, pdMS_TO_TICKS( <span class="hljs-number">1000</span> ) );   <span class="hljs-comment">/* 绝对节拍 */</span><br>        lRaw += lDir;<br>        <span class="hljs-keyword">if</span>( lRaw &gt; <span class="hljs-number">1300</span> ) lDir = <span class="hljs-number">-37</span>;<br>        <span class="hljs-keyword">if</span>( lRaw &lt; <span class="hljs-number">700</span> )  lDir = <span class="hljs-number">37</span>;<br>        xQueueSend( xQueueADC, &amp;lRaw, <span class="hljs-number">0</span> );<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><strong>处理任务</strong>——滑动均值滤波 + 超限报警：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c">xQueueReceive( xQueueADC, &amp;lValue, portMAX_DELAY );   <span class="hljs-comment">/* 无采样则阻塞，不烧 CPU */</span><br>lWindow[ i &amp; <span class="hljs-number">3</span> ] = lValue;  i++;<br><span class="hljs-type">int32_t</span> lAvg = ( lWindow[<span class="hljs-number">0</span>] + lWindow[<span class="hljs-number">1</span>] + lWindow[<span class="hljs-number">2</span>] + lWindow[<span class="hljs-number">3</span>] ) / <span class="hljs-number">4</span>;<br><span class="hljs-keyword">if</span>( lAvg &gt; <span class="hljs-number">1250</span> )<br>&#123;<br>    xEventGroupSetBits( xEventAlarm, ALARM_BIT );     <span class="hljs-comment">/* 报警位广播 */</span><br>&#125;<br>xQueueSend( xQueueStats, &amp;lAvg, <span class="hljs-number">0</span> );<br></code></pre></td></tr></table></figure>
+
+<p><strong>显示任务</strong>与<strong>心跳回调</strong>——一个阻塞收统计，一个 500ms 报平安：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[Display] #%lu avg = %ld, alarm = %s (tick %lu)\r\n&quot;</span>, ... );<br><span class="hljs-comment">/* 心跳回调：在 Tmr Svc 上下文里，只打一行就走 */</span><br><span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[Heart   ] system alive at tick %lu\r\n&quot;</span>, ... );<br></code></pre></td></tr></table></figure>
+
+<h2 id="三、实测日志：13-秒完整现场"><a href="#三、实测日志：13-秒完整现场" class="headerlink" title="三、实测日志：13 秒完整现场"></a>三、实测日志：13 秒完整现场</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs text">Starting scheduler...<br>[Heart   ] system alive at tick 502<br>[Heart   ] system alive at tick 1002<br>[Display] #1 avg = 259, alarm = off (tick 1024)<br>[Heart   ] system alive at tick 1502<br>...<br>[Display] #8 avg = 1240, alarm = off (tick 8008)<br>[Heart   ] system alive at tick 8502<br>[Heart   ] system alive at tick 9002<br>[Display] #9 avg = 1277, alarm = ON  (tick 9009)<br>[Heart   ] system alive at tick 9502<br>[Heart   ] system alive at tick 10002<br>[Display] #10 avg = 1296, alarm = ON  (tick 10008)<br>...<br>[Display] #13 avg = 1240, alarm = ON  (tick 13011)<br></code></pre></td></tr></table></figure>
+
+<p>三个值得圈点的现象：</p>
+<ol>
+<li><strong>心跳 500ms 一个不少</strong>（502、1002、1502……13002），显示任务 1s 一条——两类节奏互不干扰，这就是多任务的含义；</li>
+<li><strong>均值爬升符合物理直觉</strong>：259 → 527 → 805 → 1092 → 1129 → …… 1296——滤波把方波样的采样抹成了缓坡（前 3 个周期窗口未满，均值偏低，也是真实滤波器的正常表现）；</li>
+<li><strong>报警在 #9 触发（avg&#x3D;1277 &gt; 1250）并锁存</strong>：此后即使均值回落到 1240，alarm 仍为 ON——事件组的位不会自己清零，**”报警确认”必须显式 <code>xEventGroupClearBits</code>**。真实系统里通常由人工确认或恢复逻辑来清位，本实验故意保留锁存行为展示语义。</li>
+</ol>
+<h2 id="四、翻车复盘：xTimerStart-的位置陷阱"><a href="#四、翻车复盘：xTimerStart-的位置陷阱" class="headerlink" title="四、翻车复盘：xTimerStart 的位置陷阱"></a>四、翻车复盘：xTimerStart 的位置陷阱</h2><p>第一版代码把 <code>xTimerStart( xHeartbeat, 0 )</code> 写在 <code>main()</code> 里、<code>vTaskStartScheduler()</code> 之前。结果：编译零警告、运行不报错，<strong>心跳日志一条都没有</strong>。</p>
+<p>原因（第 9 篇的翻车现场，这里给出完整修复）：定时器命令队列由 <code>vTaskStartScheduler()</code> 创建——启动前队列不存在，<code>xTimerStart</code> 静默失败。把启动挪进传感器任务的开头（调度器已运行），心跳立刻恢复。这个坑我们是在写本篇时真实踩到的：<strong>多任务系统的初始化顺序本身就是知识点</strong>——内核对象创建在启动前，定时器启动在启动后，各归其位。</p>
+<h2 id="五、继续折腾的方向"><a href="#五、继续折腾的方向" class="headerlink" title="五、继续折腾的方向"></a>五、继续折腾的方向</h2><p>这台小系统有大量可以进化的地方，每一条都对应一个真实的工程课题：</p>
+<ul>
+<li><strong>报警确认机制</strong>：显示任务确认后 <code>ClearBits</code>，加”报警历史”队列；</li>
+<li><strong>队列满背压</strong>：显示任务卡死时 <code>qStats</code> 会满（第 5 篇实验 6），给 <code>xQueueSend</code> 换成有界超时 + 丢弃计数；</li>
+<li><strong>真实 ADC</strong>：把模拟采样换成真硬件的 DMA + 中断 → 队列，正好用上第 6 篇的延迟中断处理；</li>
+<li><strong>移植到真机</strong>：STM32&#x2F;ESP32 的 FreeRTOS 工程里，本系列 95% 的代码原样可用——要换的只有 <code>FreeRTOSConfig.h</code> 和移植层；</li>
+<li><strong>进阶</strong>：FreeRTOS+TCP 网络栈、SMP 多核（Kernel v11 已支持）、tickless 低功耗。</li>
+</ul>
+<h2 id="六、系列总结：11-篇，一台机器"><a href="#六、系列总结：11-篇，一台机器" class="headerlink" title="六、系列总结：11 篇，一台机器"></a>六、系列总结：11 篇，一台机器</h2><p>11 篇下来，我们从”裸机为什么难受”一路走到”亲手拼出一台多任务系统”：</p>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>篇目</th>
+<th>关键产出</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>入门</td>
+<td>01 初识 &#x2F; 02 环境搭建</td>
+<td>裸机 vs RTOS 模型；Windows 仿真工程 + 191KB 的第一个 exe</td>
+</tr>
+<tr>
+<td>核心</td>
+<td>03 任务 &#x2F; 04 调度</td>
+<td>状态机与饿死实验；周期漂移 1300→1000 tick</td>
+</tr>
+<tr>
+<td>通信</td>
+<td>05 队列 &#x2F; 06 中断 &#x2F; 07 信号量</td>
+<td>86% 丢数据 vs 零丢失；模拟中断链路；反转 210ms→137ms</td>
+</tr>
+<tr>
+<td>资源</td>
+<td>08 事件组 &#x2F; 09 定时器 &#x2F; 10 内存</td>
+<td>屏障同步 2ms 内越栏；xTimerStart 翻车现场；堆水位 736 字节的账</td>
+</tr>
+<tr>
+<td>收官</td>
+<td>11 本篇</td>
+<td>四角色系统 13 秒稳定运行</td>
+</tr>
+</tbody></table>
+<p>全部实验代码（<code>main_e1.c</code> ~ <code>main_e15.c</code>）都在本系列工程 <code>freertos-lab/demo01/</code> 里，每个都能用一条 gcc 命令复现。感谢你看到这里——下一步，买块开发板，把这些代码烧进真机，你会看到 tick 真正来自 SysTick，上下文切换真正发生在 PendSV 里。那时再回头看这个系列，每一篇都会多一层理解。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li>本系列全部前篇（目录见文首）</li>
+<li>官方电子书 <em>Mastering the FreeRTOS Real Time Kernel</em>（免费的官方 PDF，通读一遍正好复习整个系列）</li>
+<li><a target="_blank" rel="noopener" href="https://github.com/FreeRTOS/FreeRTOS-Kernel">FreeRTOS-Kernel 源码仓库</a> —— 本系列所有实验基于 commit <code>54c60e7</code>（v11 main）</li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/FreeRTOS-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" class="category-chain-item">FreeRTOS 学习笔记</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/FreeRTOS/" class="print-no-link">#FreeRTOS</a>
+      
+        <a href="/tags/RTOS/" class="print-no-link">#RTOS</a>
+      
+        <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/" class="print-no-link">#嵌入式</a>
+      
+        <a href="/tags/C%E8%AF%AD%E8%A8%80/" class="print-no-link">#C语言</a>
+      
+    </div>
+  
+</div>
+
+
+              
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2026/11/21/freertos-12-appendix/" title="FreeRTOS 学习笔记（十二）：附录 —— 全部实验代码与复现指南">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">FreeRTOS 学习笔记（十二）：附录 —— 全部实验代码与复现指南</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/11/21/freertos-10-memory/" title="FreeRTOS 学习笔记（十）：内存管理 —— heap_1 ~ heap_5 五种方案怎么选">
+                        <span class="hidden-mobile">FreeRTOS 学习笔记（十）：内存管理 —— heap_1 ~ heap_5 五种方案怎么选</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

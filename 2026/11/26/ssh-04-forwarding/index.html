@@ -1,0 +1,759 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/imgs/ava/fluid.png">
+  <link rel="icon" href="/imgs/ava/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Chris">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="连上一台服务器之后，SSH 能干的远不止敲命令。它还能在加密通道里”搬运”端口：把内网才有的服务搬到本地访问，把本地服务暴露到远程，甚至开一个代理让所有流量从远程出去。这就是端口转发，三个参数 -L、-R、-D 经常被背下来却没真正理解。 这一篇不背概念，直接在本机起靶机，把三种转发各跑一遍，用 curl 验证每一条隧道真的通了，再从 -vvv 日志里看清楚每种转发到底是谁在监听端口、谁去连目标">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SSH 学习笔记（四）：端口转发，-L &#x2F; -R &#x2F; -D 到底转发的是什么">
+<meta property="og:url" content="https://lu-six-star.github.io/2026/11/26/ssh-04-forwarding/index.html">
+<meta property="og:site_name" content="星橙点点">
+<meta property="og:description" content="连上一台服务器之后，SSH 能干的远不止敲命令。它还能在加密通道里”搬运”端口：把内网才有的服务搬到本地访问，把本地服务暴露到远程，甚至开一个代理让所有流量从远程出去。这就是端口转发，三个参数 -L、-R、-D 经常被背下来却没真正理解。 这一篇不背概念，直接在本机起靶机，把三种转发各跑一遍，用 curl 验证每一条隧道真的通了，再从 -vvv 日志里看清楚每种转发到底是谁在监听端口、谁去连目标">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://lu-six-star.github.io/images/ssh-04-cover.png">
+<meta property="article:published_time" content="2026-11-26T08:30:00.000Z">
+<meta property="article:modified_time" content="2026-11-26T09:10:17.860Z">
+<meta property="article:author" content="Chris">
+<meta property="article:tag" content="SSH">
+<meta property="article:tag" content="OpenSSH">
+<meta property="article:tag" content="端口转发">
+<meta property="article:tag" content="隧道">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://lu-six-star.github.io/images/ssh-04-cover.png">
+  
+  
+  
+  <title>SSH 学习笔记（四）：端口转发，-L / -R / -D 到底转发的是什么 - 星橙点点</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"lu-six-star.github.io","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>星橙点点</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/images/ssh-04-cover.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="SSH 学习笔记（四）：端口转发，-L / -R / -D 到底转发的是什么"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-11-26 16:30" pubdate>
+          2026年11月26日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          5.5k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          46 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">SSH 学习笔记（四）：端口转发，-L / -R / -D 到底转发的是什么</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <blockquote>
+<p>连上一台服务器之后，SSH 能干的远不止敲命令。它还能在加密通道里”搬运”端口：把内网才有的服务搬到本地访问，把本地服务暴露到远程，甚至开一个代理让所有流量从远程出去。这就是端口转发，三个参数 <code>-L</code>、<code>-R</code>、<code>-D</code> 经常被背下来却没真正理解。</p>
+<p>这一篇不背概念，直接在本机起靶机，把三种转发各跑一遍，用 <code>curl</code> 验证每一条隧道真的通了，再从 <code>-vvv</code> 日志里看清楚每种转发到底是谁在监听端口、谁去连目标。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="这个系列会写什么"><a href="#这个系列会写什么" class="headerlink" title="这个系列会写什么"></a>这个系列会写什么</h2><table>
+<thead>
+<tr>
+<th>#</th>
+<th>主题</th>
+<th>状态</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>一次 ssh 登录到底发生了什么（握手 &#x2F; 认证 &#x2F; 第一个命令）</td>
+<td><a href="/ssh-01-handshake/">已发布</a></td>
+</tr>
+<tr>
+<td>2</td>
+<td>密钥与免密登录：authorized_keys、ssh-agent、权限那点事</td>
+<td><a href="/ssh-02-keys/">已发布</a></td>
+</tr>
+<tr>
+<td>3</td>
+<td>ssh config：别名、多主机与跳板机</td>
+<td><a href="/ssh-03-config/">已发布</a></td>
+</tr>
+<tr>
+<td>4</td>
+<td>端口转发：-L &#x2F; -R &#x2F; -D 到底转发的是什么</td>
+<td><strong>本篇</strong></td>
+</tr>
+<tr>
+<td>5</td>
+<td>登录故障排查清单：从 -vvv 日志定位问题</td>
+<td><a href="/ssh-05-troubleshooting/">已发布</a></td>
+</tr>
+</tbody></table>
+<h2 id="一、先搭一个能验证转发的靶机"><a href="#一、先搭一个能验证转发的靶机" class="headerlink" title="一、先搭一个能验证转发的靶机"></a>一、先搭一个能验证转发的靶机</h2><p>要验证”转发通不通”，得有一个可访问的 HTTP 服务当目标，再用 curl 从另一端去够它。靶机长这样：</p>
+<ul>
+<li><strong>sshd</strong>：便携版 Win32-OpenSSH，监听 <code>127.0.0.1:2222</code>，开 <code>AllowTcpForwarding yes</code>、<code>GatewayPorts no</code></li>
+<li><strong>HTTP 服务</strong>：Python 起一个极简服务在 <code>127.0.0.1:8080</code>，任何请求都返回标识串 <code>FWD-HTTP-8080-HELLO</code></li>
+<li><strong>客户端</strong>：Windows 自带 OpenSSH，密钥指纹 <code>SHA256:8PlD/ORyLMYPki+Oq/BqdXmKF5zxU4m4gwTmfQgu28c</code></li>
+</ul>
+<p>先确认基线——直连 HTTP 8080 是通的：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">&gt; curl -s http://127.0.0.1:8080/<br>FWD-HTTP-8080-HELLO<br></code></pre></td></tr></table></figure>
+
+<p>下面三个场景，我都把 ssh 转发进程挂在后台（<code>-N</code> 表示不执行远程命令，只建隧道），然后用 curl 去打对应端口，看能不能拿到 <code>FWD-HTTP-8080-HELLO</code>。</p>
+<h2 id="二、三种转发，一张图看懂"><a href="#二、三种转发，一张图看懂" class="headerlink" title="二、三种转发，一张图看懂"></a>二、三种转发，一张图看懂</h2><p><img src="/images/ssh-04-forwarding.png" srcset="/img/loading.gif" lazyload alt="三种端口转发对比：谁监听、谁连目标"></p>
+<p>一句话先记住区别：</p>
+<ul>
+<li><strong><code>-L</code> 本地转发</strong>：在本地监听一个端口，有连接就经隧道让服务端去连目标——把远程服务”搬”到本地。</li>
+<li><strong><code>-R</code> 远程转发</strong>：让服务端监听一个端口，有连接就经隧道让客户端去连目标——把本地服务”暴露”到远程。</li>
+<li><strong><code>-D</code> 动态转发</strong>：在本地开一个 SOCKS 代理，目标地址由每个请求动态决定——最灵活。</li>
+</ul>
+<p>下面逐个实测。</p>
+<h2 id="三、-L-本地转发：把远程服务搬到本地"><a href="#三、-L-本地转发：把远程服务搬到本地" class="headerlink" title="三、-L 本地转发：把远程服务搬到本地"></a>三、-L 本地转发：把远程服务搬到本地</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">&gt; ssh -L 18888:127.0.0.1:8080 -N target<br></code></pre></td></tr></table></figure>
+
+<p>含义：在客户端本地监听 <code>18888</code>，凡是连到 <code>18888</code> 的流量，都经 SSH 隧道送到服务端，由服务端去连 <code>127.0.0.1:8080</code>（注意这个 <code>127.0.0.1</code> 是<strong>服务端视角</strong>的本机）。</p>
+<p>curl 验证：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">&gt; curl -s http://127.0.0.1:18888/<br>FWD-HTTP-8080-HELLO<br>[CURL] http=200 exit=0<br></code></pre></td></tr></table></figure>
+
+<p>访问本地的 18888，拿到了远程 8080 的内容。隧道通了。</p>
+<p>客户端 <code>-vvv</code> 日志里的关键行：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs text">debug1: Local connections to LOCALHOST:18888 forwarded to remote address 127.0.0.1:8080<br>debug1: Local forwarding listening on 127.0.0.1 port 18888.<br>...<br>debug1: Connection to port 18888 forwarding to 127.0.0.1 port 8080 requested.<br>debug2: fd 6 setting TCP_NODELAY<br>debug1: channel 2: new [direct-tcpip]<br></code></pre></td></tr></table></figure>
+
+<p>流程是：客户端在本地监听 18888 → curl 连进来 → 客户端向服务端发一个 <code>direct-tcpip</code> 通道请求（目标 127.0.0.1:8080）→ 服务端建立到目标的连接 → 两端桥接。</p>
+<p>典型用途：远程服务器上跑着一个只监听 <code>127.0.0.1</code> 的内部服务（比如数据库面板、Jupyter），本地 <code>ssh -L 8888:127.0.0.1:8080 server</code> 后，浏览器打开 <code>localhost:8888</code> 就能访问，服务本身完全不暴露公网。</p>
+<h2 id="四、-R-远程转发：把本地服务暴露到远程"><a href="#四、-R-远程转发：把本地服务暴露到远程" class="headerlink" title="四、-R 远程转发：把本地服务暴露到远程"></a>四、-R 远程转发：把本地服务暴露到远程</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">&gt; ssh -R 19999:127.0.0.1:8080 -N target<br></code></pre></td></tr></table></figure>
+
+<p>含义反过来：让服务端监听 <code>19999</code>，凡是连到服务端 19999 的流量，都经隧道送回客户端，由客户端去连 <code>127.0.0.1:8080</code>（这次的 <code>127.0.0.1</code> 是<strong>客户端视角</strong>的本机）。</p>
+<p>curl 验证（去服务端那侧打 19999，本机靶机里服务端也是本机，所以直接 curl 127.0.0.1:19999）：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">&gt; curl -s http://127.0.0.1:19999/<br>FWD-HTTP-8080-HELLO<br>[CURL] http=200 exit=0<br></code></pre></td></tr></table></figure>
+
+<p>远程的 19999 拿到了本地 8080 的内容。</p>
+<p>客户端日志的关键词变成了 <code>forwarded-tcpip</code>（注意和 <code>-L</code> 的 <code>direct-tcpip</code> 不同）：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs text">debug1: Remote connections from LOCALHOST:19999 forwarded to local address 127.0.0.1:8080<br>debug1: remote forward success for: listen 19999, connect 127.0.0.1:8080<br>debug1: forwarding_success: all expected forwarding replies received<br>...<br>debug1: client_input_channel_open: ctype forwarded-tcpip rchan 1 win 2097152 max 32768<br>debug1: client_request_forwarded_tcpip: listen localhost port 19999, originator 127.0.0.1 port 59917<br>debug1: channel 0: connected to 127.0.0.1 port 8080<br></code></pre></td></tr></table></figure>
+
+<p>区别在于方向：<code>-L</code> 是<strong>客户端主动</strong>向服务端发 <code>direct-tcpip</code>；<code>-R</code> 是<strong>服务端主动</strong>向客户端发 <code>forwarded-tcpip</code>（因为远程端口有连接进来了），客户端再去连本地目标。</p>
+<p>一个常见限制：默认 <code>GatewayPorts no</code>，服务端只把 <code>-R</code> 的端口绑在 <code>127.0.0.1</code>，只有服务端本机能够访问。要让其他机器也能访问远程转发的端口，需要服务端设 <code>GatewayPorts yes</code>（或 <code>clientspecified</code>），这是个安全开关，别随便开。</p>
+<p>典型用途：本地开发的 Web 服务想让外网临时预览（没有公网 IP），在一台有公网 IP 的云主机上 <code>ssh -R 8080:127.0.0.1:3000 cloud</code>，访问云主机的 8080 就等于访问本地 3000——这就是各种”内网穿透”工具的底层原理之一。</p>
+<h2 id="五、-D-动态转发：开一个-SOCKS-代理"><a href="#五、-D-动态转发：开一个-SOCKS-代理" class="headerlink" title="五、-D 动态转发：开一个 SOCKS 代理"></a>五、-D 动态转发：开一个 SOCKS 代理</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">&gt; ssh -D 11080 -N target<br></code></pre></td></tr></table></figure>
+
+<p>含义：在客户端本地监听 <code>11080</code>，作为一个 <strong>SOCKS5 代理</strong>。应用把流量交给这个代理，目标地址由每个请求自己决定，ssh 动态解析后经隧道从服务端发出去。</p>
+<p>curl 验证（让 curl 走这个 SOCKS 代理去访问 8080）：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">&gt; curl --socks5 127.0.0.1:11080 -s http://127.0.0.1:8080/<br>FWD-HTTP-8080-HELLO<br>[CURL] http=200 exit=0<br></code></pre></td></tr></table></figure>
+
+<p>日志里能看到完整的 SOCKS5 握手过程：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs text">debug1: Local forwarding listening on 127.0.0.1 port 11080.<br>debug1: Connection to port 11080 forwarding to socks port 0 requested.<br>debug1: channel 2: new [dynamic-tcpip]<br>debug2: channel 2: open confirm<br>...<br>socks5 auth done<br>socks5: version 5 reqtype 1 atyp 1 addr 127.0.0.1 port 8080<br>debug3: decode socks5<br>debug3: socks5 post auth<br>dynamic request: socks5 host 127.0.0.1 port 8080 command 1<br>debug1: channel 2: connected to 127.0.0.1 port 8080<br></code></pre></td></tr></table></figure>
+
+<p>通道类型是 <code>dynamic-tcpip</code>，先完成 SOCKS5 握手（<code>decode socks5</code> → <code>socks5 auth done</code> → <code>socks5 post auth</code>），从请求里解析出目标 <code>host 127.0.0.1 port 8080</code>，再建隧道。和 <code>-L</code>&#x2F;<code>-R</code> 目标地址写死不同，<code>-D</code> 的目标是每个请求临时决定的。</p>
+<p>典型用途：浏览器装个 SwitchyOmega，把流量走 <code>127.0.0.1:11080</code> 的 SOCKS5，就能以远程服务器的网络出口访问内网资源或特定站点；命令行里 <code>curl --socks5</code>、<code>git</code> 配 <code>core.gitProxy</code> 也都能用。</p>
+<h2 id="六、三种转发对比"><a href="#六、三种转发对比" class="headerlink" title="六、三种转发对比"></a>六、三种转发对比</h2><table>
+<thead>
+<tr>
+<th></th>
+<th>-L 本地转发</th>
+<th>-R 远程转发</th>
+<th>-D 动态转发</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>谁监听端口</td>
+<td>客户端本地</td>
+<td>服务端远程</td>
+<td>客户端本地</td>
+</tr>
+<tr>
+<td>目标地址</td>
+<td>写死在参数里</td>
+<td>写死在参数里</td>
+<td>每个请求动态决定</td>
+</tr>
+<tr>
+<td>通道类型</td>
+<td><code>direct-tcpip</code>（客户端发起）</td>
+<td><code>forwarded-tcpip</code>（服务端发起）</td>
+<td><code>dynamic-tcpip</code></td>
+</tr>
+<tr>
+<td>一句话</td>
+<td>远程服务搬本地</td>
+<td>本地服务暴露远程</td>
+<td>本地开 SOCKS 代理</td>
+</tr>
+<tr>
+<td>典型场景</td>
+<td>访问内网面板&#x2F;数据库</td>
+<td>内网穿透、临时外网预览</td>
+<td>浏览器&#x2F;命令行走代理出口</td>
+</tr>
+</tbody></table>
+<p>服务端 sshd 日志对所有 TCP 转发都记同一类记录，以 <code>-L</code>&#x2F;<code>-D</code> 为例：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs text">Accepted publickey for chris from 127.0.0.1 ... ED25519 SHA256:8PlD/ORyLMYPki+Oq/BqdXmKF5zxU4m4gwTmfQgu28c<br>server_input_channel_open: ctype direct-tcpip rchan 0 win 2097152 max 32768<br>server_request_direct_tcpip: originator 127.0.0.1 port 59920, target 127.0.0.1 port 8080<br>connect_next: connecting to 127.0.0.1 (127.0.0.1) port 8080<br>channel 0: connected to 127.0.0.1 port 8080<br></code></pre></td></tr></table></figure>
+
+<h2 id="七、踩坑记录"><a href="#七、踩坑记录" class="headerlink" title="七、踩坑记录"></a>七、踩坑记录</h2><ol>
+<li>**转发建不起来，优先加 <code>-v</code> 看 <code>ExitOnForwardFailure</code>**：默认 ssh 即使转发失败也会继续登录，让人误以为成功。加 <code>-o ExitOnForwardFailure=yes</code>，转发端口被占或没权限时直接退出，省得在”连上了但用不了”里绕圈。</li>
+<li><strong><code>-N</code> 别忘</strong>：只做转发不执行命令时加 <code>-N</code>，否则 ssh 会开一个 shell，看着像卡住；后台跑再加 <code>-f</code>（fork 到后台）。</li>
+<li><strong><code>-R</code> 的端口只能服务端本机访问</strong>：默认 <code>GatewayPorts no</code>，远程转发绑在 <code>127.0.0.1</code>。要让外网访问需服务端改 <code>GatewayPorts</code>，这是安全决策，不是 bug。</li>
+<li><strong><code>-D</code> 是 SOCKS5，不是 HTTP 代理</strong>：浏览器要选 SOCKS5，<code>curl</code> 用 <code>--socks5</code>（或 <code>--socks5-hostname</code> 让远程解析 DNS），配错代理类型会直接连不上。</li>
+<li><strong>靶机里的目标 <code>127.0.0.1</code> 视角要分清</strong>：<code>-L</code> 的目标是服务端的本机，<code>-R</code> 的目标是客户端的本机。本篇两端都是同一台机器，所以 curl 都能打到；换成真实两台机器时，写错 IP 就会”curl 通了但内容不对”。</li>
+<li><strong>Windows 上杀 ssh 进程看 exit code 会误导</strong>：本篇验证完用 taskkill 终止转发进程，ssh 显示 exit 1，这不代表失败——curl 已经在转发存活期间拿到了 200。判断转发是否成功看 curl 的 http_code，别只看 ssh 的退出码。</li>
+</ol>
+<h2 id="八、小结与下一篇预告"><a href="#八、小结与下一篇预告" class="headerlink" title="八、小结与下一篇预告"></a>八、小结与下一篇预告</h2><p>三句话收尾：</p>
+<ul>
+<li>**<code>-L</code> 是”远程搬本地”**：客户端监听，发 <code>direct-tcpip</code>，服务端连目标，用于访问内网服务。</li>
+<li>**<code>-R</code> 是”本地暴露远程”**：服务端监听，发 <code>forwarded-tcpip</code>，客户端连目标，用于内网穿透。</li>
+<li>**<code>-D</code> 是”本地 SOCKS 代理”**：动态解析目标，走 <code>dynamic-tcpip</code>，灵活但需要应用支持 SOCKS5。</li>
+</ul>
+<p>下一篇是这个系列的收尾：<strong>登录故障排查清单</strong>。把前四篇踩过的坑全部汇总——私钥权限、主机密钥变更、公钥不在白名单、config 优先级写错、跳板连不上、转发建不起来——按 <code>-vvv</code> 日志的阶段整理成一张可以逐条对照的排查表，遇到 <code>Permission denied</code> 不再靠搜关键词碰运气。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://man.openbsd.org/ssh">OpenSSH manual: ssh(1)</a>（<code>-L</code>、<code>-R</code>、<code>-D</code>、<code>-N</code>、<code>-f</code>、<code>ExitOnForwardFailure</code>）</li>
+<li><a target="_blank" rel="noopener" href="https://man.openbsd.org/sshd_config">OpenSSH manual: sshd_config(5)</a>（<code>AllowTcpForwarding</code>、<code>GatewayPorts</code>）</li>
+<li><a target="_blank" rel="noopener" href="https://www.rfc-editor.org/rfc/rfc1928">SOCKS 协议 (RFC 1928)</a>（<code>-D</code> 使用的 SOCKS5 协议）</li>
+<li>本次实验代码与全部原始日志：<code>ssh-lab/</code>（<code>fwd_lab.py</code>、<code>results/11-forwarding.log</code> 及 <code>11-fwd-&#123;L,R,D&#125;-raw.txt</code>）</li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/SSH-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" class="category-chain-item">SSH 学习笔记</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/SSH/" class="print-no-link">#SSH</a>
+      
+        <a href="/tags/OpenSSH/" class="print-no-link">#OpenSSH</a>
+      
+        <a href="/tags/%E7%AB%AF%E5%8F%A3%E8%BD%AC%E5%8F%91/" class="print-no-link">#端口转发</a>
+      
+        <a href="/tags/%E9%9A%A7%E9%81%93/" class="print-no-link">#隧道</a>
+      
+    </div>
+  
+</div>
+
+
+              
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2026/11/26/ssh-05-troubleshooting/" title="SSH 学习笔记（五）：登录故障排查清单，从 -vvv 日志一眼定位">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">SSH 学习笔记（五）：登录故障排查清单，从 -vvv 日志一眼定位</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/11/26/ssh-03-config/" title="SSH 学习笔记（三）：把一长串参数变成 ssh lab，顺带搞定跳板机">
+                        <span class="hidden-mobile">SSH 学习笔记（三）：把一长串参数变成 ssh lab，顺带搞定跳板机</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

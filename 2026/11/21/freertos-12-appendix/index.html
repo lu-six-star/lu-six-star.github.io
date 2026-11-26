@@ -1,0 +1,733 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/imgs/ava/fluid.png">
+  <link rel="icon" href="/imgs/ava/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Chris">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="系列正文里只贴了关键代码片段，这篇附录收录全部 15 个实验的完整可编译源码：每个程序都存成独立文件、一条 gcc 命令即可编译复现。与本系列所有实验一样，代码均在 Windows 仿真环境实测通过（gcc 16.2.0，内核 commit 54c60e7）。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="FreeRTOS 学习笔记（十二）：附录 —— 全部实验代码与复现指南">
+<meta property="og:url" content="https://lu-six-star.github.io/2026/11/21/freertos-12-appendix/index.html">
+<meta property="og:site_name" content="星橙点点">
+<meta property="og:description" content="系列正文里只贴了关键代码片段，这篇附录收录全部 15 个实验的完整可编译源码：每个程序都存成独立文件、一条 gcc 命令即可编译复现。与本系列所有实验一样，代码均在 Windows 仿真环境实测通过（gcc 16.2.0，内核 commit 54c60e7）。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://lu-six-star.github.io/images/freertos-12-cover.png">
+<meta property="article:published_time" content="2026-11-21T12:00:00.000Z">
+<meta property="article:modified_time" content="2026-11-26T09:10:17.847Z">
+<meta property="article:author" content="Chris">
+<meta property="article:tag" content="FreeRTOS">
+<meta property="article:tag" content="RTOS">
+<meta property="article:tag" content="嵌入式">
+<meta property="article:tag" content="C语言">
+<meta property="article:tag" content="代码">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://lu-six-star.github.io/images/freertos-12-cover.png">
+  
+  
+  
+  <title>FreeRTOS 学习笔记（十二）：附录 —— 全部实验代码与复现指南 - 星橙点点</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"lu-six-star.github.io","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>星橙点点</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/images/freertos-12-cover.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="FreeRTOS 学习笔记（十二）：附录 —— 全部实验代码与复现指南"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-11-21 20:00" pubdate>
+          2026年11月21日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          29k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          245 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">FreeRTOS 学习笔记（十二）：附录 —— 全部实验代码与复现指南</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <blockquote>
+<p>系列正文里只贴了关键代码片段，这篇附录收录<strong>全部 15 个实验的完整可编译源码</strong>：每个程序都存成独立文件、一条 gcc 命令即可编译复现。与本系列所有实验一样，代码均在 Windows 仿真环境实测通过（gcc 16.2.0，内核 commit <code>54c60e7</code>）。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="系列目录"><a href="#系列目录" class="headerlink" title="系列目录"></a>系列目录</h2><ol>
+<li><a href="/2026/11/25/freertos-01-introduction/">初识 FreeRTOS：从裸机到多任务</a></li>
+<li><a href="/2026/11/26/freertos-02-setup/">在 Windows 上跑起 FreeRTOS：环境搭建与第一个任务</a></li>
+<li><a href="/2026/11/26/freertos-03-task-management/">任务管理：状态机、优先级与空闲任务</a></li>
+<li><a href="/2026/11/26/freertos-04-scheduler/">调度器与时间管理：tick 心跳与周期任务的正确写法</a></li>
+<li><a href="/2026/11/26/freertos-05-queue/">队列：任务间通信的第一选择</a></li>
+<li><a href="/2026/11/26/freertos-06-interrupts/">中断管理：FromISR 与延迟中断处理</a></li>
+<li><a href="/2026/11/26/freertos-07-semaphores/">信号量与互斥量：同步的艺术</a></li>
+<li><a href="/2026/11/26/freertos-08-events-notifications/">事件组与任务通知：更轻量的同步方式</a></li>
+<li><a href="/2026/11/26/freertos-09-timers/">软件定时器：让回调按时到达</a></li>
+<li><a href="/2026/11/26/freertos-10-memory/">内存管理：heap_1 ~ heap_5 五种方案怎么选</a></li>
+<li><a href="/2026/11/26/freertos-11-project/">综合实战：多任务传感器采集系统</a></li>
+<li><strong>附录：全部实验代码与复现指南（本篇）</strong></li>
+</ol>
+<h2 id="一、工程结构与复现方法"><a href="#一、工程结构与复现方法" class="headerlink" title="一、工程结构与复现方法"></a>一、工程结构与复现方法</h2><p>目录结构（<a href="/2026/11/26/freertos-02-setup/">第 2 篇</a>建立）：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs text">freertos-lab/<br>├── FreeRTOS-Kernel/        # git clone --depth 1 https://github.com/FreeRTOS/FreeRTOS-Kernel.git<br>└── demo01/<br>    ├── FreeRTOSConfig.h    # 全部实验共用（第二节有全文）<br>    └── main_*.c            # 15 个实验程序，各自独立编译<br></code></pre></td></tr></table></figure>
+
+<p><strong>编译命令模板</strong>（在 <code>demo01</code> 目录执行，把 <code>main_e9.c</code> &#x2F; <code>demo_e9</code> 换成对应编号即可）：</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs powershell">gcc <span class="hljs-literal">-O0</span> <span class="hljs-literal">-g</span> <span class="hljs-literal">-Wall</span> <span class="hljs-literal">-Wextra</span> <span class="hljs-literal">-D_WIN32_WINNT</span>=<span class="hljs-number">0</span>x0601 `<br>    <span class="hljs-literal">-I</span> ../FreeRTOS<span class="hljs-literal">-Kernel</span>/include `<br>    <span class="hljs-literal">-I</span> ../FreeRTOS<span class="hljs-literal">-Kernel</span>/portable/MSVC<span class="hljs-literal">-MingW</span> `<br>    <span class="hljs-literal">-I</span> . `<br>    main_e9.c `<br>    ../FreeRTOS<span class="hljs-literal">-Kernel</span>/tasks.c ../FreeRTOS<span class="hljs-literal">-Kernel</span>/list.c ../FreeRTOS<span class="hljs-literal">-Kernel</span>/queue.c `<br>    ../FreeRTOS<span class="hljs-literal">-Kernel</span>/timers.c ../FreeRTOS<span class="hljs-literal">-Kernel</span>/event_groups.c ../FreeRTOS<span class="hljs-literal">-Kernel</span>/stream_buffer.c `<br>    ../FreeRTOS<span class="hljs-literal">-Kernel</span>/portable/MSVC<span class="hljs-literal">-MingW</span>/port.c `<br>    ../FreeRTOS<span class="hljs-literal">-Kernel</span>/portable/MemMang/heap_4.c `<br>    <span class="hljs-literal">-o</span> demo_e9.exe <span class="hljs-literal">-lwinmm</span><br></code></pre></td></tr></table></figure>
+
+<p><strong>一键编译全部实验</strong>：</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs powershell"><span class="hljs-variable">$exps</span> = <span class="hljs-string">&#x27;e1&#x27;</span>,<span class="hljs-string">&#x27;e2&#x27;</span>,<span class="hljs-string">&#x27;e3&#x27;</span>,<span class="hljs-string">&#x27;e4&#x27;</span>,<span class="hljs-string">&#x27;e5&#x27;</span>,<span class="hljs-string">&#x27;e6&#x27;</span>,<span class="hljs-string">&#x27;e7&#x27;</span>,<span class="hljs-string">&#x27;e8&#x27;</span>,<span class="hljs-string">&#x27;e9&#x27;</span>,<span class="hljs-string">&#x27;e10a&#x27;</span>,<span class="hljs-string">&#x27;e10b&#x27;</span>,<span class="hljs-string">&#x27;e11&#x27;</span>,<span class="hljs-string">&#x27;e12&#x27;</span>,<span class="hljs-string">&#x27;e13&#x27;</span>,<span class="hljs-string">&#x27;e14&#x27;</span>,<span class="hljs-string">&#x27;e15&#x27;</span><br><span class="hljs-keyword">foreach</span> (<span class="hljs-variable">$v</span> <span class="hljs-keyword">in</span> <span class="hljs-variable">$exps</span>) &#123;<br>  gcc <span class="hljs-literal">-O0</span> <span class="hljs-literal">-g</span> <span class="hljs-literal">-Wall</span> <span class="hljs-literal">-Wextra</span> <span class="hljs-literal">-D_WIN32_WINNT</span>=<span class="hljs-number">0</span>x0601 `<br>      <span class="hljs-literal">-I</span> ../FreeRTOS<span class="hljs-literal">-Kernel</span>/include <span class="hljs-literal">-I</span> ../FreeRTOS<span class="hljs-literal">-Kernel</span>/portable/MSVC<span class="hljs-literal">-MingW</span> <span class="hljs-literal">-I</span> . `<br>      main_<span class="hljs-variable">$v</span>.c `<br>      ../FreeRTOS<span class="hljs-literal">-Kernel</span>/tasks.c ../FreeRTOS<span class="hljs-literal">-Kernel</span>/list.c ../FreeRTOS<span class="hljs-literal">-Kernel</span>/queue.c `<br>      ../FreeRTOS<span class="hljs-literal">-Kernel</span>/timers.c ../FreeRTOS<span class="hljs-literal">-Kernel</span>/event_groups.c ../FreeRTOS<span class="hljs-literal">-Kernel</span>/stream_buffer.c `<br>      ../FreeRTOS<span class="hljs-literal">-Kernel</span>/portable/MSVC<span class="hljs-literal">-MingW</span>/port.c ../FreeRTOS<span class="hljs-literal">-Kernel</span>/portable/MemMang/heap_4.c `<br>      <span class="hljs-literal">-o</span> demo_<span class="hljs-variable">$v</span>.exe <span class="hljs-literal">-lwinmm</span><br>  <span class="hljs-keyword">if</span> (<span class="hljs-variable">$LASTEXITCODE</span> <span class="hljs-operator">-eq</span> <span class="hljs-number">0</span>) &#123; <span class="hljs-built_in">Write-Output</span> <span class="hljs-string">&quot;demo_<span class="hljs-variable">$v</span>.exe OK&quot;</span> &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>运行直接 <code>.\demo_e9.exe</code>，常驻运行的程序按 <code>Ctrl+C</code> 退出。所有程序都做了 <code>setvbuf(stdout, NULL, _IONBF, 0)</code>，重定向到文件也能实时看到输出。</p>
+<h2 id="二、FreeRTOSConfig-h（全部实验共用）"><a href="#二、FreeRTOSConfig-h（全部实验共用）" class="headerlink" title="二、FreeRTOSConfig.h（全部实验共用）"></a>二、FreeRTOSConfig.h（全部实验共用）</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/*</span><br><span class="hljs-comment"> * FreeRTOSConfig.h —— 最小可用的内核配置（基于官方模板精简）</span><br><span class="hljs-comment"> */</span><br><span class="hljs-meta">#<span class="hljs-keyword">ifndef</span> FREERTOS_CONFIG_H</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> FREERTOS_CONFIG_H</span><br><br><span class="hljs-comment">/* ---------------- 调度行为 ---------------- */</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configUSE_PREEMPTION                    1      <span class="hljs-comment">/* 抢占式调度 */</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configUSE_TIME_SLICING                  1      <span class="hljs-comment">/* 同优先级任务按时间片轮转 */</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configUSE_PORT_OPTIMISED_TASK_SELECTION 1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configTICK_RATE_HZ                      ( 1000 )   <span class="hljs-comment">/* tick 频率：1ms 一次心跳 */</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configMAX_PRIORITIES                    ( 7 )      <span class="hljs-comment">/* 优先级 0 ~ 6 */</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configMINIMAL_STACK_SIZE                ( ( unsigned short ) 70 )</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configMAX_TASK_NAME_LEN                 16</span><br><br><span class="hljs-comment">/* Win32 仿真按 64 位编译时使用 64 位 tick 计数 */</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configTICK_TYPE_WIDTH_IN_BITS           TICK_TYPE_WIDTH_64_BITS</span><br><br><span class="hljs-comment">/* ---------------- 内存堆 ---------------- */</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configTOTAL_HEAP_SIZE                   ( ( size_t ) ( 128 * 1024 ) )</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configSUPPORT_DYNAMIC_ALLOCATION        1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configSUPPORT_STATIC_ALLOCATION         0</span><br><br><span class="hljs-comment">/* ---------------- 内核可选功能 ---------------- */</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configUSE_TIMERS                        1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configTIMER_TASK_PRIORITY               ( configMAX_PRIORITIES - 1 )</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configTIMER_TASK_STACK_DEPTH            configMINIMAL_STACK_SIZE</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configTIMER_QUEUE_LENGTH                10</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configUSE_MUTEXES                       1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configUSE_COUNTING_SEMAPHORES           1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configUSE_QUEUE_SETS                   0</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configUSE_TASK_NOTIFICATIONS            1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configUSE_CO_ROUTINES                   0</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configUSE_EVENT_GROUPS                  1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configUSE_STREAM_BUFFERS                1</span><br><br><span class="hljs-comment">/* ---------------- 钩子函数 ---------------- */</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configUSE_IDLE_HOOK                     0</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configUSE_TICK_HOOK                     0</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configUSE_MALLOC_FAILED_HOOK            0</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configCHECK_FOR_STACK_OVERFLOW          0</span><br><br><span class="hljs-comment">/* ---------------- API 裁剪 ---------------- */</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> INCLUDE_vTaskDelay                      1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> INCLUDE_vTaskDelete                     1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> INCLUDE_vTaskSuspend                    1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> INCLUDE_xTaskDelayUntil                 1   <span class="hljs-comment">/* 第 4 篇：绝对周期延时 */</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> INCLUDE_xTaskGetSchedulerState          1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> INCLUDE_xTaskGetCurrentTaskHandle       1</span><br><br><span class="hljs-comment">/* ---------------- 调试断言 ---------------- */</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configASSERT( x )    <span class="hljs-keyword">if</span>( ( x ) == 0 ) &#123; taskDISABLE_INTERRUPTS(); for( ; ; ) ; &#125;</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">endif</span> <span class="hljs-comment">/* FREERTOS_CONFIG_H */</span></span><br></code></pre></td></tr></table></figure>
+
+<h2 id="三、第-2-篇：第一个任务（main-c）"><a href="#三、第-2-篇：第一个任务（main-c）" class="headerlink" title="三、第 2 篇：第一个任务（main.c）"></a>三、第 2 篇：第一个任务（<code>main.c</code>）</h2><blockquote>
+<p>预期现象：每秒打印 <code>[TaskA]/[TaskB]</code> 各一行，tick 每秒 +1000 左右（仿真抖动见第 2 篇）。</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/*</span><br><span class="hljs-comment"> * main.c —— 第一个 FreeRTOS 程序</span><br><span class="hljs-comment"> * 两个任务共用同一个任务函数，通过参数区分，各自周期性打印</span><br><span class="hljs-comment"> */</span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;FreeRTOS.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;task.h&quot;</span></span><br><br><span class="hljs-comment">/* 任务函数：FreeRTOS 里&quot;任务&quot;就是一个永不返回的函数 */</span><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vPrinterTask</span><span class="hljs-params">( <span class="hljs-type">void</span> * pvParameters )</span><br>&#123;<br>    <span class="hljs-type">const</span> <span class="hljs-type">char</span> * pcName = ( <span class="hljs-type">const</span> <span class="hljs-type">char</span> * ) pvParameters;<br><br>    <span class="hljs-keyword">for</span>( ; ; )   <span class="hljs-comment">/* 任务主体必须是死循环，绝不能 return */</span><br>    &#123;<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[%s] running, tick = %lu\r\n&quot;</span>,<br>                pcName, ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xTaskGetTickCount() );<br><br>        <span class="hljs-comment">/* 阻塞延时 1 秒：期间 CPU 让给其他任务 */</span><br>        vTaskDelay( pdMS_TO_TICKS( <span class="hljs-number">1000</span> ) );<br>    &#125;<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">( <span class="hljs-type">void</span> )</span><br>&#123;<br>    <span class="hljs-comment">/* 关闭 stdout 缓冲，输出重定向到文件时也能实时看到打印 */</span><br>    setvbuf( <span class="hljs-built_in">stdout</span>, <span class="hljs-literal">NULL</span>, _IONBF, <span class="hljs-number">0</span> );<br><br>    <span class="hljs-comment">/* xTaskCreate(任务函数, 任务名, 栈深度(字), 参数, 优先级, 任务句柄) */</span><br>    BaseType_t xOK1 = xTaskCreate( vPrinterTask, <span class="hljs-string">&quot;TaskA&quot;</span>, configMINIMAL_STACK_SIZE,<br>                                   ( <span class="hljs-type">void</span> * ) <span class="hljs-string">&quot;TaskA&quot;</span>, <span class="hljs-number">1</span>, <span class="hljs-literal">NULL</span> );<br>    BaseType_t xOK2 = xTaskCreate( vPrinterTask, <span class="hljs-string">&quot;TaskB&quot;</span>, configMINIMAL_STACK_SIZE,<br>                                   ( <span class="hljs-type">void</span> * ) <span class="hljs-string">&quot;TaskB&quot;</span>, <span class="hljs-number">1</span>, <span class="hljs-literal">NULL</span> );<br><br>    <span class="hljs-keyword">if</span>( ( xOK1 != pdPASS ) || ( xOK2 != pdPASS ) )<br>    &#123;<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;Task create failed! (heap too small?)\r\n&quot;</span> );<br>        <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>    &#125;<br><br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;Starting scheduler...\r\n&quot;</span> );<br><br>    <span class="hljs-comment">/* 启动调度器，控制权交给内核，之后 main() 不再运行 */</span><br>    vTaskStartScheduler();<br><br>    <span class="hljs-comment">/* 正常情况下永远到不了这里 */</span><br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;Scheduler exited unexpectedly!\r\n&quot;</span> );<br>    <span class="hljs-keyword">for</span>( ; ; )<br>    &#123;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="四、第-3-篇：任务管理（实验-1-3）"><a href="#四、第-3-篇：任务管理（实验-1-3）" class="headerlink" title="四、第 3 篇：任务管理（实验 1 ~ 3）"></a>四、第 3 篇：任务管理（实验 1 ~ 3）</h2><h3 id="实验-1：忙等”延时”对照（main-e1-c）"><a href="#实验-1：忙等”延时”对照（main-e1-c）" class="headerlink" title="实验 1：忙等”延时”对照（main_e1.c）"></a>实验 1：忙等”延时”对照（<code>main_e1.c</code>）</h3><blockquote>
+<p>预期现象：8 秒打印 434 行（<code>vTaskDelay</code> 版只有 16 行），打印间隔从 1 秒缩到约 37ms——空转不是延时，是烧 CPU。</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* main_e1.c —— 实验 1：把 vTaskDelay 换成空转循环&quot;延时&quot; */</span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;FreeRTOS.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;task.h&quot;</span></span><br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vPrinterTask</span><span class="hljs-params">( <span class="hljs-type">void</span> * pvParameters )</span><br>&#123;<br>    <span class="hljs-type">const</span> <span class="hljs-type">char</span> * pcName = ( <span class="hljs-type">const</span> <span class="hljs-type">char</span> * ) pvParameters;<br><br>    <span class="hljs-keyword">for</span>( ; ; )<br>    &#123;<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[%s] running, tick = %lu\r\n&quot;</span>,<br>                pcName, ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xTaskGetTickCount() );<br><br>        <span class="hljs-comment">/* 错误示范：用空转循环&quot;延时&quot;，CPU 一刻不停 */</span><br>        <span class="hljs-keyword">for</span>( <span class="hljs-keyword">volatile</span> <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">8000000</span>; i++ )<br>        &#123;<br>        &#125;<br>    &#125;<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">( <span class="hljs-type">void</span> )</span><br>&#123;<br>    setvbuf( <span class="hljs-built_in">stdout</span>, <span class="hljs-literal">NULL</span>, _IONBF, <span class="hljs-number">0</span> );<br><br>    xTaskCreate( vPrinterTask, <span class="hljs-string">&quot;TaskA&quot;</span>, configMINIMAL_STACK_SIZE, ( <span class="hljs-type">void</span> * ) <span class="hljs-string">&quot;TaskA&quot;</span>, <span class="hljs-number">1</span>, <span class="hljs-literal">NULL</span> );<br>    xTaskCreate( vPrinterTask, <span class="hljs-string">&quot;TaskB&quot;</span>, configMINIMAL_STACK_SIZE, ( <span class="hljs-type">void</span> * ) <span class="hljs-string">&quot;TaskB&quot;</span>, <span class="hljs-number">1</span>, <span class="hljs-literal">NULL</span> );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;Starting scheduler...\r\n&quot;</span> );<br>    vTaskStartScheduler();<br>    <span class="hljs-keyword">for</span>( ; ; ) &#123; &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="实验-2：优先级决定出场顺序（main-e2-c）"><a href="#实验-2：优先级决定出场顺序（main-e2-c）" class="headerlink" title="实验 2：优先级决定出场顺序（main_e2.c）"></a>实验 2：优先级决定出场顺序（<code>main_e2.c</code>）</h3><blockquote>
+<p>预期现象：TaskB（优先级 2）每轮都先于 TaskA（优先级 1）打印。</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* main_e2.c —— 实验 2：不同优先级的调度顺序（TaskB 优先级更高） */</span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;FreeRTOS.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;task.h&quot;</span></span><br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vPrinterTask</span><span class="hljs-params">( <span class="hljs-type">void</span> * pvParameters )</span><br>&#123;<br>    <span class="hljs-type">const</span> <span class="hljs-type">char</span> * pcName = ( <span class="hljs-type">const</span> <span class="hljs-type">char</span> * ) pvParameters;<br><br>    <span class="hljs-keyword">for</span>( ; ; )<br>    &#123;<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[%s] running, tick = %lu\r\n&quot;</span>,<br>                pcName, ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xTaskGetTickCount() );<br>        vTaskDelay( pdMS_TO_TICKS( <span class="hljs-number">1000</span> ) );<br>    &#125;<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">( <span class="hljs-type">void</span> )</span><br>&#123;<br>    setvbuf( <span class="hljs-built_in">stdout</span>, <span class="hljs-literal">NULL</span>, _IONBF, <span class="hljs-number">0</span> );<br><br>    <span class="hljs-comment">/* 优先级：A=1，B=2（更高） */</span><br>    xTaskCreate( vPrinterTask, <span class="hljs-string">&quot;TaskA&quot;</span>, configMINIMAL_STACK_SIZE, ( <span class="hljs-type">void</span> * ) <span class="hljs-string">&quot;TaskA&quot;</span>, <span class="hljs-number">1</span>, <span class="hljs-literal">NULL</span> );<br>    xTaskCreate( vPrinterTask, <span class="hljs-string">&quot;TaskB&quot;</span>, configMINIMAL_STACK_SIZE, ( <span class="hljs-type">void</span> * ) <span class="hljs-string">&quot;TaskB&quot;</span>, <span class="hljs-number">2</span>, <span class="hljs-literal">NULL</span> );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;Starting scheduler...\r\n&quot;</span> );<br>    vTaskStartScheduler();<br>    <span class="hljs-keyword">for</span>( ; ; ) &#123; &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="实验-3：高优先级忙等-→-低优先级饿死（main-e3-c）"><a href="#实验-3：高优先级忙等-→-低优先级饿死（main-e3-c）" class="headerlink" title="实验 3：高优先级忙等 → 低优先级饿死（main_e3.c）"></a>实验 3：高优先级忙等 → 低优先级饿死（<code>main_e3.c</code>）</h3><blockquote>
+<p>预期现象：6 秒只有 TaskB 打印，TaskA 一行都不出现。</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* main_e3.c —— 实验 3：高优先级任务忙等，低优先级任务被&quot;饿死&quot; */</span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;FreeRTOS.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;task.h&quot;</span></span><br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vBusyTask</span><span class="hljs-params">( <span class="hljs-type">void</span> * pvParameters )</span><br>&#123;<br>    ( <span class="hljs-type">void</span> ) pvParameters;<br>    <span class="hljs-keyword">for</span>( ; ; )<br>    &#123;<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[TaskB] busy running, tick = %lu\r\n&quot;</span>,<br>                ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xTaskGetTickCount() );<br>        <span class="hljs-comment">/* 高优先级任务永不阻塞，CPU 被它独占 */</span><br>        <span class="hljs-keyword">for</span>( <span class="hljs-keyword">volatile</span> <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">8000000</span>; i++ )<br>        &#123;<br>        &#125;<br>    &#125;<br>&#125;<br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vPoliteTask</span><span class="hljs-params">( <span class="hljs-type">void</span> * pvParameters )</span><br>&#123;<br>    ( <span class="hljs-type">void</span> ) pvParameters;<br>    <span class="hljs-keyword">for</span>( ; ; )<br>    &#123;<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[TaskA] polite running, tick = %lu\r\n&quot;</span>,<br>                ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xTaskGetTickCount() );<br>        vTaskDelay( pdMS_TO_TICKS( <span class="hljs-number">1000</span> ) );<br>    &#125;<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">( <span class="hljs-type">void</span> )</span><br>&#123;<br>    setvbuf( <span class="hljs-built_in">stdout</span>, <span class="hljs-literal">NULL</span>, _IONBF, <span class="hljs-number">0</span> );<br><br>    xTaskCreate( vPoliteTask, <span class="hljs-string">&quot;TaskA&quot;</span>, configMINIMAL_STACK_SIZE, <span class="hljs-literal">NULL</span>, <span class="hljs-number">1</span>, <span class="hljs-literal">NULL</span> );<br>    xTaskCreate( vBusyTask, <span class="hljs-string">&quot;TaskB&quot;</span>, configMINIMAL_STACK_SIZE, <span class="hljs-literal">NULL</span>, <span class="hljs-number">2</span>, <span class="hljs-literal">NULL</span> );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;Starting scheduler...\r\n&quot;</span> );<br>    vTaskStartScheduler();<br>    <span class="hljs-keyword">for</span>( ; ; ) &#123; &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="五、第-4-篇：调度器与时间管理（实验-4-5）"><a href="#五、第-4-篇：调度器与时间管理（实验-4-5）" class="headerlink" title="五、第 4 篇：调度器与时间管理（实验 4 ~ 5）"></a>五、第 4 篇：调度器与时间管理（实验 4 ~ 5）</h2><h3 id="实验-4：vTaskDelay-做周期任务的漂移（main-e4-c）"><a href="#实验-4：vTaskDelay-做周期任务的漂移（main-e4-c）" class="headerlink" title="实验 4：vTaskDelay 做周期任务的漂移（main_e4.c）"></a>实验 4：vTaskDelay 做周期任务的漂移（<code>main_e4.c</code>）</h3><blockquote>
+<p>预期现象：每周期 +1300 tick（1000ms 延时 + 300ms 活），周期漂移 30%。</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* main_e4.c —— 实验 4：用 vTaskDelay 做周期任务，周期会漂移 */</span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;FreeRTOS.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;task.h&quot;</span></span><br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> WORK_TICKS 300   <span class="hljs-comment">/* 模拟 300ms 的工作量 */</span></span><br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vPeriodicTask</span><span class="hljs-params">( <span class="hljs-type">void</span> * pvParameters )</span><br>&#123;<br>    ( <span class="hljs-type">void</span> ) pvParameters;<br>    <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ulCycle = <span class="hljs-number">0</span>;<br><br>    <span class="hljs-keyword">for</span>( ; ; )<br>    &#123;<br>        TickType_t xStart = xTaskGetTickCount();<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;cycle %2lu start at tick = %lu\r\n&quot;</span>,<br>                ulCycle, ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xStart );<br>        ulCycle++;<br><br>        <span class="hljs-comment">/* 模拟干活：忙等 300ms（期间占用 CPU，不阻塞） */</span><br>        <span class="hljs-keyword">while</span>( ( xTaskGetTickCount() - xStart ) &lt; WORK_TICKS )<br>        &#123;<br>        &#125;<br><br>        <span class="hljs-comment">/* 从&quot;现在&quot;起再等 1000ms —— 干活的 300ms 被排除在周期之外 */</span><br>        vTaskDelay( pdMS_TO_TICKS( <span class="hljs-number">1000</span> ) );<br>    &#125;<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">( <span class="hljs-type">void</span> )</span><br>&#123;<br>    setvbuf( <span class="hljs-built_in">stdout</span>, <span class="hljs-literal">NULL</span>, _IONBF, <span class="hljs-number">0</span> );<br>    xTaskCreate( vPeriodicTask, <span class="hljs-string">&quot;TaskA&quot;</span>, configMINIMAL_STACK_SIZE, <span class="hljs-literal">NULL</span>, <span class="hljs-number">1</span>, <span class="hljs-literal">NULL</span> );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;Starting scheduler...\r\n&quot;</span> );<br>    vTaskStartScheduler();<br>    <span class="hljs-keyword">for</span>( ; ; ) &#123; &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="实验-5：xTaskDelayUntil-锁定绝对节拍（main-e5-c）"><a href="#实验-5：xTaskDelayUntil-锁定绝对节拍（main-e5-c）" class="headerlink" title="实验 5：xTaskDelayUntil 锁定绝对节拍（main_e5.c）"></a>实验 5：xTaskDelayUntil 锁定绝对节拍（<code>main_e5.c</code>）</h3><blockquote>
+<p>预期现象：每周期恰好 +1000 tick，分毫不差。注意 <code>FreeRTOSConfig.h</code> 需要 <code>INCLUDE_xTaskDelayUntil=1</code>（附录配置已包含）。</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* main_e5.c —— 实验 5：用 xTaskDelayUntil 锁定绝对节拍，周期不漂移 */</span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;FreeRTOS.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;task.h&quot;</span></span><br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> WORK_TICKS   300</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> PERIOD_TICKS 1000</span><br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vPeriodicTask</span><span class="hljs-params">( <span class="hljs-type">void</span> * pvParameters )</span><br>&#123;<br>    ( <span class="hljs-type">void</span> ) pvParameters;<br>    <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ulCycle = <span class="hljs-number">0</span>;<br>    TickType_t xLastWakeTime = xTaskGetTickCount();<br><br>    <span class="hljs-keyword">for</span>( ; ; )<br>    &#123;<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;cycle %2lu start at tick = %lu\r\n&quot;</span>,<br>                ulCycle, ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xTaskGetTickCount() );<br>        ulCycle++;<br><br>        <span class="hljs-comment">/* 模拟干活：忙等 300ms */</span><br>        TickType_t xWorkStart = xTaskGetTickCount();<br>        <span class="hljs-keyword">while</span>( ( xTaskGetTickCount() - xWorkStart ) &lt; WORK_TICKS )<br>        &#123;<br>        &#125;<br><br>        <span class="hljs-comment">/* 等到&quot;上次唤醒时刻 + 1000 tick&quot;这个绝对节拍：</span><br><span class="hljs-comment">           剩余等待时间 = 1000 - 300 = 700ms，周期恒定 */</span><br>        xTaskDelayUntil( &amp;xLastWakeTime, PERIOD_TICKS );<br>    &#125;<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">( <span class="hljs-type">void</span> )</span><br>&#123;<br>    setvbuf( <span class="hljs-built_in">stdout</span>, <span class="hljs-literal">NULL</span>, _IONBF, <span class="hljs-number">0</span> );<br>    xTaskCreate( vPeriodicTask, <span class="hljs-string">&quot;TaskA&quot;</span>, configMINIMAL_STACK_SIZE, <span class="hljs-literal">NULL</span>, <span class="hljs-number">1</span>, <span class="hljs-literal">NULL</span> );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;Starting scheduler...\r\n&quot;</span> );<br>    vTaskStartScheduler();<br>    <span class="hljs-keyword">for</span>( ; ; ) &#123; &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="六、第-5-篇：队列（实验-6-8）"><a href="#六、第-5-篇：队列（实验-6-8）" class="headerlink" title="六、第 5 篇：队列（实验 6 ~ 8）"></a>六、第 5 篇：队列（实验 6 ~ 8）</h2><h3 id="实验-6：队列满-非阻塞发送-数据丢失（main-e6-c）"><a href="#实验-6：队列满-非阻塞发送-数据丢失（main-e6-c）" class="headerlink" title="实验 6：队列满 + 非阻塞发送 &#x3D; 数据丢失（main_e6.c）"></a>实验 6：队列满 + 非阻塞发送 &#x3D; 数据丢失（<code>main_e6.c</code>）</h3><blockquote>
+<p>预期现象：8 秒生产 137 条，只送达 16 条，118 条 FAILED 丢失，编号断档。</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* main_e6.c —— 实验 6：队列满 + 非阻塞发送（timeout=0）= 数据丢失 */</span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;FreeRTOS.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;queue.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;task.h&quot;</span></span><br><br><span class="hljs-type">static</span> QueueHandle_t xQueue;<br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vProducerTask</span><span class="hljs-params">( <span class="hljs-type">void</span> * pv )</span><br>&#123;<br>    ( <span class="hljs-type">void</span> ) pv;<br>    <span class="hljs-type">uint32_t</span> ulItem = <span class="hljs-number">0</span>;<br>    <span class="hljs-keyword">for</span>( ; ; )<br>    &#123;<br>        ulItem++;<br>        <span class="hljs-keyword">if</span>( xQueueSend( xQueue, &amp;ulItem, <span class="hljs-number">0</span> ) == pdTRUE )<br>        &#123;<br>            <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[Producer] sent %lu at tick %lu\r\n&quot;</span>,<br>                    ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) ulItem, ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xTaskGetTickCount() );<br>        &#125;<br>        <span class="hljs-keyword">else</span><br>        &#123;<br>            <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[Producer] send FAILED, item %lu LOST at tick %lu\r\n&quot;</span>,<br>                    ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) ulItem, ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xTaskGetTickCount() );<br>        &#125;<br>        vTaskDelay( pdMS_TO_TICKS( <span class="hljs-number">50</span> ) );<br>    &#125;<br>&#125;<br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vConsumerTask</span><span class="hljs-params">( <span class="hljs-type">void</span> * pv )</span><br>&#123;<br>    ( <span class="hljs-type">void</span> ) pv;<br>    <span class="hljs-type">uint32_t</span> ulValue;<br>    <span class="hljs-keyword">for</span>( ; ; )<br>    &#123;<br>        <span class="hljs-keyword">if</span>( xQueueReceive( xQueue, &amp;ulValue, portMAX_DELAY ) == pdTRUE )<br>        &#123;<br>            <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[Consumer] got %lu at tick %lu\r\n&quot;</span>,<br>                    ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) ulValue, ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xTaskGetTickCount() );<br>            <span class="hljs-comment">/* 模拟慢速处理：500ms 才处理一条 */</span><br>            vTaskDelay( pdMS_TO_TICKS( <span class="hljs-number">500</span> ) );<br>        &#125;<br>    &#125;<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">( <span class="hljs-type">void</span> )</span><br>&#123;<br>    setvbuf( <span class="hljs-built_in">stdout</span>, <span class="hljs-literal">NULL</span>, _IONBF, <span class="hljs-number">0</span> );<br>    xQueue = xQueueCreate( <span class="hljs-number">3</span>, <span class="hljs-keyword">sizeof</span>( <span class="hljs-type">uint32_t</span> ) );   <span class="hljs-comment">/* 深度只有 3 */</span><br>    xTaskCreate( vProducerTask, <span class="hljs-string">&quot;Prod&quot;</span>, configMINIMAL_STACK_SIZE, <span class="hljs-literal">NULL</span>, <span class="hljs-number">1</span>, <span class="hljs-literal">NULL</span> );<br>    xTaskCreate( vConsumerTask, <span class="hljs-string">&quot;Cons&quot;</span>, configMINIMAL_STACK_SIZE, <span class="hljs-literal">NULL</span>, <span class="hljs-number">1</span>, <span class="hljs-literal">NULL</span> );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;Starting scheduler...\r\n&quot;</span> );<br>    vTaskStartScheduler();<br>    <span class="hljs-keyword">for</span>( ; ; ) &#123; &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="实验-7：队列满-阻塞发送-自动背压（main-e7-c）"><a href="#实验-7：队列满-阻塞发送-自动背压（main-e7-c）" class="headerlink" title="实验 7：队列满 + 阻塞发送 &#x3D; 自动背压（main_e7.c）"></a>实验 7：队列满 + 阻塞发送 &#x3D; 自动背压（<code>main_e7.c</code>）</h3><blockquote>
+<p>预期现象：FAILED 为 0，sent 编号连续（零丢失），发送节奏自动降到消费者的速度。</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* main_e7.c —— 实验 7：队列满 + 阻塞发送（portMAX_DELAY）= 自动背压，零丢失 */</span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;FreeRTOS.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;queue.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;task.h&quot;</span></span><br><br><span class="hljs-type">static</span> QueueHandle_t xQueue;<br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vProducerTask</span><span class="hljs-params">( <span class="hljs-type">void</span> * pv )</span><br>&#123;<br>    ( <span class="hljs-type">void</span> ) pv;<br>    <span class="hljs-type">uint32_t</span> ulItem = <span class="hljs-number">0</span>;<br>    <span class="hljs-keyword">for</span>( ; ; )<br>    &#123;<br>        ulItem++;<br>        <span class="hljs-comment">/* 队列满时无限期阻塞，直到消费者腾出空位 */</span><br>        <span class="hljs-keyword">if</span>( xQueueSend( xQueue, &amp;ulItem, portMAX_DELAY ) == pdTRUE )<br>        &#123;<br>            <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[Producer] sent %lu at tick %lu\r\n&quot;</span>,<br>                    ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) ulItem, ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xTaskGetTickCount() );<br>        &#125;<br>        vTaskDelay( pdMS_TO_TICKS( <span class="hljs-number">50</span> ) );<br>    &#125;<br>&#125;<br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vConsumerTask</span><span class="hljs-params">( <span class="hljs-type">void</span> * pv )</span><br>&#123;<br>    ( <span class="hljs-type">void</span> ) pv;<br>    <span class="hljs-type">uint32_t</span> ulValue;<br>    <span class="hljs-keyword">for</span>( ; ; )<br>    &#123;<br>        <span class="hljs-keyword">if</span>( xQueueReceive( xQueue, &amp;ulValue, portMAX_DELAY ) == pdTRUE )<br>        &#123;<br>            <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[Consumer] got %lu at tick %lu\r\n&quot;</span>,<br>                    ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) ulValue, ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xTaskGetTickCount() );<br>            vTaskDelay( pdMS_TO_TICKS( <span class="hljs-number">500</span> ) );<br>        &#125;<br>    &#125;<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">( <span class="hljs-type">void</span> )</span><br>&#123;<br>    setvbuf( <span class="hljs-built_in">stdout</span>, <span class="hljs-literal">NULL</span>, _IONBF, <span class="hljs-number">0</span> );<br>    xQueue = xQueueCreate( <span class="hljs-number">3</span>, <span class="hljs-keyword">sizeof</span>( <span class="hljs-type">uint32_t</span> ) );<br>    xTaskCreate( vProducerTask, <span class="hljs-string">&quot;Prod&quot;</span>, configMINIMAL_STACK_SIZE, <span class="hljs-literal">NULL</span>, <span class="hljs-number">1</span>, <span class="hljs-literal">NULL</span> );<br>    xTaskCreate( vConsumerTask, <span class="hljs-string">&quot;Cons&quot;</span>, configMINIMAL_STACK_SIZE, <span class="hljs-literal">NULL</span>, <span class="hljs-number">1</span>, <span class="hljs-literal">NULL</span> );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;Starting scheduler...\r\n&quot;</span> );<br>    vTaskStartScheduler();<br>    <span class="hljs-keyword">for</span>( ; ; ) &#123; &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="实验-8：队列空-带超时的阻塞接收（main-e8-c）"><a href="#实验-8：队列空-带超时的阻塞接收（main-e8-c）" class="headerlink" title="实验 8：队列空 + 带超时的阻塞接收（main_e8.c）"></a>实验 8：队列空 + 带超时的阻塞接收（<code>main_e8.c</code>）</h3><blockquote>
+<p>预期现象：empty 32 次 + got 7 次（8 秒），接收时刻严格对齐 1 秒的生产节拍，等待期间不烧 CPU。</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* main_e8.c —— 实验 8：队列空 + 带超时的阻塞接收，&quot;等&quot;不烧 CPU */</span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;FreeRTOS.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;queue.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;task.h&quot;</span></span><br><br><span class="hljs-type">static</span> QueueHandle_t xQueue;<br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vProducerTask</span><span class="hljs-params">( <span class="hljs-type">void</span> * pv )</span><br>&#123;<br>    ( <span class="hljs-type">void</span> ) pv;<br>    <span class="hljs-type">uint32_t</span> ulItem = <span class="hljs-number">0</span>;<br>    <span class="hljs-keyword">for</span>( ; ; )<br>    &#123;<br>        <span class="hljs-comment">/* 慢速生产者：每 1000ms 才产一条 */</span><br>        vTaskDelay( pdMS_TO_TICKS( <span class="hljs-number">1000</span> ) );<br>        ulItem++;<br>        xQueueSend( xQueue, &amp;ulItem, <span class="hljs-number">0</span> );<br>    &#125;<br>&#125;<br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vConsumerTask</span><span class="hljs-params">( <span class="hljs-type">void</span> * pv )</span><br>&#123;<br>    ( <span class="hljs-type">void</span> ) pv;<br>    <span class="hljs-type">uint32_t</span> ulValue;<br>    <span class="hljs-keyword">for</span>( ; ; )<br>    &#123;<br>        <span class="hljs-keyword">if</span>( xQueueReceive( xQueue, &amp;ulValue, pdMS_TO_TICKS( <span class="hljs-number">200</span> ) ) == pdTRUE )<br>        &#123;<br>            <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[Consumer] got %lu at tick %lu\r\n&quot;</span>,<br>                    ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) ulValue, ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xTaskGetTickCount() );<br>        &#125;<br>        <span class="hljs-keyword">else</span><br>        &#123;<br>            <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[Consumer] queue empty, keep waiting (tick %lu)\r\n&quot;</span>,<br>                    ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xTaskGetTickCount() );<br>        &#125;<br>    &#125;<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">( <span class="hljs-type">void</span> )</span><br>&#123;<br>    setvbuf( <span class="hljs-built_in">stdout</span>, <span class="hljs-literal">NULL</span>, _IONBF, <span class="hljs-number">0</span> );<br>    xQueue = xQueueCreate( <span class="hljs-number">3</span>, <span class="hljs-keyword">sizeof</span>( <span class="hljs-type">uint32_t</span> ) );<br>    xTaskCreate( vProducerTask, <span class="hljs-string">&quot;Prod&quot;</span>, configMINIMAL_STACK_SIZE, <span class="hljs-literal">NULL</span>, <span class="hljs-number">1</span>, <span class="hljs-literal">NULL</span> );<br>    xTaskCreate( vConsumerTask, <span class="hljs-string">&quot;Cons&quot;</span>, configMINIMAL_STACK_SIZE, <span class="hljs-literal">NULL</span>, <span class="hljs-number">1</span>, <span class="hljs-literal">NULL</span> );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;Starting scheduler...\r\n&quot;</span> );<br>    vTaskStartScheduler();<br>    <span class="hljs-keyword">for</span>( ; ; ) &#123; &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="七、第-6-篇：中断管理（实验-9）"><a href="#七、第-6-篇：中断管理（实验-9）" class="headerlink" title="七、第 6 篇：中断管理（实验 9）"></a>七、第 6 篇：中断管理（实验 9）</h2><h3 id="实验-9：模拟中断-延迟中断处理（main-e9-c）"><a href="#实验-9：模拟中断-延迟中断处理（main-e9-c）" class="headerlink" title="实验 9：模拟中断 + 延迟中断处理（main_e9.c）"></a>实验 9：模拟中断 + 延迟中断处理（<code>main_e9.c</code>）</h3><blockquote>
+<p>预期现象：每 500ms 触发一次 3 号”中断”，Handler 任务随即打印”处理中”——延迟中断链路完整跑通。<code>portYIELD_FROM_ISR(x)</code> 在 Win32 移植层展开为 <code>return x</code>，所以 ISR 处理函数返回 uint32_t。</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* main_e9.c —— 实验 9：模拟中断 + 延迟中断处理（Win32 移植层真实中断模拟） */</span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;FreeRTOS.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;task.h&quot;</span></span><br><br><span class="hljs-comment">/* Win32 移植层的中断模拟 API（port.c） */</span><br><span class="hljs-keyword">extern</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vPortGenerateSimulatedInterrupt</span><span class="hljs-params">( <span class="hljs-type">uint32_t</span> ulInterruptNumber )</span>;<br><span class="hljs-keyword">extern</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vPortSetInterruptHandler</span><span class="hljs-params">( <span class="hljs-type">uint32_t</span> ulInterruptNumber,</span><br><span class="hljs-params">                                      <span class="hljs-type">uint32_t</span> ( * pvHandler )( <span class="hljs-type">void</span> ) )</span>;<br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> MAIN_INTERRUPT_NUMBER 3</span><br><span class="hljs-type">static</span> TaskHandle_t xHandlerTask;<br><br><span class="hljs-comment">/* &quot;ISR&quot;：运行在移植层模拟的中断上下文里。</span><br><span class="hljs-comment"> * 铁律：只做最少的事（取数据 + 发通知），立刻退出。 */</span><br><span class="hljs-type">static</span> <span class="hljs-type">uint32_t</span> <span class="hljs-title function_">vFakeIsrHandler</span><span class="hljs-params">( <span class="hljs-type">void</span> )</span><br>&#123;<br>    BaseType_t xHigherPriorityTaskWoken = pdFALSE;<br><br>    <span class="hljs-comment">/* 延迟中断处理的核心一步：给处理任务发通知 */</span><br>    vTaskNotifyGiveFromISR( xHandlerTask, &amp;xHigherPriorityTaskWoken );<br><br>    <span class="hljs-comment">/* 若唤醒了更高优先级任务，退出中断后立刻切换 */</span><br>    portYIELD_FROM_ISR( xHigherPriorityTaskWoken );<br>&#125;<br><br><span class="hljs-comment">/* 周期性&quot;硬件事件&quot;发生器：每 500ms 触发一次 3 号中断 */</span><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vTriggerTask</span><span class="hljs-params">( <span class="hljs-type">void</span> * pv )</span><br>&#123;<br>    ( <span class="hljs-type">void</span> ) pv;<br>    <span class="hljs-keyword">for</span>( ; ; )<br>    &#123;<br>        vTaskDelay( pdMS_TO_TICKS( <span class="hljs-number">500</span> ) );<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[Trigger ] raise interrupt #%d at tick %lu\r\n&quot;</span>,<br>                MAIN_INTERRUPT_NUMBER, ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xTaskGetTickCount() );<br>        vPortGenerateSimulatedInterrupt( MAIN_INTERRUPT_NUMBER );<br>    &#125;<br>&#125;<br><br><span class="hljs-comment">/* 延迟处理任务：被 ISR 唤醒后干&quot;重活&quot; */</span><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vHandlerTask</span><span class="hljs-params">( <span class="hljs-type">void</span> * pv )</span><br>&#123;<br>    ( <span class="hljs-type">void</span> ) pv;<br>    <span class="hljs-type">uint32_t</span> ulCount = <span class="hljs-number">0</span>;<br>    <span class="hljs-keyword">for</span>( ; ; )<br>    &#123;<br>        ulCount = ulTaskNotifyTake( pdTRUE, portMAX_DELAY );<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[Handler ] event #%lu delivered, processing at tick %lu\r\n&quot;</span>,<br>                ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) ulCount, ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xTaskGetTickCount() );<br>    &#125;<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">( <span class="hljs-type">void</span> )</span><br>&#123;<br>    setvbuf( <span class="hljs-built_in">stdout</span>, <span class="hljs-literal">NULL</span>, _IONBF, <span class="hljs-number">0</span> );<br>    xTaskCreate( vHandlerTask, <span class="hljs-string">&quot;Handler&quot;</span>, configMINIMAL_STACK_SIZE, <span class="hljs-literal">NULL</span>, <span class="hljs-number">2</span>, &amp;xHandlerTask );<br>    xTaskCreate( vTriggerTask, <span class="hljs-string">&quot;Trigger&quot;</span>, configMINIMAL_STACK_SIZE, <span class="hljs-literal">NULL</span>, <span class="hljs-number">1</span>, <span class="hljs-literal">NULL</span> );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;Starting scheduler...\r\n&quot;</span> );<br>    vPortSetInterruptHandler( MAIN_INTERRUPT_NUMBER, vFakeIsrHandler );<br>    vTaskStartScheduler();<br>    <span class="hljs-keyword">for</span>( ; ; ) &#123; &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="八、第-7-篇：信号量与互斥量（实验-10a-10b）"><a href="#八、第-7-篇：信号量与互斥量（实验-10a-10b）" class="headerlink" title="八、第 7 篇：信号量与互斥量（实验 10a &#x2F; 10b）"></a>八、第 7 篇：信号量与互斥量（实验 10a &#x2F; 10b）</h2><h3 id="实验-10a：二值信号量当锁-→-优先级反转（main-e10a-c）"><a href="#实验-10a：二值信号量当锁-→-优先级反转（main-e10a-c）" class="headerlink" title="实验 10a：二值信号量当锁 → 优先级反转（main_e10a.c）"></a>实验 10a：二值信号量当锁 → 优先级反转（<code>main_e10a.c</code>）</h3><blockquote>
+<p>预期现象：H 从尝试（tick≈102）到拿锁（tick≈312），等待约 210ms——被 M 的忙等插队。</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* main_e10a.c —— 实验 10a：二值信号量当锁 → 优先级反转（对照组） */</span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;FreeRTOS.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;task.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;semphr.h&quot;</span></span><br><br><span class="hljs-type">static</span> SemaphoreHandle_t xLock;<br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vLowTask</span><span class="hljs-params">( <span class="hljs-type">void</span> * pv )</span><br>&#123;<br>    ( <span class="hljs-type">void</span> ) pv;<br>    <span class="hljs-keyword">for</span>( ; ; )<br>    &#123;<br>        xSemaphoreTake( xLock, portMAX_DELAY );<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[L] got lock, working ~500ms at tick %lu\r\n&quot;</span>,<br>                ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xTaskGetTickCount() );<br>        <span class="hljs-comment">/* 固定迭代次数的&quot;忙&quot;工作：一旦被抢占，完工时间就被拖长 */</span><br>        <span class="hljs-keyword">for</span>( <span class="hljs-keyword">volatile</span> <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">110000000</span>; i++ ) &#123; &#125;<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[L] work done, release lock at tick %lu\r\n&quot;</span>,<br>                ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xTaskGetTickCount() );<br>        xSemaphoreGive( xLock );<br>        vTaskDelay( pdMS_TO_TICKS( <span class="hljs-number">100</span> ) );<br>    &#125;<br>&#125;<br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vHighTask</span><span class="hljs-params">( <span class="hljs-type">void</span> * pv )</span><br>&#123;<br>    ( <span class="hljs-type">void</span> ) pv;<br>    vTaskDelay( pdMS_TO_TICKS( <span class="hljs-number">100</span> ) );   <span class="hljs-comment">/* 确保 L 先持锁，H 后到 */</span><br>    <span class="hljs-keyword">for</span>( ; ; )<br>    &#123;<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[H] trying lock at tick %lu\r\n&quot;</span>,<br>                ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xTaskGetTickCount() );<br>        xSemaphoreTake( xLock, portMAX_DELAY );<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[H] GOT lock at tick %lu  &lt;&lt;&lt; 重点看这个数\r\n&quot;</span>,<br>                ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xTaskGetTickCount() );<br>        xSemaphoreGive( xLock );<br>        vTaskDelay( pdMS_TO_TICKS( <span class="hljs-number">2000</span> ) );<br>    &#125;<br>&#125;<br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vMidTask</span><span class="hljs-params">( <span class="hljs-type">void</span> * pv )</span><br>&#123;<br>    ( <span class="hljs-type">void</span> ) pv;<br>    vTaskDelay( pdMS_TO_TICKS( <span class="hljs-number">50</span> ) );    <span class="hljs-comment">/* H 阻塞在锁上之后，M 再出场 */</span><br>    <span class="hljs-keyword">for</span>( ; ; )<br>    &#123;<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[M] spinning ~400ms at tick %lu\r\n&quot;</span>,<br>                ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xTaskGetTickCount() );<br>        <span class="hljs-keyword">for</span>( <span class="hljs-keyword">volatile</span> <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">90000000</span>; i++ ) &#123; &#125;<br>        vTaskDelay( pdMS_TO_TICKS( <span class="hljs-number">400</span> ) );<br>    &#125;<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">( <span class="hljs-type">void</span> )</span><br>&#123;<br>    setvbuf( <span class="hljs-built_in">stdout</span>, <span class="hljs-literal">NULL</span>, _IONBF, <span class="hljs-number">0</span> );<br>    xLock = xSemaphoreCreateBinary();<br>    xSemaphoreGive( xLock );              <span class="hljs-comment">/* 先 Give 一次，让 L 能拿到 */</span><br>    xTaskCreate( vLowTask,  <span class="hljs-string">&quot;L&quot;</span>, configMINIMAL_STACK_SIZE, <span class="hljs-literal">NULL</span>, <span class="hljs-number">1</span>, <span class="hljs-literal">NULL</span> );<br>    xTaskCreate( vHighTask, <span class="hljs-string">&quot;H&quot;</span>, configMINIMAL_STACK_SIZE, <span class="hljs-literal">NULL</span>, <span class="hljs-number">3</span>, <span class="hljs-literal">NULL</span> );<br>    xTaskCreate( vMidTask,  <span class="hljs-string">&quot;M&quot;</span>, configMINIMAL_STACK_SIZE, <span class="hljs-literal">NULL</span>, <span class="hljs-number">2</span>, <span class="hljs-literal">NULL</span> );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;Starting scheduler...\r\n&quot;</span> );<br>    vTaskStartScheduler();<br>    <span class="hljs-keyword">for</span>( ; ; ) &#123; &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="实验-10b：互斥量-优先级继承（main-e10b-c）"><a href="#实验-10b：互斥量-优先级继承（main-e10b-c）" class="headerlink" title="实验 10b：互斥量 + 优先级继承（main_e10b.c）"></a>实验 10b：互斥量 + 优先级继承（<code>main_e10b.c</code>）</h3><blockquote>
+<p>预期现象：与 10a 唯一区别是创建互斥量——H 只等约 137ms，快 35%；M 在 H 等锁期间被冻结。</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* main_e10b.c —— 实验 10b：互斥量 + 优先级继承（实验组） */</span><br><span class="hljs-comment">/* 与 e10a 唯一的区别：xSemaphoreCreateBinary() 换成 xSemaphoreCreateMutex() */</span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;FreeRTOS.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;task.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;semphr.h&quot;</span></span><br><br><span class="hljs-type">static</span> SemaphoreHandle_t xLock;<br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vLowTask</span><span class="hljs-params">( <span class="hljs-type">void</span> * pv )</span><br>&#123;<br>    ( <span class="hljs-type">void</span> ) pv;<br>    <span class="hljs-keyword">for</span>( ; ; )<br>    &#123;<br>        xSemaphoreTake( xLock, portMAX_DELAY );<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[L] got lock, working ~500ms at tick %lu\r\n&quot;</span>,<br>                ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xTaskGetTickCount() );<br>        <span class="hljs-keyword">for</span>( <span class="hljs-keyword">volatile</span> <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">110000000</span>; i++ ) &#123; &#125;<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[L] work done, release lock at tick %lu\r\n&quot;</span>,<br>                ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xTaskGetTickCount() );<br>        xSemaphoreGive( xLock );<br>        vTaskDelay( pdMS_TO_TICKS( <span class="hljs-number">100</span> ) );<br>    &#125;<br>&#125;<br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vHighTask</span><span class="hljs-params">( <span class="hljs-type">void</span> * pv )</span><br>&#123;<br>    ( <span class="hljs-type">void</span> ) pv;<br>    vTaskDelay( pdMS_TO_TICKS( <span class="hljs-number">100</span> ) );<br>    <span class="hljs-keyword">for</span>( ; ; )<br>    &#123;<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[H] trying lock at tick %lu\r\n&quot;</span>,<br>                ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xTaskGetTickCount() );<br>        xSemaphoreTake( xLock, portMAX_DELAY );<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[H] GOT lock at tick %lu  &lt;&lt;&lt; 重点看这个数\r\n&quot;</span>,<br>                ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xTaskGetTickCount() );<br>        xSemaphoreGive( xLock );<br>        vTaskDelay( pdMS_TO_TICKS( <span class="hljs-number">2000</span> ) );<br>    &#125;<br>&#125;<br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vMidTask</span><span class="hljs-params">( <span class="hljs-type">void</span> * pv )</span><br>&#123;<br>    ( <span class="hljs-type">void</span> ) pv;<br>    vTaskDelay( pdMS_TO_TICKS( <span class="hljs-number">50</span> ) );<br>    <span class="hljs-keyword">for</span>( ; ; )<br>    &#123;<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[M] spinning ~400ms at tick %lu\r\n&quot;</span>,<br>                ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xTaskGetTickCount() );<br>        <span class="hljs-keyword">for</span>( <span class="hljs-keyword">volatile</span> <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">90000000</span>; i++ ) &#123; &#125;<br>        vTaskDelay( pdMS_TO_TICKS( <span class="hljs-number">400</span> ) );<br>    &#125;<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">( <span class="hljs-type">void</span> )</span><br>&#123;<br>    setvbuf( <span class="hljs-built_in">stdout</span>, <span class="hljs-literal">NULL</span>, _IONBF, <span class="hljs-number">0</span> );<br>    <span class="hljs-comment">/* ===== 唯一改动：互斥量自带优先级继承 ===== */</span><br>    xLock = xSemaphoreCreateMutex();<br>    xTaskCreate( vLowTask,  <span class="hljs-string">&quot;L&quot;</span>, configMINIMAL_STACK_SIZE, <span class="hljs-literal">NULL</span>, <span class="hljs-number">1</span>, <span class="hljs-literal">NULL</span> );<br>    xTaskCreate( vHighTask, <span class="hljs-string">&quot;H&quot;</span>, configMINIMAL_STACK_SIZE, <span class="hljs-literal">NULL</span>, <span class="hljs-number">3</span>, <span class="hljs-literal">NULL</span> );<br>    xTaskCreate( vMidTask,  <span class="hljs-string">&quot;M&quot;</span>, configMINIMAL_STACK_SIZE, <span class="hljs-literal">NULL</span>, <span class="hljs-number">2</span>, <span class="hljs-literal">NULL</span> );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;Starting scheduler...\r\n&quot;</span> );<br>    vTaskStartScheduler();<br>    <span class="hljs-keyword">for</span>( ; ; ) &#123; &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="九、第-8-篇：事件组与任务通知（实验-11-12）"><a href="#九、第-8-篇：事件组与任务通知（实验-11-12）" class="headerlink" title="九、第 8 篇：事件组与任务通知（实验 11 &#x2F; 12）"></a>九、第 8 篇：事件组与任务通知（实验 11 &#x2F; 12）</h2><h3 id="实验-11：事件组同步屏障（main-e11-c）"><a href="#实验-11：事件组同步屏障（main-e11-c）" class="headerlink" title="实验 11：事件组同步屏障（main_e11.c）"></a>实验 11：事件组同步屏障（<code>main_e11.c</code>）</h3><blockquote>
+<p>预期现象：三个任务到达屏障时刻各不相同，但释放时刻几乎同一 tick（实测 1524&#x2F;1525&#x2F;1526）。</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* main_e11.c —— 实验 11：事件组做三任务同步屏障（xEventGroupSync） */</span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdint.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;FreeRTOS.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;task.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;event_groups.h&quot;</span></span><br><br><span class="hljs-type">static</span> EventGroupHandle_t xEventGroup;<br><span class="hljs-type">static</span> <span class="hljs-type">const</span> TickType_t xWorkMs[ <span class="hljs-number">3</span> ] = &#123; <span class="hljs-number">1500</span>, <span class="hljs-number">800</span>, <span class="hljs-number">400</span> &#125;;   <span class="hljs-comment">/* 三个任务干活时长不同 */</span><br><span class="hljs-type">static</span> <span class="hljs-type">const</span> <span class="hljs-type">char</span> * pcNames[ <span class="hljs-number">3</span> ] = &#123; <span class="hljs-string">&quot;A&quot;</span>, <span class="hljs-string">&quot;B&quot;</span>, <span class="hljs-string">&quot;C&quot;</span> &#125;;<br><span class="hljs-type">static</span> <span class="hljs-type">const</span> TickType_t xAllBits = ( <span class="hljs-number">1</span> &lt;&lt; <span class="hljs-number">0</span> ) | ( <span class="hljs-number">1</span> &lt;&lt; <span class="hljs-number">1</span> ) | ( <span class="hljs-number">1</span> &lt;&lt; <span class="hljs-number">2</span> );<br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vWorkerTask</span><span class="hljs-params">( <span class="hljs-type">void</span> * pv )</span><br>&#123;<br>    <span class="hljs-type">int</span> i = ( <span class="hljs-type">int</span> ) ( <span class="hljs-type">uintptr_t</span> ) pv;<br>    TickType_t xWorkStart;<br><br>    <span class="hljs-keyword">for</span>( <span class="hljs-type">int</span> ulCycle = <span class="hljs-number">1</span>; ulCycle &lt;= <span class="hljs-number">2</span>; ulCycle++ )<br>    &#123;<br>        xWorkStart = xTaskGetTickCount();<br>        <span class="hljs-keyword">while</span>( ( xTaskGetTickCount() - xWorkStart ) &lt; xWorkMs[ i ] ) &#123; &#125;  <span class="hljs-comment">/* 忙等模拟工作量 */</span><br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[%s] cycle %d work done, arriving barrier at tick %lu\r\n&quot;</span>,<br>                pcNames[ i ], ulCycle, ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xTaskGetTickCount() );<br><br>        <span class="hljs-comment">/* 到达屏障：置自己的位，等三人都到齐（AND） */</span><br>        xEventGroupSync( xEventGroup, ( <span class="hljs-number">1</span> &lt;&lt; i ), xAllBits, portMAX_DELAY );<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[%s] cycle %d ALL READY -&gt; released at tick %lu\r\n&quot;</span>,<br>                pcNames[ i ], ulCycle, ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xTaskGetTickCount() );<br>        vTaskDelay( pdMS_TO_TICKS( <span class="hljs-number">200</span> ) );<br>    &#125;<br>    vTaskDelete( <span class="hljs-literal">NULL</span> );<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">( <span class="hljs-type">void</span> )</span><br>&#123;<br>    setvbuf( <span class="hljs-built_in">stdout</span>, <span class="hljs-literal">NULL</span>, _IONBF, <span class="hljs-number">0</span> );<br>    xEventGroup = xEventGroupCreate();<br>    xTaskCreate( vWorkerTask, <span class="hljs-string">&quot;WkA&quot;</span>, configMINIMAL_STACK_SIZE, ( <span class="hljs-type">void</span> * ) ( <span class="hljs-type">uintptr_t</span> ) <span class="hljs-number">0</span>, <span class="hljs-number">1</span>, <span class="hljs-literal">NULL</span> );<br>    xTaskCreate( vWorkerTask, <span class="hljs-string">&quot;WkB&quot;</span>, configMINIMAL_STACK_SIZE, ( <span class="hljs-type">void</span> * ) ( <span class="hljs-type">uintptr_t</span> ) <span class="hljs-number">1</span>, <span class="hljs-number">1</span>, <span class="hljs-literal">NULL</span> );<br>    xTaskCreate( vWorkerTask, <span class="hljs-string">&quot;WkC&quot;</span>, configMINIMAL_STACK_SIZE, ( <span class="hljs-type">void</span> * ) ( <span class="hljs-type">uintptr_t</span> ) <span class="hljs-number">2</span>, <span class="hljs-number">1</span>, <span class="hljs-literal">NULL</span> );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;Starting scheduler...\r\n&quot;</span> );<br>    vTaskStartScheduler();<br>    <span class="hljs-keyword">for</span>( ; ; ) &#123; &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="实验-12：任务通知直发-32-位值（main-e12-c）"><a href="#实验-12：任务通知直发-32-位值（main-e12-c）" class="headerlink" title="实验 12：任务通知直发 32 位值（main_e12.c）"></a>实验 12：任务通知直发 32 位值（<code>main_e12.c</code>）</h3><blockquote>
+<p>预期现象：每 300ms 一对收发；接收方打印早于发送方不是 bug——接收优先级更高，notify 的瞬间就切过去了。</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* main_e12.c —— 实验 12：任务通知 —— 直发 32 位值，比队列更轻的点对点通道 */</span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;FreeRTOS.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;task.h&quot;</span></span><br><br><span class="hljs-type">static</span> TaskHandle_t xReceiver;<br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vSenderTask</span><span class="hljs-params">( <span class="hljs-type">void</span> * pv )</span><br>&#123;<br>    ( <span class="hljs-type">void</span> ) pv;<br>    <span class="hljs-type">uint32_t</span> ulValue = <span class="hljs-number">0</span>;<br>    <span class="hljs-keyword">for</span>( ; ; )<br>    &#123;<br>        vTaskDelay( pdMS_TO_TICKS( <span class="hljs-number">300</span> ) );<br>        ulValue += <span class="hljs-number">10</span>;<br>        <span class="hljs-comment">/* 直接把 32 位值写进接收任务的&quot;邮箱&quot;并唤醒它 */</span><br>        xTaskNotify( xReceiver, ulValue, eSetValueWithOverwrite );<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[Sender  ] notify value %lu at tick %lu\r\n&quot;</span>,<br>                ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) ulValue, ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xTaskGetTickCount() );<br>    &#125;<br>&#125;<br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vReceiverTask</span><span class="hljs-params">( <span class="hljs-type">void</span> * pv )</span><br>&#123;<br>    ( <span class="hljs-type">void</span> ) pv;<br>    <span class="hljs-type">uint32_t</span> ulValue;<br>    <span class="hljs-keyword">for</span>( ; ; )<br>    &#123;<br>        <span class="hljs-comment">/* 睡到通知来为止；一次调用同时完成&quot;取值 + 清通知&quot; */</span><br>        xTaskNotifyWait( <span class="hljs-number">0</span>, <span class="hljs-number">0xFFFFFFFF</span>UL, &amp;ulValue, portMAX_DELAY );<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[Receiver] woken by notify, value = %lu at tick %lu\r\n&quot;</span>,<br>                ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) ulValue, ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xTaskGetTickCount() );<br>    &#125;<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">( <span class="hljs-type">void</span> )</span><br>&#123;<br>    setvbuf( <span class="hljs-built_in">stdout</span>, <span class="hljs-literal">NULL</span>, _IONBF, <span class="hljs-number">0</span> );<br>    xTaskCreate( vReceiverTask, <span class="hljs-string">&quot;Rx&quot;</span>, configMINIMAL_STACK_SIZE, <span class="hljs-literal">NULL</span>, <span class="hljs-number">2</span>, &amp;xReceiver );<br>    xTaskCreate( vSenderTask,   <span class="hljs-string">&quot;Tx&quot;</span>, configMINIMAL_STACK_SIZE, <span class="hljs-literal">NULL</span>, <span class="hljs-number">1</span>, <span class="hljs-literal">NULL</span> );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;Starting scheduler...\r\n&quot;</span> );<br>    vTaskStartScheduler();<br>    <span class="hljs-keyword">for</span>( ; ; ) &#123; &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="十、第-9-篇：软件定时器（实验-13）"><a href="#十、第-9-篇：软件定时器（实验-13）" class="headerlink" title="十、第 9 篇：软件定时器（实验 13）"></a>十、第 9 篇：软件定时器（实验 13）</h2><h3 id="实验-13：自动重载-单次-改周期（main-e13-c）"><a href="#实验-13：自动重载-单次-改周期（main-e13-c）" class="headerlink" title="实验 13：自动重载 &#x2F; 单次 &#x2F; 改周期（main_e13.c）"></a>实验 13：自动重载 &#x2F; 单次 &#x2F; 改周期（<code>main_e13.c</code>）</h3><blockquote>
+<p>预期现象：自动重载 500ms 一响、单次只响一次、改周期立即按 1000ms 重计；全部回调打印任务名 <code>&#39;Tmr Svc&#39;</code>。<strong>注意 <code>xTimerStart</code> 在任务里调用</strong>——放在 <code>main()</code> 里会静默失败（第 9 篇翻车现场）。</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* main_e13.c —— 实验 13：软件定时器 —— 自动重载 / 单次 / 改周期 / 回调上下文 */</span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;FreeRTOS.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;task.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;timers.h&quot;</span></span><br><br><span class="hljs-type">static</span> TimerHandle_t xAutoTimer;<br><span class="hljs-type">static</span> TimerHandle_t xOneShotTimer;<br><span class="hljs-type">static</span> <span class="hljs-type">uint32_t</span> ulAutoCount = <span class="hljs-number">0</span>;<br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vAutoCallback</span><span class="hljs-params">( TimerHandle_t xTimer )</span><br>&#123;<br>    ( <span class="hljs-type">void</span> ) xTimer;<br>    ulAutoCount++;<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[Auto  %2lu] callback in task &#x27;%s&#x27; at tick %lu\r\n&quot;</span>,<br>            ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) ulAutoCount, pcTaskGetName( <span class="hljs-literal">NULL</span> ),<br>            ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xTaskGetTickCount() );<br>&#125;<br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vOneShotCallback</span><span class="hljs-params">( TimerHandle_t xTimer )</span><br>&#123;<br>    ( <span class="hljs-type">void</span> ) xTimer;<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[OneShot] fired ONCE in task &#x27;%s&#x27; at tick %lu\r\n&quot;</span>,<br>            pcTaskGetName( <span class="hljs-literal">NULL</span> ), ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xTaskGetTickCount() );<br>&#125;<br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vStarterTask</span><span class="hljs-params">( <span class="hljs-type">void</span> * pv )</span><br>&#123;<br>    ( <span class="hljs-type">void</span> ) pv;<br>    xTimerStart( xAutoTimer, <span class="hljs-number">0</span> );<br>    xTimerStart( xOneShotTimer, <span class="hljs-number">0</span> );<br><br>    vTaskDelay( pdMS_TO_TICKS( <span class="hljs-number">2500</span> ) );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[Starter] change auto period 500ms -&gt; 1000ms at tick %lu\r\n&quot;</span>,<br>            ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xTaskGetTickCount() );<br>    <span class="hljs-comment">/* 改周期会让定时器立即按新周期重新计时 */</span><br>    xTimerChangePeriod( xAutoTimer, pdMS_TO_TICKS( <span class="hljs-number">1000</span> ), <span class="hljs-number">0</span> );<br><br>    <span class="hljs-keyword">for</span>( ; ; )<br>    &#123;<br>        vTaskDelay( pdMS_TO_TICKS( <span class="hljs-number">1000</span> ) );<br>    &#125;<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">( <span class="hljs-type">void</span> )</span><br>&#123;<br>    setvbuf( <span class="hljs-built_in">stdout</span>, <span class="hljs-literal">NULL</span>, _IONBF, <span class="hljs-number">0</span> );<br>    xAutoTimer = xTimerCreate( <span class="hljs-string">&quot;Auto&quot;</span>, pdMS_TO_TICKS( <span class="hljs-number">500</span> ), pdTRUE, <span class="hljs-literal">NULL</span>, vAutoCallback );<br>    xOneShotTimer = xTimerCreate( <span class="hljs-string">&quot;OneShot&quot;</span>, pdMS_TO_TICKS( <span class="hljs-number">1000</span> ), pdFALSE, <span class="hljs-literal">NULL</span>, vOneShotCallback );<br>    xTaskCreate( vStarterTask, <span class="hljs-string">&quot;Starter&quot;</span>, configMINIMAL_STACK_SIZE, <span class="hljs-literal">NULL</span>, <span class="hljs-number">1</span>, <span class="hljs-literal">NULL</span> );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;Starting scheduler...\r\n&quot;</span> );<br>    vTaskStartScheduler();<br>    <span class="hljs-keyword">for</span>( ; ; ) &#123; &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="十一、第-10-篇：内存管理（实验-14）"><a href="#十一、第-10-篇：内存管理（实验-14）" class="headerlink" title="十一、第 10 篇：内存管理（实验 14）"></a>十一、第 10 篇：内存管理（实验 14）</h2><h3 id="实验-14：内核堆水位实测（main-e14-c）"><a href="#实验-14：内核堆水位实测（main-e14-c）" class="headerlink" title="实验 14：内核堆水位实测（main_e14.c）"></a>实验 14：内核堆水位实测（<code>main_e14.c</code>）</h3><blockquote>
+<p>预期现象：队列 -200 字节、任务 -736 字节、删除后空闲任务回收 +736 精确复原；MinimumEver 是堆调优的第一依据。</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* main_e14.c —— 实验 14：内核堆水位实测（heap_4） */</span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;FreeRTOS.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;task.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;queue.h&quot;</span></span><br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vDummyTask</span><span class="hljs-params">( <span class="hljs-type">void</span> * pv )</span><br>&#123;<br>    ( <span class="hljs-type">void</span> ) pv;<br>    <span class="hljs-keyword">for</span>( ; ; )<br>    &#123;<br>        vTaskDelay( pdMS_TO_TICKS( <span class="hljs-number">1000</span> ) );<br>    &#125;<br>&#125;<br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vMemProbeTask</span><span class="hljs-params">( <span class="hljs-type">void</span> * pv )</span><br>&#123;<br>    ( <span class="hljs-type">void</span> ) pv;<br>    QueueHandle_t xQ;<br>    TaskHandle_t xT = <span class="hljs-literal">NULL</span>;<br>    <span class="hljs-type">size_t</span> s0, s1, s2, s3;<br><br>    vTaskDelay( pdMS_TO_TICKS( <span class="hljs-number">100</span> ) );   <span class="hljs-comment">/* 让系统先稳定下来 */</span><br><br>    s0 = xPortGetFreeHeapSize();<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[Heap] baseline free                = %lu bytes\r\n&quot;</span>, ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) s0 );<br><br>    xQ = xQueueCreate( <span class="hljs-number">10</span>, <span class="hljs-keyword">sizeof</span>( <span class="hljs-type">uint32_t</span> ) );<br>    s1 = xPortGetFreeHeapSize();<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[Heap] after queue 10 x 4B          = %lu bytes  (-%lu)\r\n&quot;</span>,<br>            ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) s1, ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) ( s0 - s1 ) );<br><br>    xTaskCreate( vDummyTask, <span class="hljs-string">&quot;Dummy&quot;</span>, configMINIMAL_STACK_SIZE, <span class="hljs-literal">NULL</span>, <span class="hljs-number">1</span>, &amp;xT );<br>    s2 = xPortGetFreeHeapSize();<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[Heap] after task (70 words + TCB)  = %lu bytes  (-%lu)\r\n&quot;</span>,<br>            ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) s2, ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) ( s1 - s2 ) );<br><br>    vTaskDelete( xT );<br>    vTaskDelay( pdMS_TO_TICKS( <span class="hljs-number">200</span> ) );   <span class="hljs-comment">/* 空闲任务负责回收被删任务的内存 */</span><br>    s3 = xPortGetFreeHeapSize();<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[Heap] after vTaskDelete + idle GC  = %lu bytes  (+%lu)\r\n&quot;</span>,<br>            ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) s3, ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) ( s3 - s2 ) );<br><br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[Heap] minimum ever free            = %lu bytes\r\n&quot;</span>,<br>            ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xPortGetMinimumEverFreeHeapSize() );<br><br>    vTaskDelete( <span class="hljs-literal">NULL</span> );<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">( <span class="hljs-type">void</span> )</span><br>&#123;<br>    setvbuf( <span class="hljs-built_in">stdout</span>, <span class="hljs-literal">NULL</span>, _IONBF, <span class="hljs-number">0</span> );<br>    xTaskCreate( vMemProbeTask, <span class="hljs-string">&quot;Probe&quot;</span>, configMINIMAL_STACK_SIZE, <span class="hljs-literal">NULL</span>, <span class="hljs-number">1</span>, <span class="hljs-literal">NULL</span> );<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;Starting scheduler...\r\n&quot;</span> );<br>    vTaskStartScheduler();<br>    <span class="hljs-keyword">for</span>( ; ; ) &#123; &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="十二、第-11-篇：综合实战（实验-15）"><a href="#十二、第-11-篇：综合实战（实验-15）" class="headerlink" title="十二、第 11 篇：综合实战（实验 15）"></a>十二、第 11 篇：综合实战（实验 15）</h2><h3 id="实验-15：多任务数据采集系统（main-e15-c）"><a href="#实验-15：多任务数据采集系统（main-e15-c）" class="headerlink" title="实验 15：多任务数据采集系统（main_e15.c）"></a>实验 15：多任务数据采集系统（<code>main_e15.c</code>）</h3><blockquote>
+<p>预期现象：心跳每 500ms 一条，Display 每秒统计一条，均值爬升到 1277 时报警置 ON 并锁存。<strong>注意 <code>xTimerStart</code> 放在传感器任务开头</strong>——第 9 篇翻车现场的修复版。</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* main_e15.c —— 综合实战：多任务数据采集系统</span><br><span class="hljs-comment"> * 架构：传感器任务 --队列--&gt; 处理任务 --事件组/队列--&gt; 显示任务，软件定时器打心跳</span><br><span class="hljs-comment"> * 踩坑修正：xTimerStart 必须在调度器启动后（任务里）调用，main 里提前调用会静默失败</span><br><span class="hljs-comment"> */</span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;FreeRTOS.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;task.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;queue.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;timers.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;event_groups.h&quot;</span></span><br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> ALARM_BIT ( 1 &lt;&lt; 0 )</span><br><br><span class="hljs-type">static</span> QueueHandle_t xQueueADC;      <span class="hljs-comment">/* 采样值通道 */</span><br><span class="hljs-type">static</span> QueueHandle_t xQueueStats;    <span class="hljs-comment">/* 统计结果通道 */</span><br><span class="hljs-type">static</span> EventGroupHandle_t xEventAlarm;<br><span class="hljs-type">static</span> TimerHandle_t xHeartbeat;<br><br><span class="hljs-comment">/* 1) 传感器任务：严格 1s 周期采样（xTaskDelayUntil），模拟 ADC 波动 */</span><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vSensorTask</span><span class="hljs-params">( <span class="hljs-type">void</span> * pv )</span><br>&#123;<br>    ( <span class="hljs-type">void</span> ) pv;<br>    <span class="hljs-type">int32_t</span> lRaw = <span class="hljs-number">1000</span>;<br>    <span class="hljs-type">int32_t</span> lDir = <span class="hljs-number">37</span>;<br>    TickType_t xLastWake = xTaskGetTickCount();<br><br>    <span class="hljs-comment">/* 定时器必须在调度器启动之后（比如现在这样在任务里）启动 */</span><br>    xTimerStart( xHeartbeat, <span class="hljs-number">0</span> );<br><br>    <span class="hljs-keyword">for</span>( ; ; )<br>    &#123;<br>        xTaskDelayUntil( &amp;xLastWake, pdMS_TO_TICKS( <span class="hljs-number">1000</span> ) );<br>        lRaw += lDir;<br>        <span class="hljs-keyword">if</span>( lRaw &gt; <span class="hljs-number">1300</span> ) lDir = <span class="hljs-number">-37</span>;<br>        <span class="hljs-keyword">if</span>( lRaw &lt; <span class="hljs-number">700</span> )  lDir = <span class="hljs-number">37</span>;<br>        xQueueSend( xQueueADC, &amp;lRaw, <span class="hljs-number">0</span> );<br>    &#125;<br>&#125;<br><br><span class="hljs-comment">/* 2) 处理任务：4 点滑动均值滤波，超限置报警位，结果发给显示任务 */</span><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vProcessTask</span><span class="hljs-params">( <span class="hljs-type">void</span> * pv )</span><br>&#123;<br>    ( <span class="hljs-type">void</span> ) pv;<br>    <span class="hljs-type">int32_t</span> lValue;<br>    <span class="hljs-type">int32_t</span> lWindow[ <span class="hljs-number">4</span> ] = &#123; <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span> &#125;;<br>    <span class="hljs-type">int</span> i = <span class="hljs-number">0</span>;<br><br>    <span class="hljs-keyword">for</span>( ; ; )<br>    &#123;<br>        xQueueReceive( xQueueADC, &amp;lValue, portMAX_DELAY );<br>        lWindow[ i &amp; <span class="hljs-number">3</span> ] = lValue;<br>        i++;<br>        <span class="hljs-type">int32_t</span> lAvg = ( lWindow[ <span class="hljs-number">0</span> ] + lWindow[ <span class="hljs-number">1</span> ] + lWindow[ <span class="hljs-number">2</span> ] + lWindow[ <span class="hljs-number">3</span> ] ) / <span class="hljs-number">4</span>;<br>        <span class="hljs-keyword">if</span>( lAvg &gt; <span class="hljs-number">1250</span> )<br>        &#123;<br>            xEventGroupSetBits( xEventAlarm, ALARM_BIT );<br>        &#125;<br>        xQueueSend( xQueueStats, &amp;lAvg, <span class="hljs-number">0</span> );<br>    &#125;<br>&#125;<br><br><span class="hljs-comment">/* 3) 显示任务：打印统计与报警状态 */</span><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vDisplayTask</span><span class="hljs-params">( <span class="hljs-type">void</span> * pv )</span><br>&#123;<br>    ( <span class="hljs-type">void</span> ) pv;<br>    <span class="hljs-type">int32_t</span> lAvg;<br>    <span class="hljs-type">uint32_t</span> ulCount = <span class="hljs-number">0</span>;<br><br>    <span class="hljs-keyword">for</span>( ; ; )<br>    &#123;<br>        xQueueReceive( xQueueStats, &amp;lAvg, portMAX_DELAY );<br>        ulCount++;<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[Display] #%lu avg = %ld, alarm = %s (tick %lu)\r\n&quot;</span>,<br>                ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) ulCount, ( <span class="hljs-type">long</span> ) lAvg,<br>                ( xEventGroupGetBits( xEventAlarm ) &amp; ALARM_BIT ) ? <span class="hljs-string">&quot;ON &quot;</span> : <span class="hljs-string">&quot;off&quot;</span>,<br>                ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xTaskGetTickCount() );<br>    &#125;<br>&#125;<br><br><span class="hljs-comment">/* 4) 心跳：软件定时器 500ms 自动重载，证明系统活着 */</span><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vHeartbeatCallback</span><span class="hljs-params">( TimerHandle_t xTimer )</span><br>&#123;<br>    ( <span class="hljs-type">void</span> ) xTimer;<br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[Heart   ] system alive at tick %lu\r\n&quot;</span>, ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xTaskGetTickCount() );<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">( <span class="hljs-type">void</span> )</span><br>&#123;<br>    setvbuf( <span class="hljs-built_in">stdout</span>, <span class="hljs-literal">NULL</span>, _IONBF, <span class="hljs-number">0</span> );<br><br>    xQueueADC = xQueueCreate( <span class="hljs-number">10</span>, <span class="hljs-keyword">sizeof</span>( <span class="hljs-type">int32_t</span> ) );<br>    xQueueStats = xQueueCreate( <span class="hljs-number">10</span>, <span class="hljs-keyword">sizeof</span>( <span class="hljs-type">int32_t</span> ) );<br>    xEventAlarm = xEventGroupCreate();<br>    xHeartbeat = xTimerCreate( <span class="hljs-string">&quot;HB&quot;</span>, pdMS_TO_TICKS( <span class="hljs-number">500</span> ), pdTRUE, <span class="hljs-literal">NULL</span>, vHeartbeatCallback );<br><br>    xTaskCreate( vSensorTask,  <span class="hljs-string">&quot;Sensor&quot;</span>,  configMINIMAL_STACK_SIZE, <span class="hljs-literal">NULL</span>, <span class="hljs-number">1</span>, <span class="hljs-literal">NULL</span> );<br>    xTaskCreate( vProcessTask, <span class="hljs-string">&quot;Process&quot;</span>, configMINIMAL_STACK_SIZE, <span class="hljs-literal">NULL</span>, <span class="hljs-number">2</span>, <span class="hljs-literal">NULL</span> );<br>    xTaskCreate( vDisplayTask, <span class="hljs-string">&quot;Display&quot;</span>, configMINIMAL_STACK_SIZE, <span class="hljs-literal">NULL</span>, <span class="hljs-number">1</span>, <span class="hljs-literal">NULL</span> );<br><br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;Starting scheduler...\r\n&quot;</span> );<br>    vTaskStartScheduler();<br>    <span class="hljs-keyword">for</span>( ; ; ) &#123; &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="十三、几个使用注意"><a href="#十三、几个使用注意" class="headerlink" title="十三、几个使用注意"></a>十三、几个使用注意</h2><ol>
+<li><strong>空转实验的”时长”与机器有关</strong>：<code>main_e1/e3/e10a/e10b</code> 里空转循环的迭代次数是按本机（gcc 16.2.0，-O0）标定的，你的机器速度不同，时长会成比例变化——不影响结论方向，只影响数字大小。</li>
+<li><strong>输出里的中文乱码</strong>：部分源码的 printf 带中文（如 e10a 的”重点看这个数”），在 GBK 控制台重定向时可能显示乱码，属于控制台编码问题，不影响逻辑；介意的话把那几个 printf 改成纯 ASCII。</li>
+<li><strong>重定向输出的空行</strong>：把输出重定向到文件时，<code>\r\n</code> 会变成 <code>\r\r\n</code>，每条日志后多一个空行——直接在终端跑没有这个现象。</li>
+<li><strong>想跑 E5 记得改配置</strong>：<code>INCLUDE_xTaskDelayUntil</code> 必须为 1（附录第二节配置已包含）。</li>
+<li><strong>移植真机</strong>：这些 main_*.c 的逻辑 95% 可以原样搬到 STM32&#x2F;ESP32 工程，需要换的是 <code>FreeRTOSConfig.h</code>（时钟、栈单位、堆大小）和移植层——参见第 11 篇”继续折腾的方向”。</li>
+</ol>
+<h2 id="十四、收个尾"><a href="#十四、收个尾" class="headerlink" title="十四、收个尾"></a>十四、收个尾</h2><p>这篇附录和 11 篇正文合起来，就是本系列的全部家当：**11 篇正文讲”为什么”，这篇附录给”怎么做”**。如果复现时遇到问题，先核对：内核 clone 是否成功、gcc 是否在 PATH、命令是否在 <code>demo01</code> 目录执行、<code>FreeRTOSConfig.h</code> 是否与第二节一致。祝折腾愉快！</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li>全系列目录见文首（第 1 ~ 11 篇）</li>
+<li><a target="_blank" rel="noopener" href="https://github.com/FreeRTOS/FreeRTOS-Kernel">FreeRTOS-Kernel 源码仓库</a></li>
+<li>官方电子书 <em>Mastering the FreeRTOS Real Time Kernel</em></li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/FreeRTOS-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" class="category-chain-item">FreeRTOS 学习笔记</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/FreeRTOS/" class="print-no-link">#FreeRTOS</a>
+      
+        <a href="/tags/RTOS/" class="print-no-link">#RTOS</a>
+      
+        <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/" class="print-no-link">#嵌入式</a>
+      
+        <a href="/tags/C%E8%AF%AD%E8%A8%80/" class="print-no-link">#C语言</a>
+      
+        <a href="/tags/%E4%BB%A3%E7%A0%81/" class="print-no-link">#代码</a>
+      
+    </div>
+  
+</div>
+
+
+              
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2026/11/22/data_struct_01_memory_map/" title="数据结构（一）：C 程序的内存地图 —— 你的变量都住在哪">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">数据结构（一）：C 程序的内存地图 —— 你的变量都住在哪</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/11/21/freertos-11-project/" title="FreeRTOS 学习笔记（十一）：综合实战 —— 把 11 篇知识拼成一台采集系统">
+                        <span class="hidden-mobile">FreeRTOS 学习笔记（十一）：综合实战 —— 把 11 篇知识拼成一台采集系统</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

@@ -1,0 +1,747 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/imgs/ava/fluid.png">
+  <link rel="icon" href="/imgs/ava/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Chris">
+  <meta name="keywords" content="">
+  
+    <meta property="og:type" content="article">
+<meta property="og:title" content="U-Boot学习">
+<meta property="og:url" content="https://lu-six-star.github.io/2026/08/13/uboot_learn/index.html">
+<meta property="og:site_name" content="星橙点点">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/U-Boot%E5%AD%A6%E4%B9%A0/uboot-bootflow.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/U-Boot%E5%AD%A6%E4%B9%A0/uboot-commands.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/U-Boot%E5%AD%A6%E4%B9%A0/uboot-bootm.png">
+<meta property="article:published_time" content="2026-08-13T02:30:00.000Z">
+<meta property="article:modified_time" content="2026-11-02T07:01:18.035Z">
+<meta property="article:author" content="Chris">
+<meta property="article:tag" content="uboot">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://lu-six-star.github.io/imgs/U-Boot%E5%AD%A6%E4%B9%A0/uboot-bootflow.png">
+  
+  
+  
+  <title>U-Boot学习 - 星橙点点</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"lu-six-star.github.io","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>星橙点点</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="U-Boot学习"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-08-13 10:30" pubdate>
+          2026年8月13日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          4.3k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          36 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">U-Boot学习</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <!-- uboot_learn-->
+
+<span id="more"></span>
+
+<p>学习嵌入式 Linux，Bootloader（引导加载程序）是第一关。而 U-Boot 是嵌入式领域使用最广泛、资料最全的开源 Bootloader。这篇文章从”为什么需要它”讲起，带你完整走一遍 U-Boot 的原理、启动流程、编译、命令和引导内核的过程，适合零基础入门。</p>
+<h2 id="为什么需要-Bootloader？"><a href="#为什么需要-Bootloader？" class="headerlink" title="为什么需要 Bootloader？"></a>为什么需要 Bootloader？</h2><p>计算机上电后，CPU 的寄存器、内存、串口等都是”原始”状态，不可能直接运行复杂的操作系统。所以需要一个”过渡程序”来：</p>
+<ul>
+<li><strong>初始化硬件</strong>：设置时钟、初始化 DDR 内存、串口、存储控制器等；</li>
+<li><strong>加载系统镜像</strong>：把内核镜像从存储介质读到内存中；</li>
+<li><strong>引导启动</strong>：把控制权交给内核。</li>
+</ul>
+<p>这个”过渡程序”就是 Bootloader。在嵌入式 Linux 中，绝大多数方案选用的都是 <strong>U-Boot</strong>。</p>
+<blockquote>
+<p><strong>U-Boot</strong>：全称 Universal Boot Loader，由开源社区维护（DENX 项目），支持 ARM、x86、RISC-V、MIPS 等几乎所有主流架构和五花八门的开发板，是目前事实上的”标准 Bootloader”。</p>
+</blockquote>
+<h2 id="嵌入式-Linux-的完整启动流程"><a href="#嵌入式-Linux-的完整启动流程" class="headerlink" title="嵌入式 Linux 的完整启动流程"></a>嵌入式 Linux 的完整启动流程</h2><p>在深入了解 U-Boot 之前，先看清楚它在整个启动链路中的位置。一个典型的嵌入式 Linux 系统启动分为五个阶段：</p>
+<p><img src="/imgs/U-Boot%E5%AD%A6%E4%B9%A0/uboot-bootflow.png" srcset="/img/loading.gif" lazyload></p>
+<p>各阶段的分工：</p>
+<ol>
+<li><strong>BootROM</strong>：固化在 SoC 内部 ROM 中，上电最先执行，负责从外部存储（SD、NAND 等）的固定位置读取并加载 SPL。</li>
+<li><strong>SPL（Secondary Program Loader）</strong>：由于 SoC 内部 SRAM 很小，放不下完整的 U-Boot，于是用轻量的 SPL 先初始化 DDR 内存，再把完整的 U-Boot 加载进 DDR。</li>
+<li><strong>U-Boot</strong>：初始化外设（网卡、MMC、串口等），把内核镜像（zImage）和设备树（dtb）加载到内存，设置启动参数，然后跳转到内核。</li>
+<li><strong>Linux 内核</strong>：自解压、初始化系统，挂载根文件系统。</li>
+<li><strong>根文件系统</strong>：运行 init 进程，启动各种应用程序。</li>
+</ol>
+<p><font color=red>注意：SPL 并不是必须的。如果 SoC 内部的 SRAM 足够大，可以把完整 U-Boot 直接放进 SRAM，跳过 SPL 阶段。现在的 32 位 ARM SoC 大多需要 SPL。</font></p>
+<h2 id="U-Boot-源码结构"><a href="#U-Boot-源码结构" class="headerlink" title="U-Boot 源码结构"></a>U-Boot 源码结构</h2><p>从官网（<a target="_blank" rel="noopener" href="https://ftp.denx.de/pub/u-boot/%EF%BC%89%E4%B8%8B%E8%BD%BD%E6%9C%80%E6%96%B0%E6%BA%90%E7%A0%81%E8%A7%A3%E5%8E%8B%E5%90%8E%EF%BC%8C%E4%BD%A0%E4%BC%9A%E7%9C%8B%E5%88%B0%E8%BF%99%E6%A0%B7%E7%9A%84%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84%EF%BC%9A">https://ftp.denx.de/pub/u-boot/）下载最新源码解压后，你会看到这样的目录结构：</a></p>
+<figure class="highlight axapta"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs axapta">u-boot/<br>├── arch/          <span class="hljs-meta"># 与架构相关的代码（arch/arm、arch/x86...）</span><br>├── board/         <span class="hljs-meta"># 各开发板/厂商板级代码</span><br>├── <span class="hljs-keyword">common</span>/        <span class="hljs-meta"># 通用命令实现（bootm、tftp 等）</span><br>├── drivers/       <span class="hljs-meta"># 各种外设驱动（mmc、net、serial...）</span><br>├── include/       <span class="hljs-meta"># 头文件、配置文件</span><br>├── configs/       <span class="hljs-meta"># 各板的 *_defconfig 默认配置</span><br>├── dts/           <span class="hljs-meta"># 设备树源码（*.dts / *.dtsi）</span><br>└── Makefile<br></code></pre></td></tr></table></figure>
+
+<p>其中最关键的是 <strong><code>configs/</code> 下的 defconfig 文件</strong>。每个开发板都有一份默认配置，例如：</p>
+<ul>
+<li><code>stm32mp157a-dk1_defconfig</code>（意法半导体 STM32MP1 开发板）</li>
+<li><code>imx6q-sabresd_defconfig</code>（恩智浦 i.MX6Q 开发板）</li>
+<li><code>qemu-arm_defconfig</code>（QEMU 模拟器，适合没有板子时学习）</li>
+</ul>
+<blockquote>
+<p><strong>提示</strong>：没有实体开发板的话，强烈建议先用 <strong>QEMU</strong> 跑 U-Boot，比如 <code>qemu-arm_defconfig</code>，<code>make qemu-arm_defconfig</code> 后 <code>make</code> 就能编译出一个可在 QEMU 里运行的 <code>u-boot.bin</code>。成本为零，非常适合入门。</p>
+</blockquote>
+<h2 id="编译-U-Boot"><a href="#编译-U-Boot" class="headerlink" title="编译 U-Boot"></a>编译 U-Boot</h2><p>编译 U-Boot 的思路很简单：<strong>选配置 → 交叉编译</strong>。</p>
+<h3 id="1-准备交叉编译工具链"><a href="#1-准备交叉编译工具链" class="headerlink" title="1. 准备交叉编译工具链"></a>1. 准备交叉编译工具链</h3><p>编译 ARM 版 U-Boot 需要交叉编译工具链（在电脑上编译出 ARM 能运行的机器码），常见的有：</p>
+<ul>
+<li>ARM GCC 官方工具链（<code>arm-none-eabi-gcc</code>，仅适合裸机）；</li>
+<li>板厂 SDK 自带的工具链（如 STM32、NXP、瑞芯微 SDK）；</li>
+<li>Linaro &#x2F; Buildroot &#x2F; Yocto 提供的工具链。</li>
+</ul>
+<p>以 ARM64 为例，工具链前缀一般是 <code>aarch64-linux-gnu-</code>。</p>
+<h3 id="2-配置"><a href="#2-配置" class="headerlink" title="2. 配置"></a>2. 配置</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">make &lt;板子&gt;_defconfig<br></code></pre></td></tr></table></figure>
+
+<p>例如：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">make stm32mp157a-dk1_defconfig<br></code></pre></td></tr></table></figure>
+
+<p>这一步会生成 <code>.config</code> 配置文件，后续还可以用 <code>make menuconfig</code> 图形化调整选项。</p>
+<h3 id="3-编译"><a href="#3-编译" class="headerlink" title="3. 编译"></a>3. 编译</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -j8<br></code></pre></td></tr></table></figure>
+
+<p>编译完成后会得到多个产物，常见的有：</p>
+<ul>
+<li>**<code>u-boot.bin</code>**：U-Boot 二进制，可烧录；</li>
+<li>**<code>u-boot.img</code>**：带头部信息的镜像，通常配合 SPL 使用；</li>
+<li><strong><code>SPL</code></strong> &#x2F; **<code>u-boot-spl.bin</code>**：SPL 镜像；</li>
+<li>**<code>u-boot.dtb</code>**：U-Boot 自己用的设备树。</li>
+</ul>
+<blockquote>
+<p><strong>提示</strong>：<code>ARCH</code> 指定 CPU 架构（arm、arm64、riscv），<code>CROSS_COMPILE</code> 指定交叉工具链前缀，几乎所有的嵌入式软件（包括后面的 Linux 内核）都是这套”套路”。</p>
+</blockquote>
+<h2 id="烧录与启动"><a href="#烧录与启动" class="headerlink" title="烧录与启动"></a>烧录与启动</h2><p>编译好的镜像需要烧录到存储介质中。不同介质、不同 SoC 的烧录方式差异很大，但整体思路一致：</p>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>存放位置</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>BootROM</td>
+<td>SoC 内部 ROM</td>
+<td>出厂固化，无需烧录</td>
+</tr>
+<tr>
+<td>SPL</td>
+<td>外部存储起始位置</td>
+<td>SD 卡 1KB 偏移处、NAND 起始块等</td>
+</tr>
+<tr>
+<td>U-Boot</td>
+<td>专门的 U-Boot 分区</td>
+<td>从 SPL 加载</td>
+</tr>
+<tr>
+<td>zImage + dtb</td>
+<td>boot 分区</td>
+<td>由 U-Boot 加载</td>
+</tr>
+<tr>
+<td>rootfs</td>
+<td>rootfs 分区</td>
+<td>由内核挂载</td>
+</tr>
+</tbody></table>
+<p>烧录 SD 卡通常用 <code>dd</code>（Linux 下），例如：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">sudo <span class="hljs-built_in">dd</span> <span class="hljs-keyword">if</span>=u-boot.bin of=/dev/sdb bs=1k seek=1 conv=fsync<br></code></pre></td></tr></table></figure>
+
+<p>烧录完成后，板子接上串口，上电就能看到 U-Boot 的启动日志，并在倒数归零前按任意键进入 U-Boot 命令行（<code>=&gt;</code> 提示符）：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs text">U-Boot 2023.10 (Aug 13 2026 - 10:30:00)<br>...<br>Hit any key to stop autoboot:  3<br>=&gt;<br></code></pre></td></tr></table></figure>
+
+<blockquote>
+<p><strong>注意</strong>：进入 U-Boot 命令行并不等于进入 Linux。此时系统还”冻结”在引导阶段，你可以自由地操作内存、存储、网络，再手动启动内核。</p>
+</blockquote>
+<h2 id="常用命令与环境变量"><a href="#常用命令与环境变量" class="headerlink" title="常用命令与环境变量"></a>常用命令与环境变量</h2><p>U-Boot 的命令行是它的核心交互方式，也是排查启动问题的利器。下面是按功能分类的常用命令：</p>
+<p><img src="/imgs/U-Boot%E5%AD%A6%E4%B9%A0/uboot-commands.png" srcset="/img/loading.gif" lazyload></p>
+<p><strong>环境变量</strong>是 U-Boot 的”配置文件”，它决定了很多启动行为，其中最重要的两个是：</p>
+<ul>
+<li><strong><code>bootcmd</code><strong>：上电时</strong>自动执行</strong>的命令串。理解它的最好方式是把它当成”开机脚本”——它里面的命令和你在命令行手动敲入的效果一样。</li>
+<li><strong><code>bootargs</code><strong>：</strong>传给 Linux 内核</strong>的启动参数，比如内核用什么串口输出日志（<code>console=</code>）、根文件系统在哪个分区（<code>root=</code>）。</li>
+</ul>
+<p>一个典型的 bootcmd 设置：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash">setenv bootcmd <span class="hljs-string">&#x27;fatload mmc 0:1 0x82000000 zImage; fatload mmc 0:1 0x83000000 board.dtb; bootz 0x82000000 - 0x83000000&#x27;</span><br>saveenv<br></code></pre></td></tr></table></figure>
+
+<p>一个典型的 bootargs：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">setenv bootargs <span class="hljs-string">&#x27;console=ttyS0,115200 root=/dev/mmcblk0p2 rootwait rw&#x27;</span><br></code></pre></td></tr></table></figure>
+
+<p><font color=red>注意：<code>setenv</code> 只修改内存中的环境变量，重启即失效；必须再执行 <code>saveenv</code> 才能永久保存到存储介质（如 SD 卡的环境分区）。</font></p>
+<h2 id="设备树（Device-Tree）与-U-Boot"><a href="#设备树（Device-Tree）与-U-Boot" class="headerlink" title="设备树（Device Tree）与 U-Boot"></a>设备树（Device Tree）与 U-Boot</h2><p>现代嵌入式 Linux 使用<strong>设备树（DT, Device Tree）</strong>来描述硬件：哪个地址有 UART、GPIO 怎么连、内存多大等，都以文本形式写在 <code>.dts</code> 文件中，编译成 <code>.dtb</code> 二进制后传给内核。这样做的核心好处是<strong>硬件描述与内核代码分离</strong>，换一块板子往往只需要换 dtb 而不用改内核。</p>
+<p>U-Boot 是 dtb 的”搬运工”：它把 dtb 从存储介质加载到内存，然后在启动内核时把 dtb 的地址传给内核。U-Boot 自身也可以使用设备树来初始化硬件（<code>u-boot.dtb</code>）。</p>
+<blockquote>
+<p><strong>提示</strong>：设备树里对应的硬件在 U-Boot 阶段和内核阶段是”同一份描述”——所以排查外设问题时，先确认 dtb 是否正确，往往能解决一大半问题。后续学内核时我们会专门展开讲设备树。</p>
+</blockquote>
+<h2 id="U-Boot-如何引导内核（bootm-bootz）"><a href="#U-Boot-如何引导内核（bootm-bootz）" class="headerlink" title="U-Boot 如何引导内核（bootm &#x2F; bootz）"></a>U-Boot 如何引导内核（bootm &#x2F; bootz）</h2><p>理解了上面这些，U-Boot 引导内核的流程就很清晰了：</p>
+<ol>
+<li>用 <code>tftp</code> &#x2F; <code>fatload</code> &#x2F; <code>mmc read</code> 等命令把内核镜像加载到内存（如 <code>0x82000000</code>）；</li>
+<li>把设备树 dtb 加载到内存（如 <code>0x83000000</code>）；</li>
+<li>设置好 <code>bootargs</code> 环境变量；</li>
+<li>执行 <code>bootz 0x82000000 - 0x83000000</code>（zImage 用 <code>bootz</code>，uImage 用 <code>bootm</code>，Image 用 <code>booti</code>）；</li>
+<li>内核接管：自解压、挂载 rootfs、运行 init。</li>
+</ol>
+<p>整个过程如下图：</p>
+<p><img src="/imgs/U-Boot%E5%AD%A6%E4%B9%A0/uboot-bootm.png" srcset="/img/loading.gif" lazyload></p>
+<p><font color=red>注意：dtb 的加载地址不能和内核镜像的地址重叠，否则内核自解压时会覆盖掉 dtb，导致启动失败。常见做法是内核放低地址（0x82000000），dtb 放高地址（0x83000000）。</font></p>
+<h2 id="常见问题与注意事项"><a href="#常见问题与注意事项" class="headerlink" title="常见问题与注意事项"></a>常见问题与注意事项</h2><p>初学 U-Boot 最容易踩的坑：</p>
+<ol>
+<li><strong>串口没输出</strong>：先检查串口波特率（一般是 115200）、接线和 <code>console=</code> 参数是否和板子匹配。</li>
+<li><strong>环境变量改完重启失效</strong>：忘了 <code>saveenv</code>。</li>
+<li><strong>启动后没进 Linux</strong>：多半是 <code>bootcmd</code> 里的加载地址、文件名或分区写错。</li>
+<li><strong>内核卡住不动</strong>：先看 <code>bootargs</code> 里的 <code>console</code> 是否对、<code>root</code> 分区是否存在、<code>dtb</code> 是否匹配。</li>
+<li><strong>uImage 与 zImage 混淆</strong>：<code>bootz</code> 启动 zImage，<code>bootm</code> 启动 uImage，别用错。</li>
+<li><strong>镜像地址重叠</strong>：内核与 dtb 加载地址要错开。</li>
+</ol>
+<h2 id="小结与下一步"><a href="#小结与下一步" class="headerlink" title="小结与下一步"></a>小结与下一步</h2><p>U-Boot 看似复杂，本质就三件事：<strong>初始化硬件、加载镜像、把控制权交给内核</strong>。它的命令行和两个环境变量（<code>bootcmd</code> &#x2F; <code>bootargs</code>）是日常开发与排障的核心。</p>
+<p>学完 U-Boot 之后，就可以沿着这条主线继续深入：</p>
+<ul>
+<li><strong>Linux 内核</strong>：学习内核编译、内核启动流程、驱动开发；</li>
+<li><strong>设备树（DTS&#x2F;DTB）</strong>：理解硬件描述语法，这是嵌入式 Linux 的重中之重；</li>
+<li><strong>根文件系统</strong>：BusyBox &#x2F; Buildroot &#x2F; Yocto，理解应用运行环境怎么构建。</li>
+</ul>
+<p>其中 Buildroot 能一次性帮你生成工具链 + U-Boot + 内核 + 根文件系统，非常适合在 QEMU 或自己的板子上把整个启动链路跑通。下一篇我们就从 <strong>Linux 内核</strong> 开始讲起。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Embedded/" class="category-chain-item">Embedded</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/uboot/" class="print-no-link">#uboot</a>
+      
+    </div>
+  
+</div>
+
+
+              
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2026/08/13/uboot_qemu/" title="QEMU学习U-Boot实战">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">QEMU学习U-Boot实战</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/08/13/bluetooth_mesh/" title="蓝牙Mesh学习">
+                        <span class="hidden-mobile">蓝牙Mesh学习</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

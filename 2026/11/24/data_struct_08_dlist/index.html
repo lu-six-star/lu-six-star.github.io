@@ -1,0 +1,653 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/imgs/ava/fluid.png">
+  <link rel="icon" href="/imgs/ava/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Chris">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="单链表的三个不爽：只能单向走、删除要找前驱、头节点是特例。解法：prev 指针 + 哨兵节点。本篇实测：带哨兵的双向链表删除不存在的元素也安全，反向遍历一步到位；循环链表走 12 步自动回绕——FreeRTOS 的 list.c 用的正是这套结构。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="数据结构（八）：双向链表与循环链表 —— 哨兵节点">
+<meta property="og:url" content="https://lu-six-star.github.io/2026/11/24/data_struct_08_dlist/index.html">
+<meta property="og:site_name" content="星橙点点">
+<meta property="og:description" content="单链表的三个不爽：只能单向走、删除要找前驱、头节点是特例。解法：prev 指针 + 哨兵节点。本篇实测：带哨兵的双向链表删除不存在的元素也安全，反向遍历一步到位；循环链表走 12 步自动回绕——FreeRTOS 的 list.c 用的正是这套结构。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://lu-six-star.github.io/images/data_struct-08-dlist.png">
+<meta property="article:published_time" content="2026-11-24T06:00:00.000Z">
+<meta property="article:modified_time" content="2026-11-26T09:10:17.855Z">
+<meta property="article:author" content="Chris">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="数据结构">
+<meta property="article:tag" content="链表">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://lu-six-star.github.io/images/data_struct-08-dlist.png">
+  
+  
+  
+  <title>数据结构（八）：双向链表与循环链表 —— 哨兵节点 - 星橙点点</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"lu-six-star.github.io","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>星橙点点</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/images/data_struct-08-dlist.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="数据结构（八）：双向链表与循环链表 —— 哨兵节点"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-11-24 14:00" pubdate>
+          2026年11月24日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          1.7k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          15 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">数据结构（八）：双向链表与循环链表 —— 哨兵节点</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <blockquote>
+<p>单链表的三个不爽：只能单向走、删除要找前驱、头节点是特例。解法：prev 指针 + 哨兵节点。本篇实测：带哨兵的双向链表删除不存在的元素也安全，反向遍历一步到位；循环链表走 12 步自动回绕——FreeRTOS 的 list.c 用的正是这套结构。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="系列目录"><a href="#系列目录" class="headerlink" title="系列目录"></a>系列目录</h2><ol>
+<li><a href="/2026/11/26/data_struct_01_memory_map/">C 程序的内存地图</a></li>
+<li><a href="/2026/11/26/data_struct_02_stack_frames/">栈与函数调用</a></li>
+<li><a href="/2026/11/26/data_struct_03_heap/">堆与动态内存</a></li>
+<li><a href="/2026/11/26/data_struct_04_alignment/">结构体内存对齐</a></li>
+<li><a href="/2026/11/26/data_struct_05_struct_advanced/">结构体进阶：union、位域与柔性数组</a></li>
+<li><a href="/2026/11/26/data_struct_06_vector/">数组与动态数组：手写简易 vector</a></li>
+<li><a href="/2026/11/26/data_struct_07_slist/">单链表：指针串起来的散装节点</a></li>
+<li><strong>双向链表与循环链表：哨兵节点（本篇）</strong></li>
+<li><a href="/2026/11/26/data_struct_09_stack_queue/">栈与队列：LIFO 与 FIFO 的工程实现</a></li>
+<li><a href="/2026/11/26/data_struct_10_hash/">哈希表：数组与链表的合体</a></li>
+<li><a href="/2026/11/26/data_struct_11_freertos_list/">真工程实战：解读 FreeRTOS list.c</a></li>
+<li><a href="/2026/11/26/data_struct_12_tsqueue/">手写线程安全队列：竞态与临界区</a></li>
+<li><a href="/2026/11/26/data_struct_13_appendix/">附录：全部实验代码与复现指南</a></li>
+</ol>
+<h2 id="一、哨兵节点：消灭所有特例"><a href="#一、哨兵节点：消灭所有特例" class="headerlink" title="一、哨兵节点：消灭所有特例"></a>一、哨兵节点：消灭所有特例</h2><p>先造一个<strong>不存数据</strong>的假节点（哨兵），让它永远站在链表最前面，prev&#x2F;next 指向自己（空表自环）：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vDListInit</span><span class="hljs-params">( <span class="hljs-type">void</span> )</span><br>&#123;<br>    pxSentinel = ( DNode * ) <span class="hljs-built_in">malloc</span>( <span class="hljs-keyword">sizeof</span>( DNode ) );<br>    pxSentinel-&gt;pxPrev = pxSentinel;   <span class="hljs-comment">/* 空表：哨兵自环 */</span><br>    pxSentinel-&gt;pxNext = pxSentinel;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>从此之后，”第一个真节点”和”中间节点”的插入删除<strong>代码完全一样</strong>——没有”链表为空”的特判，没有”删的是头”的特判。这就是工程链表（包括 FreeRTOS list.c）都用哨兵的原因：<strong>宁多一个假节点，省掉一堆边界 if</strong>。</p>
+<h2 id="二、实验：带哨兵的双向链表"><a href="#二、实验：带哨兵的双向链表" class="headerlink" title="二、实验：带哨兵的双向链表"></a>二、实验：带哨兵的双向链表</h2><p>插入 3、9、1，打印正反向，删除 9、删除不存在的 5。实测输出：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs text">正向: 哨兵 &lt;-&gt; 3 &lt;-&gt; 9 &lt;-&gt; 1 &lt;-&gt; 哨兵<br>反向: 哨兵 &lt;-&gt; 1 &lt;-&gt; 9 &lt;-&gt; 3 &lt;-&gt; 哨兵<br>删除 9: 成功<br>删除 5: 未找到<br>正向: 哨兵 &lt;-&gt; 3 &lt;-&gt; 1 &lt;-&gt; 哨兵<br>反向: 哨兵 &lt;-&gt; 1 &lt;-&gt; 3 &lt;-&gt; 哨兵<br></code></pre></td></tr></table></figure>
+
+<p>两个实测细节：</p>
+<ol>
+<li><strong>反向遍历同样正确</strong>——每节点多一个 prev 指针（64 位机 8 字节开销），换来 O(1) 反向和”删除当前节点不用找前驱”；</li>
+<li><strong>删除不存在的 5 返回”未找到”而不是崩溃</strong>——哨兵+双向结构下，遍历自然终止于哨兵，边界天然安全。</li>
+</ol>
+<p>删除的指针操作也对称得漂亮：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c">p-&gt;pxPrev-&gt;pxNext = p-&gt;pxNext;    <span class="hljs-comment">/* 前驱跨过我 */</span><br>p-&gt;pxNext-&gt;pxPrev = p-&gt;pxPrev;    <span class="hljs-comment">/* 后继跨过我 */</span><br><span class="hljs-built_in">free</span>( p );<br></code></pre></td></tr></table></figure>
+
+<h2 id="三、循环链表：尾巴牵着脑袋"><a href="#三、循环链表：尾巴牵着脑袋" class="headerlink" title="三、循环链表：尾巴牵着脑袋"></a>三、循环链表：尾巴牵着脑袋</h2><p>把单链表最后一个节点的 next 指回头节点，就得到循环链表。实测：5 个节点（1→2→3→4→5→1…）从头走 12 步：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">2 3 4 5 1 2     （5 个节点走 12 步，数值循环回绕）<br></code></pre></td></tr></table></figure>
+
+<p>循环结构没有 NULL 尾巴，遍历的终止条件从 <code>p != NULL</code> 变成”回到出发点”——<strong>轮询调度、轮转任务、环形缓冲</strong>都是它的形状。FreeRTOS 的时间片轮转，靠的就是链表 pxIndex 指针在循环列表里”从上次的位置继续走”。</p>
+<h2 id="四、踩坑记录"><a href="#四、踩坑记录" class="headerlink" title="四、踩坑记录"></a>四、踩坑记录</h2><ol>
+<li><strong>循环链表忘了终止条件</strong>——遍历写成 <code>p != NULL</code> 就是死循环，必须”回到起点即停”；</li>
+<li><strong>哨兵也会被误删</strong>——遍历终止条件写错时，哨兵会被当数据处理，务必理解”哨兵是结构的一部分”；</li>
+<li><strong>双向链表删除顺序</strong>——先接后继再 free，两根指针都要摘干净；</li>
+<li><strong>空表判断</strong>——哨兵方案下 <code>sentinel-&gt;next == sentinel</code> 即空表，这个约定要贯穿所有函数。</li>
+</ol>
+<h2 id="五、小结与下一篇预告"><a href="#五、小结与下一篇预告" class="headerlink" title="五、小结与下一篇预告"></a>五、小结与下一篇预告</h2><ul>
+<li>哨兵节点消灭特例，prev 指针换来自由——实测删除不存在元素也安全；</li>
+<li>双向 &#x3D; O(1) 删除当前节点 + 双向遍历；循环 &#x3D; 天然轮转；</li>
+<li>这两个特性组合（双向 + 循环 + 哨兵 + 排序），正是 FreeRTOS 内核链表的完整配方——第 11 篇去读真源码。</li>
+</ul>
+<p>下一篇回归最基础的两种”受限结构”：栈（LIFO）与队列（FIFO）。重点实验<strong>循环队列</strong>——5 格队列入满、出 2、再入 2，亲眼看 head&#x2F;tail 下标如何取模回绕（”60”落在了物理下标 0 上）。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li>《算法导论》10.2 节</li>
+<li>本系列附录（<a href="/2026/11/26/data_struct_13_appendix/">第 13 篇</a>）收录全部实验代码</li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/DATA-STRUCT/" class="category-chain-item">DATA_STRUCT</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/C/" class="print-no-link">#C</a>
+      
+        <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" class="print-no-link">#数据结构</a>
+      
+        <a href="/tags/%E9%93%BE%E8%A1%A8/" class="print-no-link">#链表</a>
+      
+    </div>
+  
+</div>
+
+
+              
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2026/11/24/data_struct_09_stack_queue/" title="数据结构（九）：栈与队列 —— LIFO 与 FIFO 的工程实现">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">数据结构（九）：栈与队列 —— LIFO 与 FIFO 的工程实现</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/11/24/data_struct_07_slist/" title="数据结构（七）：单链表 —— 指针串起来的散装节点">
+                        <span class="hidden-mobile">数据结构（七）：单链表 —— 指针串起来的散装节点</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

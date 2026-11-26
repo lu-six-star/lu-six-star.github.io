@@ -1,0 +1,777 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/imgs/ava/fluid.png">
+  <link rel="icon" href="/imgs/ava/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Chris">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="这是系列收尾。前四篇把登录的每一层都跑了一遍，也踩了一串真实的坑：私钥被拒收、主机密钥对不上、公钥不在白名单、config 优先级写错、跳板连不上、转发建不起来。它们在终端里的长相高度相似——一句 Permission denied，或者一段 Connection timed out——但根因完全不同，修法也完全不同。 这一篇把这些故障按 -vvv 日志的阶段重新整理成一张可逐条对照的清单：看到">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SSH 学习笔记（五）：登录故障排查清单，从 -vvv 日志一眼定位">
+<meta property="og:url" content="https://lu-six-star.github.io/2026/11/26/ssh-05-troubleshooting/index.html">
+<meta property="og:site_name" content="星橙点点">
+<meta property="og:description" content="这是系列收尾。前四篇把登录的每一层都跑了一遍，也踩了一串真实的坑：私钥被拒收、主机密钥对不上、公钥不在白名单、config 优先级写错、跳板连不上、转发建不起来。它们在终端里的长相高度相似——一句 Permission denied，或者一段 Connection timed out——但根因完全不同，修法也完全不同。 这一篇把这些故障按 -vvv 日志的阶段重新整理成一张可逐条对照的清单：看到">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://lu-six-star.github.io/images/ssh-05-cover.png">
+<meta property="article:published_time" content="2026-11-26T08:45:00.000Z">
+<meta property="article:modified_time" content="2026-11-26T09:10:17.861Z">
+<meta property="article:author" content="Chris">
+<meta property="article:tag" content="SSH">
+<meta property="article:tag" content="OpenSSH">
+<meta property="article:tag" content="故障排查">
+<meta property="article:tag" content="日志">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://lu-six-star.github.io/images/ssh-05-cover.png">
+  
+  
+  
+  <title>SSH 学习笔记（五）：登录故障排查清单，从 -vvv 日志一眼定位 - 星橙点点</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"lu-six-star.github.io","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>星橙点点</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/images/ssh-05-cover.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="SSH 学习笔记（五）：登录故障排查清单，从 -vvv 日志一眼定位"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-11-26 16:45" pubdate>
+          2026年11月26日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          6.5k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          55 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">SSH 学习笔记（五）：登录故障排查清单，从 -vvv 日志一眼定位</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <blockquote>
+<p>这是系列收尾。前四篇把登录的每一层都跑了一遍，也踩了一串真实的坑：私钥被拒收、主机密钥对不上、公钥不在白名单、config 优先级写错、跳板连不上、转发建不起来。它们在终端里的长相高度相似——一句 <code>Permission denied</code>，或者一段 <code>Connection timed out</code>——但根因完全不同，修法也完全不同。</p>
+<p>这一篇把这些故障按 <code>-vvv</code> 日志的阶段重新整理成一张可逐条对照的清单：看到哪一行日志，基本就能锁定是哪一层出了问题，该去查哪个文件、跑哪条命令。清单里所有报错片段都来自本系列的真实实验日志。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="这个系列会写什么"><a href="#这个系列会写什么" class="headerlink" title="这个系列会写什么"></a>这个系列会写什么</h2><table>
+<thead>
+<tr>
+<th>#</th>
+<th>主题</th>
+<th>状态</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>一次 ssh 登录到底发生了什么（握手 &#x2F; 认证 &#x2F; 第一个命令）</td>
+<td><a href="/ssh-01-handshake/">已发布</a></td>
+</tr>
+<tr>
+<td>2</td>
+<td>密钥与免密登录：authorized_keys、ssh-agent、权限那点事</td>
+<td><a href="/ssh-02-keys/">已发布</a></td>
+</tr>
+<tr>
+<td>3</td>
+<td>ssh config：别名、多主机与跳板机</td>
+<td><a href="/ssh-03-config/">已发布</a></td>
+</tr>
+<tr>
+<td>4</td>
+<td>端口转发：-L &#x2F; -R &#x2F; -D 到底转发的是什么</td>
+<td><a href="/ssh-04-forwarding/">已发布</a></td>
+</tr>
+<tr>
+<td>5</td>
+<td>登录故障排查清单：从 -vvv 日志定位问题</td>
+<td><strong>本篇</strong></td>
+</tr>
+</tbody></table>
+<h2 id="一、先记住：一次登录分五层，每层都会失败"><a href="#一、先记住：一次登录分五层，每层都会失败" class="headerlink" title="一、先记住：一次登录分五层，每层都会失败"></a>一、先记住：一次登录分五层，每层都会失败</h2><p><code>ssh -vvv</code> 会把连接过程按顺序喊出来，失败发生在哪一层，日志就停在哪一层。从外到内五层是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs text">① TCP 连接        →  Connecting to ... port 22<br>② 版本 / 密钥交换 →  Remote protocol version 2.0, remote software ...<br>③ 主机密钥验证    →  Server host key: ... / Host key verification failed<br>④ 用户认证        →  Authentications that can continue / Authenticated to<br>⑤ 开通道执行命令  →  Entering interactive session / Exit status<br></code></pre></td></tr></table></figure>
+
+<p>报错定位的核心思路：<strong>看日志最后停在哪一步</strong>。停在 ① 是网络&#x2F;端口，停在 ③ 是 known_hosts，停在 ④ 是密钥或 authorized_keys，停在 ⑤ 是通道或命令。下面按层整理。</p>
+<h2 id="二、逐层排查清单"><a href="#二、逐层排查清单" class="headerlink" title="二、逐层排查清单"></a>二、逐层排查清单</h2><h3 id="2-1-第-①-层：连都连不上"><a href="#2-1-第-①-层：连都连不上" class="headerlink" title="2.1 第 ① 层：连都连不上"></a>2.1 第 ① 层：连都连不上</h3><p><strong>现象</strong></p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">ssh: connect to host 127.0.0.1 port 2222: Connection refused<br></code></pre></td></tr></table></figure>
+
+<p>或 <code>Connection timed out</code>，或 <code>-vvv</code> 卡在 <code>Connecting to ... port 22</code> 之后没有任何下文。</p>
+<p><strong>根因</strong>：TCP 都没通。常见三类：服务没起、端口写错、被防火墙挡了。</p>
+<p><strong>怎么查</strong></p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs text"># 端口有没有在听（服务端本机）<br>&gt; netstat -ano | findstr :2222          # Windows<br>$ ss -tlnp | grep 2222                  # Linux<br><br># 客户端能不能摸到这个端口<br>&gt; Test-NetConnection 127.0.0.1 -Port 2222   # Windows<br>$ nc -zv 127.0.0.1 2222                     # Linux<br></code></pre></td></tr></table></figure>
+
+<p><code>Connection refused</code> 说明端口没在听（服务没起或端口错）；<code>timed out</code> 说明包被丢了（防火墙 &#x2F; 安全组 &#x2F; 路由）。</p>
+<p>本系列里我第一次跑 paramiko 靶机时漏了 <code>start_server</code>，客户端连上去立刻被 reset，就是这一层——TCP 握手成了但应用层没接，日志停在版本交换之前。</p>
+<h3 id="2-2-第-③-层：主机密钥对不上"><a href="#2-2-第-③-层：主机密钥对不上" class="headerlink" title="2.2 第 ③ 层：主机密钥对不上"></a>2.2 第 ③ 层：主机密钥对不上</h3><p><strong>现象</strong></p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs text">@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@<br>@    WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!     @<br>@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@<br>IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!<br>...<br>Offending ED25519 key in .../known_hosts:1<br>Host key for [127.0.0.1]:2222 has changed and you have requested strict checking.<br>Host key verification failed.<br></code></pre></td></tr></table></figure>
+
+<p><strong>根因</strong>：服务器发来的主机密钥指纹，和客户端 <code>known_hosts</code> 里记录的对不上。要么真换了机器 &#x2F; 重装系统，要么有人在中间（中间人）。</p>
+<p><strong>怎么修</strong>：先通过带外渠道核对新指纹，确认是合法变更，再删旧条目重连：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">ssh-keygen -R &quot;[127.0.0.1]:2222&quot;<br></code></pre></td></tr></table></figure>
+
+<p>不核对就删，等于把中间人告警一键静音。这个告警存在的唯一意义就是逼你停下来核对。</p>
+<p>另一种第 ③ 层报错是第一次连时的交互确认：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">The authenticity of host &#x27;...&#x27; can&#x27;t be established.<br>Are you sure you want to continue connecting (yes/no/[fingerprint])?<br></code></pre></td></tr></table></figure>
+
+<p>非交互脚本里要预先 <code>ssh-keyscan</code> 把主机公钥写进 <code>known_hosts</code>，或用 <code>StrictHostKeyChecking accept-new</code>（仅可信内网）。</p>
+<h3 id="2-3-第-④-层：认证失败——私钥根本没被加载"><a href="#2-3-第-④-层：认证失败——私钥根本没被加载" class="headerlink" title="2.3 第 ④ 层：认证失败——私钥根本没被加载"></a>2.3 第 ④ 层：认证失败——私钥根本没被加载</h3><p><strong>现象</strong></p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs text">@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@<br>@         WARNING: UNPROTECTED PRIVATE KEY FILE!          @<br>@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@<br>Permissions for &#x27;.../perm_open_key&#x27; are too open.<br>It is required that your private key files are NOT accessible by others.<br>This private key will be ignored.<br>Load key &quot;.../perm_open_key&quot;: bad permissions<br>...<br>chris@127.0.0.1: Permission denied (publickey,password).<br></code></pre></td></tr></table></figure>
+
+<p><strong>根因</strong>：不是”认证被拒”，而是客户端在加载阶段就把这把私钥判为不安全、直接忽略了——根本没把钥匙掏出来。从别处拷来的私钥几乎必踩。</p>
+<p><strong>怎么修</strong></p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs text"># Linux<br>chmod 600 ~/.ssh/id_ed25519<br># Windows（收 ACL）<br>icacls client_ed25519 /inheritance:r /grant:r &quot;$($env:USERNAME):(R)&quot;<br></code></pre></td></tr></table></figure>
+
+<p>判断技巧：<code>-vvv</code> 里如果看到 <code>Load key &quot;...&quot;: bad permissions</code> 或 <code>This private key will be ignored</code>，就是这层的问题，别去查服务端。</p>
+<h3 id="2-4-第-④-层：认证失败——公钥不在白名单-被选项拦截"><a href="#2-4-第-④-层：认证失败——公钥不在白名单-被选项拦截" class="headerlink" title="2.4 第 ④ 层：认证失败——公钥不在白名单 &#x2F; 被选项拦截"></a>2.4 第 ④ 层：认证失败——公钥不在白名单 &#x2F; 被选项拦截</h3><p><strong>现象</strong></p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs text">debug1: Offering public key: .../wrong_ed25519 ED25519 SHA256:b8bHQwgkEYHZ4P8qT7Rtx6JpzEkEEy9wg4sVjzg73v0<br>debug3: receive packet: type 51<br>debug1: Authentications that can continue: publickey,password<br>...<br>chris@127.0.0.1: Permission denied (publickey,password).<br></code></pre></td></tr></table></figure>
+
+<p><strong>根因</strong>：私钥正常加载了（能看到 <code>Offering public key</code>），但服务端拒绝了。<code>type 51</code> 就是”这把不行，请换一种”。常见三种：</p>
+<ol>
+<li>公钥没写进服务端的 <code>~/.ssh/authorized_keys</code>（最常见）。</li>
+<li>写进去了但<strong>权限或属主不对</strong>——<code>StrictModes yes</code> 时，<code>authorized_keys</code> 或 <code>.ssh</code> 目录权限过宽、属主不是登录用户，sshd 会直接忽略整个文件。</li>
+<li>公钥在白名单，但<strong>行首选项把你拦了</strong>（第二篇实测）：</li>
+</ol>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text"># from 不匹配 → 直接拒绝，日志同样是 type 51<br>debug3: receive packet: type 51<br># command= → 不拒绝，但你请求的命令被替换成强制命令<br></code></pre></td></tr></table></figure>
+
+<p><strong>怎么查</strong>：去服务端看 sshd 日志（<code>/var/log/auth.log</code> 或 <code>journalctl -u sshd</code>；Windows 便携版用 <code>-E</code> 指定日志文件），找 <code>Accepted</code> 还是 <code>refused</code>、<code>Authentication refused: bad ownership or modes</code>、<code>forced command</code> 这类行，一眼分清是没写进去、权限错了、还是被选项限制了。</p>
+<p>三句话自检：公钥真写进 <code>authorized_keys</code> 了吗？目录和文件权限对吗？服务端 <code>PubkeyAuthentication yes</code> 吗？三句任何一句不成立，看到的都是同一句 <code>Permission denied</code>。</p>
+<h3 id="2-5-第-④-层：config-把你带沟里了"><a href="#2-5-第-④-层：config-把你带沟里了" class="headerlink" title="2.5 第 ④ 层：config 把你带沟里了"></a>2.5 第 ④ 层：config 把你带沟里了</h3><p><strong>现象</strong>：明明密钥、白名单都对，但 <code>ssh lab</code> 就是连不上；换个写法又好了。</p>
+<p><strong>根因</strong>：<code>~/.ssh/config</code> 的解析结果和你以为的不一样。最典型的就是第三篇的 <code>Host *</code> 位置错误——单值参数 first-match-wins，<code>Host *</code> 写在前面会抢在具体 Host 之前命中，导致 <code>port</code>、<code>user</code> 全错。</p>
+<p><strong>怎么查</strong>：先跑 <code>ssh -G</code>，别先连：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">&gt; ssh -G lab | findstr /i &quot;port user hostname identityfile proxyjump&quot;<br></code></pre></td></tr></table></figure>
+
+<p>看解析出的 <code>port</code> 是不是你要的、<code>identityfile</code> 指对没有、<code>proxyjump</code> 有没有生效。很多”连不上”在这一步就露馅了。</p>
+<h3 id="2-6-第-④-⑤-层之间：跳板机连不上"><a href="#2-6-第-④-⑤-层之间：跳板机连不上" class="headerlink" title="2.6 第 ④~⑤ 层之间：跳板机连不上"></a>2.6 第 ④~⑤ 层之间：跳板机连不上</h3><p><strong>现象</strong>：用了 <code>ProxyJump</code> 后报错：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">Connection timed out during banner exchange<br>Connection to UNKNOWN port 65535 timed out<br></code></pre></td></tr></table></figure>
+
+<p>或 jump 能登、target 却 <code>Connection closed by remote host</code>。</p>
+<p><strong>根因</strong>（本系列实测踩过）：<code>ProxyJump</code> 的子连接（连跳板的那个 ssh 进程）<strong>不继承命令行的 <code>-o</code> 选项</strong>。你在命令行写了 <code>-o UserKnownHostsFile=xxx</code>，只对主连接 target 生效；连 jump 的子进程读的是 config 里的默认值，去读 <code>~/.ssh/known_hosts</code>，找不到 jump 的主机密钥就卡住，隧道里 target 的 banner 永远收不到。</p>
+<p><strong>怎么修</strong>：把 <code>UserKnownHostsFile</code>、<code>StrictHostKeyChecking</code>、<code>BatchMode</code> 这些通用选项写进 config 的 <code>Host *</code> 块，不要只写在命令行。跳板本身的配置（jump 的 HostName&#x2F;Port&#x2F;IdentityFile）也要在 config 里完整，否则第一段就过不去。</p>
+<p>判断技巧：<code>-vvv</code> 里找有没有 <code>Authenticated to ... (via proxy)</code>。有这行说明跳板通了、问题在 target；没有这行，问题在 jump 这第一段。</p>
+<h3 id="2-7-第-⑤-层：转发建不起来"><a href="#2-7-第-⑤-层：转发建不起来" class="headerlink" title="2.7 第 ⑤ 层：转发建不起来"></a>2.7 第 ⑤ 层：转发建不起来</h3><p><strong>现象</strong>：<code>ssh -L/-R/-D</code> 连上了，但本地&#x2F;远程端口访问不了，curl 超时。</p>
+<p><strong>怎么查</strong>：先加 <code>-o ExitOnForwardFailure=yes</code>，让转发失败时 ssh 直接退出，而不是静默登录成功却没有隧道。然后看 <code>-vvv</code> 里有没有：</p>
+<ul>
+<li><code>Local forwarding listening on ...</code> &#x2F; <code>remote forward success</code>：转发建立成功，问题在应用端（代理类型写错、目标 IP 视角错）。</li>
+<li><code>bind: Address already in use</code>：端口被占，换一个。</li>
+<li>没有任何 forward 相关日志：服务端 <code>AllowTcpForwarding no</code> 禁了，或 <code>GatewayPorts</code> 限制了 <code>-R</code> 的监听地址。</li>
+</ul>
+<p>第四篇实测：<code>-L</code> 成功时日志有 <code>channel N: new [direct-tcpip]</code>，<code>-R</code> 是 <code>forwarded-tcpip</code>，<code>-D</code> 是 <code>dynamic-tcpip</code>——看不到对应通道类型，转发就没真正建立。</p>
+<h2 id="三、一张决策速查表"><a href="#三、一张决策速查表" class="headerlink" title="三、一张决策速查表"></a>三、一张决策速查表</h2><table>
+<thead>
+<tr>
+<th>你在日志里看到</th>
+<th>大概率卡在</th>
+<th>先查 &#x2F; 先跑</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Connection refused</code> &#x2F; <code>timed out</code></td>
+<td>① TCP</td>
+<td>服务在听吗、端口对吗、防火墙</td>
+</tr>
+<tr>
+<td><code>REMOTE HOST IDENTIFICATION HAS CHANGED</code></td>
+<td>③ 主机密钥</td>
+<td>核对指纹后 <code>ssh-keygen -R</code></td>
+</tr>
+<tr>
+<td><code>Host key verification failed</code></td>
+<td>③ 主机密钥</td>
+<td>known_hosts 里有没有这台</td>
+</tr>
+<tr>
+<td><code>UNPROTECTED PRIVATE KEY FILE</code> &#x2F; <code>will be ignored</code> &#x2F; <code>bad permissions</code></td>
+<td>④ 私钥加载</td>
+<td><code>chmod 600</code> 或 <code>icacls</code> 收权限</td>
+</tr>
+<tr>
+<td><code>Offering public key</code> + <code>type 51</code> + <code>Permission denied</code></td>
+<td>④ 公钥认证</td>
+<td>authorized_keys 写了吗、权限对吗、选项拦了吗</td>
+</tr>
+<tr>
+<td><code>ssh -G</code> 解析出的 port&#x2F;user 和预期不符</td>
+<td>④ config</td>
+<td><code>Host *</code> 是否写在了前面</td>
+</tr>
+<tr>
+<td><code>banner exchange</code> 超时 &#x2F; 没有 <code>(via proxy)</code></td>
+<td>④ 跳板</td>
+<td>通用选项是否写进了 config 的 Host *</td>
+</tr>
+<tr>
+<td>转发连上但端口不通、无 <code>direct/forwarded/dynamic-tcpip</code></td>
+<td>⑤ 转发</td>
+<td>加 <code>ExitOnForwardFailure=yes</code>，查 <code>AllowTcpForwarding</code></td>
+</tr>
+</tbody></table>
+<h2 id="四、从外到内的排查流程"><a href="#四、从外到内的排查流程" class="headerlink" title="四、从外到内的排查流程"></a>四、从外到内的排查流程</h2><p>遇到问题别上来就改配置，按这个顺序走，基本五分钟内定位：</p>
+<ol>
+<li><strong>先看 TCP</strong>：<code>ssh -v</code> 有没有进到 <code>Connecting to ... port</code>。没有下文 → 网络&#x2F;端口&#x2F;服务问题（第 2.1 节）。</li>
+<li><strong>看主机密钥</strong>：有没有 <code>Host key verification failed</code> 或 <code>IDENTIFICATION HAS CHANGED</code>。有 → known_hosts 问题（第 2.2 节）。</li>
+<li><strong>看私钥加载</strong>：<code>-vvv</code> 里找 <code>Offering public key</code>。没有 → 私钥没加载，查权限（第 2.3 节）；有 <code>Load key ... bad permissions</code> 直接锁定。</li>
+<li><strong>看服务端回应</strong>：<code>Offering public key</code> 之后收到 <code>type 51</code> → 服务端拒绝，查 authorized_keys &#x2F; 权限 &#x2F; 选项（第 2.4 节）。这时去看服务端 sshd 日志最有效。</li>
+<li><strong>看 config</strong>：以上都正常却连不上，<code>ssh -G</code> 打印最终配置，对照预期（第 2.5 节）。</li>
+<li><strong>看场景</strong>：用了跳板查第 2.6 节，用了转发查第 2.7 节。</li>
+</ol>
+<p>这个顺序的好处是：每一步只需要看日志的一个片段，不用通读几千行 <code>-vvv</code> 输出。</p>
+<h2 id="五、小结：这个系列到底交付了什么"><a href="#五、小结：这个系列到底交付了什么" class="headerlink" title="五、小结：这个系列到底交付了什么"></a>五、小结：这个系列到底交付了什么</h2><p>五篇连起来，是一条从”知其然”到”知其所以然”再到”出问题能自己查”的完整路径：</p>
+<ul>
+<li><strong>第一篇</strong>：把一次登录拆成六层，用 <code>-vvv</code> 看见每一步，区分 host key 和 user key、<code>known_hosts</code> 和 <code>authorized_keys</code>。</li>
+<li><strong>第二篇</strong>：把免密登录跑通，讲清 <code>authorized_keys</code> 的行首选项（限制命令、限制来源）和 <code>ssh-agent</code> 如何一把钥匙开多台机器。</li>
+<li><strong>第三篇</strong>：把一长串参数收进 config，搞懂 first-match-wins，用 <code>ProxyJump</code> 一步过跳板。</li>
+<li><strong>第四篇</strong>：用 <code>-L</code>&#x2F;<code>-R</code>&#x2F;<code>-D</code> 开隧道，从日志里看清每种转发是谁在监听、谁在连目标。</li>
+<li><strong>第五篇（本篇）</strong>：把前四篇的坑汇总成按阶段定位的排查清单，遇到报错不再靠搜关键词碰运气。</li>
+</ul>
+<p>SSH 看起来就是”加密版 telnet”，但真正把它用顺、出问题能自己搞定，靠的是脑子里有这张分层的图。希望这五篇能帮你把这张图建起来。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://man.openbsd.org/ssh">OpenSSH manual: ssh(1)</a>（<code>-v</code>&#x2F;<code>-vvv</code>、<code>-G</code>、<code>-J</code>、<code>-L</code>&#x2F;<code>-R</code>&#x2F;<code>-D</code>）</li>
+<li><a target="_blank" rel="noopener" href="https://en.wikibooks.org/wiki/OpenSSH/Cookbook/Troubleshooting">OpenSSH 故障排查 Wiki</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.ssh.com/academy/ssh/logs">ssh.com: SSH 日志与故障排查</a></li>
+<li>本系列实验代码与全部原始日志：<code>ssh-lab/</code>（<code>results/</code> 下 01~11 号日志，覆盖每篇的实测场景）</li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/SSH-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" class="category-chain-item">SSH 学习笔记</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/SSH/" class="print-no-link">#SSH</a>
+      
+        <a href="/tags/OpenSSH/" class="print-no-link">#OpenSSH</a>
+      
+        <a href="/tags/%E6%95%85%E9%9A%9C%E6%8E%92%E6%9F%A5/" class="print-no-link">#故障排查</a>
+      
+        <a href="/tags/%E6%97%A5%E5%BF%97/" class="print-no-link">#日志</a>
+      
+    </div>
+  
+</div>
+
+
+              
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/11/26/ssh-04-forwarding/" title="SSH 学习笔记（四）：端口转发，-L / -R / -D 到底转发的是什么">
+                        <span class="hidden-mobile">SSH 学习笔记（四）：端口转发，-L / -R / -D 到底转发的是什么</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

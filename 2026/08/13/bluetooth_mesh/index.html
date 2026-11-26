@@ -1,0 +1,764 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/imgs/ava/fluid.png">
+  <link rel="icon" href="/imgs/ava/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Chris">
+  <meta name="keywords" content="">
+  
+    <meta property="og:type" content="article">
+<meta property="og:title" content="蓝牙Mesh学习">
+<meta property="og:url" content="https://lu-six-star.github.io/2026/08/13/bluetooth_mesh/index.html">
+<meta property="og:site_name" content="星橙点点">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/%E8%93%9D%E7%89%99Mesh%E5%AD%A6%E4%B9%A0/bluetooth-mesh-message-flow.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/%E8%93%9D%E7%89%99Mesh%E5%AD%A6%E4%B9%A0/bluetooth-mesh-topology.png">
+<meta property="og:image" content="https://lu-six-star.github.io/imgs/%E8%93%9D%E7%89%99Mesh%E5%AD%A6%E4%B9%A0/bluetooth-mesh-provisioning.png">
+<meta property="article:published_time" content="2026-08-13T01:30:00.000Z">
+<meta property="article:modified_time" content="2026-11-02T07:01:18.068Z">
+<meta property="article:author" content="Chris">
+<meta property="article:tag" content="BLE">
+<meta property="article:tag" content="Mesh">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://lu-six-star.github.io/imgs/%E8%93%9D%E7%89%99Mesh%E5%AD%A6%E4%B9%A0/bluetooth-mesh-message-flow.png">
+  
+  
+  
+  <title>蓝牙Mesh学习 - 星橙点点</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"lu-six-star.github.io","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>星橙点点</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="蓝牙Mesh学习"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-08-13 09:30" pubdate>
+          2026年8月13日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          4.2k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          35 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">蓝牙Mesh学习</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <!-- bluetooth_mesh-->
+
+<span id="more"></span>
+
+<p>蓝牙 Mesh（Bluetooth Mesh）是蓝牙技术联盟（Bluetooth SIG）在 2017 年正式发布的一套<strong>基于低功耗蓝牙（BLE）的网状网络规范</strong>。它让大量 BLE 设备（灯光、传感器、开关等）可以通过<strong>泛洪（Flooding）</strong>的方式互相通信，而不需要依赖路由器或中心节点，非常适合智能家居、楼宇自动化等场景。</p>
+<h2 id="什么是蓝牙-Mesh？"><a href="#什么是蓝牙-Mesh？" class="headerlink" title="什么是蓝牙 Mesh？"></a>什么是蓝牙 Mesh？</h2><p>蓝牙 Mesh 建立在 <strong>BLE 的广播（Advertising）机制之上</strong>，不需要像经典蓝牙或传统 BLE 那样先建立连接（GATT 连接）再通信。它通过设备之间的消息转发，将信息像水波一样”泛洪”扩散到整个网络，从而实现远距离、多设备、自愈的通信。</p>
+<p>它的核心设计理念有几点：</p>
+<ul>
+<li><strong>泛洪式转发</strong>：任何节点收到消息后，在 TTL 允许的范围内继续转发，不需要路由表。</li>
+<li><strong>发布 &#x2F; 订阅</strong>：节点将消息发布到某个”主题”（组地址），只有订阅了该主题的节点才会处理，类似 MQTT。</li>
+<li><strong>网络密钥体系</strong>：每一层数据都经过加密和认证，安全性由”网络层密钥（NetKey）+ 应用层密钥（AppKey）”双重保障。</li>
+<li><strong>对老设备友好</strong>：只要设备支持 BLE 4.0 及以上，就可以升级固件支持 Mesh，不强制要求新硬件。</li>
+</ul>
+<h2 id="为什么需要蓝牙-Mesh？"><a href="#为什么需要蓝牙-Mesh？" class="headerlink" title="为什么需要蓝牙 Mesh？"></a>为什么需要蓝牙 Mesh？</h2><p>传统的 BLE 通信是”一对多”或”一对一”的连接式（GATT）通信，一个主设备（手机）在同一时间只能连接有限个从设备，存在以下限制：</p>
+<ul>
+<li><strong>覆盖范围有限</strong>：单个 BLE 设备的通信半径通常只有几十米，且不能多跳。</li>
+<li><strong>连接数量有限</strong>：手机同一时间维护的 BLE 连接数有限，难以控制成百上千个设备。</li>
+<li><strong>无法自愈</strong>：某个设备掉线后，其余设备可能无法互相通信。</li>
+</ul>
+<p>蓝牙 Mesh 正是为了解决这些问题而生的：</p>
+<ul>
+<li><strong>多跳扩展覆盖</strong>：消息经过中继节点一跳一跳地传递，覆盖范围远超单个设备。</li>
+<li><strong>海量设备支持</strong>：网络理论上可容纳数千个节点。</li>
+<li><strong>去中心化、自愈</strong>：网络中不存在单点故障，个别节点离线不影响整体通信。</li>
+</ul>
+<h2 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a>基本概念</h2><p>在深入理解 Mesh 之前，先了解几个关键概念：<strong>节点、元素、地址、状态与模型、发布&#x2F;订阅</strong>。</p>
+<h3 id="节点与元素"><a href="#节点与元素" class="headerlink" title="节点与元素"></a>节点与元素</h3><p>一台完成配网的 BLE 设备就是一个<strong>节点（Node）</strong>。一个节点内部可以包含一个或多个<strong>元素（Element）</strong>，每个元素都拥有自己独立的单播地址。例如一个”三路开关”可以是同一个节点下的三个元素，分别控制三路灯光。</p>
+<h3 id="地址类型"><a href="#地址类型" class="headerlink" title="地址类型"></a>地址类型</h3><p>Mesh 中一共有三种地址：</p>
+<table>
+<thead>
+<tr>
+<th>地址类型</th>
+<th>取值范围</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>单播地址（Unicast）</td>
+<td>0x0001 ~ 0x7FFF</td>
+<td>每个元素唯一的地址</td>
+</tr>
+<tr>
+<td>虚拟地址（Virtual）</td>
+<td>0x8000 ~ 0xBFFF</td>
+<td>基于 UUID 生成的地址，语义化</td>
+</tr>
+<tr>
+<td>组地址（Group）</td>
+<td>0xC000 ~ 0xFFFF</td>
+<td>一组设备共享的地址（即”主题”）</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p><strong>注意</strong>：节点之间主要靠<strong>组地址</strong>实现”一对多”的发布&#x2F;订阅，这也是 Mesh 消息能”点对多点”传输的基础。</p>
+</blockquote>
+<h3 id="状态与模型"><a href="#状态与模型" class="headerlink" title="状态与模型"></a>状态与模型</h3><p><strong>状态（State）</strong>描述设备当前的情况，比如灯的”开&#x2F;关（On&#x2F;Off）”、”亮度（Lightness）”。</p>
+<p><strong>模型（Model）</strong>是 Mesh 应用层的核心抽象，可以理解为”定义了一组状态和操作消息的接口”，例如：</p>
+<ul>
+<li><strong>Generic OnOff Server</strong>：提供开关状态，能接收开关命令并更新状态。</li>
+<li><strong>Generic OnOff Client</strong>：向 Server 发送开关命令。</li>
+<li><strong>Light Lightness Server &#x2F; Client</strong>：控制亮度。</li>
+</ul>
+<p>模型分为 Client 和 Server 两类，消息在两者之间传递，类似于”服务端提供状态、客户端请求操作”。</p>
+<h3 id="发布-订阅机制"><a href="#发布-订阅机制" class="headerlink" title="发布 &#x2F; 订阅机制"></a>发布 &#x2F; 订阅机制</h3><p>Mesh 的消息传递采用<strong>发布 &#x2F; 订阅（Publish &#x2F; Subscribe）</strong>模式，与 MQTT 非常相似：</p>
+<ul>
+<li><strong>发布（Publish）</strong>：节点将消息发布到某个<strong>组地址</strong>。</li>
+<li><strong>订阅（Subscribe）</strong>：节点可以订阅一个或多个组地址，收到发给该组地址的消息后才会处理。</li>
+</ul>
+<p>例如：三个灯泡都订阅了组地址 <code>0xC001</code>（”客厅灯”），当开关把”开灯”消息发布到 <code>0xC001</code> 时，三个灯泡都会收到并执行开灯动作；而其他未订阅该组地址的节点则直接丢弃消息。</p>
+<p>下图展示了消息如何通过发布&#x2F;订阅和泛洪在网内传递：</p>
+<p><img src="/imgs/%E8%93%9D%E7%89%99Mesh%E5%AD%A6%E4%B9%A0/bluetooth-mesh-message-flow.png" srcset="/img/loading.gif" lazyload></p>
+<p>如上图所示，消息在网络层的 PDU 中带有 <code>TTL</code>、<code>SEQ</code>（序列号）、<code>SRC</code>（源地址）和 <code>DST</code>（目的地址）等字段。<code>DST</code> 决定了哪些节点需要处理消息，<code>SEQ + SRC</code> 组合则用于防止同一消息被无限重复转发（防重放）。</p>
+<h2 id="网络架构与节点类型"><a href="#网络架构与节点类型" class="headerlink" title="网络架构与节点类型"></a>网络架构与节点类型</h2><p>Mesh 网络中的所有节点地位上是<strong>对等</strong>的，但根据承担的功能不同，可以分为几种”角色”（同一台设备可以同时承担多个角色）：</p>
+<table>
+<thead>
+<tr>
+<th>节点类型</th>
+<th>作用</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>普通节点（Node）</td>
+<td>只收发自己关心的消息，不转发</td>
+<td>一般传感器、灯具</td>
+</tr>
+<tr>
+<td>中继节点（Relay）</td>
+<td>将收到的消息转发给其他节点，扩展覆盖</td>
+<td>覆盖区域内的”骨干”设备</td>
+</tr>
+<tr>
+<td>低功耗节点（Low Power Node, LPN）</td>
+<td>平时关闭接收，按需唤醒，大幅省电</td>
+<td>电池供电的传感器、门锁</td>
+</tr>
+<tr>
+<td>朋友节点（Friend Node）</td>
+<td>为 LPN 缓存并转发消息，与 LPN 建立”友谊关系”</td>
+<td>长期供电的设备</td>
+</tr>
+<tr>
+<td>代理节点（Proxy Node）</td>
+<td>通过 GATT 与不支持广播的旧设备&#x2F;手机通信</td>
+<td>手机 App 接入网络的桥梁</td>
+</tr>
+</tbody></table>
+<p>下图展示了 Mesh 网络的拓扑结构：</p>
+<p><img src="/imgs/%E8%93%9D%E7%89%99Mesh%E5%AD%A6%E4%B9%A0/bluetooth-mesh-topology.png" srcset="/img/loading.gif" lazyload></p>
+<p><font color=red>注意：只有具备”中继”特性的节点才会转发消息。如果网络中中继节点过少，网络覆盖会受限；反之中继节点过多，广播消息量会显著增加。</font></p>
+<h2 id="消息如何传输（泛洪机制）"><a href="#消息如何传输（泛洪机制）" class="headerlink" title="消息如何传输（泛洪机制）"></a>消息如何传输（泛洪机制）</h2><p>蓝牙 Mesh 采用<strong>泛洪（Flooding）</strong>而非路由表的方式转发消息，大致流程如下：</p>
+<ol>
+<li>发送节点将消息广播出去，消息携带 <code>TTL</code>（初始值由发送方设定，如 3~7）。</li>
+<li>收到消息的中继节点检查：<ul>
+<li><code>SRC + SEQ</code> 是否已见过（去重，防止死循环）；</li>
+<li><code>TTL</code> 是否大于 0。</li>
+</ul>
+</li>
+<li>若未见过且 TTL &gt; 1，则节点将 <code>TTL</code> 减 1 后重新广播，实现多跳。</li>
+<li>所有收到消息的节点判断 <code>DST</code> 是否命中自己的订阅地址：命中则交给上层处理，未命中则丢弃。</li>
+</ol>
+<p>这种机制带来两个特点：</p>
+<ul>
+<li><strong>优点</strong>：无需维护路由表，实现简单、天然自愈（某条路径失效会自动走其他路径）。</li>
+<li><strong>缺点</strong>：同一消息会被重复广播多次，网络消息总量和功耗较高。</li>
+</ul>
+<blockquote>
+<p><strong>提示</strong>：<code>TTL</code> 并不是越大越好。TTL 越大消息能传得越远，但网内重复广播的次数也越多，容易造成信道拥塞，需要根据网络规模权衡设置。</p>
+</blockquote>
+<h2 id="如何配网（Provisioning）"><a href="#如何配网（Provisioning）" class="headerlink" title="如何配网（Provisioning）"></a>如何配网（Provisioning）</h2><p>新设备要加入 Mesh 网络，必须先由<strong>配网器（Provisioner）</strong>（通常是手机 App）完成<strong>配网（Provisioning）</strong>。配网的本质是：<strong>安全地把网络密钥（NetKey）和单播地址”交给”新设备</strong>，使它正式成为网络中的一员。</p>
+<p>配网的整体流程如下：</p>
+<p><img src="/imgs/%E8%93%9D%E7%89%99Mesh%E5%AD%A6%E4%B9%A0/bluetooth-mesh-provisioning.png" srcset="/img/loading.gif" lazyload></p>
+<p>具体步骤如下：</p>
+<ol>
+<li><strong>设备广播未配网信标（Unprovisioned Device Beacon，类型 0x3F）</strong>：未配网设备周期广播广告包，表明”我在这里，等待被配网”。</li>
+<li><strong>建立配网承载（Provisioning Bearer）</strong>：配网器与设备建立连接，可通过 <strong>PB-ADV</strong>（广播承载，设备间直接配网）或 <strong>PB-GATT</strong>（代理承载，手机等用 GATT 连接配网）。</li>
+<li><strong>交换能力信息（Capabilities）</strong>：设备告知配网器自己支持的加密算法、公钥交换方式、OOB 认证能力等。</li>
+<li><strong>配网开始（Provisioning Start）</strong>：双方确定使用的算法（通常是 FIPS P-256 椭圆曲线）与认证方式。</li>
+<li><strong>交换公钥，协商会话密钥</strong>：双方通过 ECDH 交换公钥，计算出 DHKey 并派生配网会话密钥。</li>
+<li><strong>认证（Authentication）</strong>：为防止中间人攻击，通过”输入 6 位数字 &#x2F; 静态 OOB &#x2F; 输出 OOB”等方式互相认证（生产环境下强烈建议开启认证）。</li>
+<li><strong>下发配网数据（Provisioning Data）</strong>：配网器通过加密通道下发 <strong>NetKey、Key Index、设备单播地址、IV Index</strong> 等关键信息。</li>
+<li><strong>配网完成（Provisioning Complete）</strong>：设备保存密钥与地址，成为正式节点，开始广播 Secure Network Beacon 并参与收发消息。</li>
+</ol>
+<p><font color=red>注意：配网是一次性且极为关键的操作——NetKey 相当于整个网络的”大门钥匙”，一旦泄露，整个网络的安全性都将沦陷。</font></p>
+<h2 id="安全机制"><a href="#安全机制" class="headerlink" title="安全机制"></a>安全机制</h2><p>蓝牙 Mesh 在每一层都提供了加密和认证，采用 <strong>AES-CCM</strong> 加密算法：</p>
+<ul>
+<li><strong>网络层</strong>：所有节点共享 <strong>NetKey</strong>，对网络消息进行加密，防止未入网设备窃听、伪造或重放。</li>
+<li><strong>传输层</strong>：支持分段（Segmentation）与重组，并能对应用数据再次保护。</li>
+<li><strong>应用层</strong>：不同业务使用不同的 <strong>AppKey</strong>（应用密钥），实现业务间的隔离，例如”照明系统”和”门锁系统”可以使用不同的 AppKey。</li>
+</ul>
+<p>正是这套”NetKey + AppKey”的双层密钥体系，保证了即使某个设备被攻破，攻击者也很难影响到网络中的其他业务。</p>
+<h2 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h2><p>在实际使用蓝牙 Mesh 时，有几个关键点需要特别注意：</p>
+<ol>
+<li><strong>密钥管理</strong>：配网信息（NetKey）要妥善保管。换网、丢 Key 的恢复过程很麻烦，建议配网器端做好备份与权限控制。</li>
+<li><strong>广播信道拥挤</strong>：Mesh 依赖广播，网络节点越多、消息越频繁，信道拥塞和丢包就越严重，需要合理设计消息频率和 TTL。</li>
+<li><strong>功耗与角色设计</strong>：电池设备应设计为 <strong>LPN + Friend</strong> 的组合来省电；但 Friend 会增加消息时延，不适合对实时性要求很高的控制。</li>
+<li><strong>中继节点数量</strong>：中继节点太少覆盖不足，太多则广播风暴加剧，需要按网络规模规划中继设备。</li>
+<li><strong>手机接入依赖 Proxy</strong>：传统手机只能走 GATT 连接，因此网络中至少要有<strong>代理节点（Proxy）</strong>，否则手机 App 无法控制网络。</li>
+<li><strong>配网安全</strong>：测试环境可跳过认证，但<strong>生产环境务必开启 OOB 认证</strong>，防止配网阶段被中间人攻击。</li>
+<li><strong>与 Zigbee &#x2F; WiFi Mesh 的差异</strong>：BLE Mesh 是”泛洪式”，无需路由协议、实现简单；Zigbee Mesh 是”路由式”，消息按路由表精确传递，功耗与延迟特性不同，选型时要结合业务场景。</li>
+</ol>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>蓝牙 Mesh 是低功耗蓝牙生态向”多对多、去中心化、海量设备”演进的重要一步：</p>
+<ul>
+<li>它基于<strong>广播 + 泛洪</strong>，无需路由器即可多跳通信，天然自愈；</li>
+<li>采用<strong>发布&#x2F;订阅</strong>模型，配合组地址，实现”一对多”的灵活控制；</li>
+<li>通过<strong>配网（Provisioning）</strong>把新设备安全地引入网络，并依靠 NetKey&#x2F;AppKey 双层密钥保障安全；</li>
+<li>通过 <strong>LPN&#x2F;Friend&#x2F;Proxy</strong> 等节点角色，兼顾了低功耗、覆盖范围和手机接入等多样化需求。</li>
+</ul>
+<p>对于智能家居、楼宇控制、传感器网络等场景，蓝牙 Mesh 是一个非常值得关注和选型的技术方案。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Protocol/" class="category-chain-item">Protocol</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/BLE/" class="print-no-link">#BLE</a>
+      
+        <a href="/tags/Mesh/" class="print-no-link">#Mesh</a>
+      
+    </div>
+  
+</div>
+
+
+              
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2026/08/13/uboot_learn/" title="U-Boot学习">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">U-Boot学习</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/12/02/chris_linux_cmake_learn/" title="Cmake学习">
+                        <span class="hidden-mobile">Cmake学习</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

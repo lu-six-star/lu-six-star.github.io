@@ -1,0 +1,769 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/imgs/ava/fluid.png">
+  <link rel="icon" href="/imgs/ava/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Chris">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="学 RTOS 最劝退的一步往往是”要买块开发板”。其实 FreeRTOS 官方就提供了 Windows 移植层——不用任何硬件，一个 gcc 就能在电脑上跑起真实的 FreeRTOS 内核。本篇所有代码和运行输出都是在本机实测的，照着敲即可复现。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="FreeRTOS 学习笔记（二）：在 Windows 上跑起 FreeRTOS —— 环境搭建与第一个任务">
+<meta property="og:url" content="https://lu-six-star.github.io/2026/11/18/freertos-02-setup/index.html">
+<meta property="og:site_name" content="星橙点点">
+<meta property="og:description" content="学 RTOS 最劝退的一步往往是”要买块开发板”。其实 FreeRTOS 官方就提供了 Windows 移植层——不用任何硬件，一个 gcc 就能在电脑上跑起真实的 FreeRTOS 内核。本篇所有代码和运行输出都是在本机实测的，照着敲即可复现。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://lu-six-star.github.io/images/freertos-02-cover.png">
+<meta property="article:published_time" content="2026-11-18T06:00:00.000Z">
+<meta property="article:modified_time" content="2026-11-26T09:10:17.840Z">
+<meta property="article:author" content="Chris">
+<meta property="article:tag" content="FreeRTOS">
+<meta property="article:tag" content="RTOS">
+<meta property="article:tag" content="嵌入式">
+<meta property="article:tag" content="C语言">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://lu-six-star.github.io/images/freertos-02-cover.png">
+  
+  
+  
+  <title>FreeRTOS 学习笔记（二）：在 Windows 上跑起 FreeRTOS —— 环境搭建与第一个任务 - 星橙点点</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"lu-six-star.github.io","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>星橙点点</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/images/freertos-02-cover.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="FreeRTOS 学习笔记（二）：在 Windows 上跑起 FreeRTOS —— 环境搭建与第一个任务"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-11-18 14:00" pubdate>
+          2026年11月18日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          7.5k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          63 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">FreeRTOS 学习笔记（二）：在 Windows 上跑起 FreeRTOS —— 环境搭建与第一个任务</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <blockquote>
+<p>学 RTOS 最劝退的一步往往是”要买块开发板”。其实 FreeRTOS 官方就提供了 Windows 移植层——不用任何硬件，一个 gcc 就能在电脑上跑起真实的 FreeRTOS 内核。本篇所有代码和运行输出都是<strong>在本机实测</strong>的，照着敲即可复现。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="系列目录"><a href="#系列目录" class="headerlink" title="系列目录"></a>系列目录</h2><ol>
+<li><a href="/2026/11/25/freertos-01-introduction/">初识 FreeRTOS：从裸机到多任务</a></li>
+<li><strong>在 Windows 上跑起 FreeRTOS：环境搭建与第一个任务（本篇）</strong></li>
+<li>任务管理：状态机、优先级与空闲任务</li>
+<li>调度器与时间管理：SysTick 心跳、vTaskDelay 与 vTaskDelayUntil</li>
+<li>队列：任务间通信的第一选择</li>
+<li>中断管理：FromISR API 与延迟中断处理</li>
+<li>信号量与互斥量：同步的艺术</li>
+<li>事件组与任务通知：更轻量的同步方式</li>
+<li>软件定时器：让回调按时到达</li>
+<li>内存管理：heap_1 ~ heap_5 五种方案怎么选</li>
+<li>综合实战：多任务传感器采集系统</li>
+</ol>
+<h2 id="一、Windows-仿真是怎么回事？"><a href="#一、Windows-仿真是怎么回事？" class="headerlink" title="一、Windows 仿真是怎么回事？"></a>一、Windows 仿真是怎么回事？</h2><p>上一篇文章说过，FreeRTOS 内核分为”与硬件无关的核心”和”与硬件相关的移植层”。既然如此，那把移植层写成”适配 Windows 的版本”，内核不就能在 Windows 上跑了吗？</p>
+<p>官方正是这么做的。<code>FreeRTOS-Kernel</code> 仓库的 <code>portable/MSVC-MingW/</code> 目录下有一套 Windows 移植层，它的实现思路非常巧妙：</p>
+<ul>
+<li><strong>每个 FreeRTOS 任务 &#x3D; 一个真正的 Win32 线程</strong>。任务阻塞时，内核用 Windows 的挂起&#x2F;恢复机制切换线程，完美模拟”上下文切换”；</li>
+<li><strong>tick 心跳 &#x3D; 用 Windows 多媒体定时器（winmm）模拟周期性中断</strong>。</li>
+</ul>
+<p><img src="/images/freertos-02-architecture.png" srcset="/img/loading.gif" lazyload alt="FreeRTOS 体系结构：从你的代码到硬件"></p>
+<p>对照上图，这就是”本系列路线”那条路：你的代码 → 内核 API → 内核核心 → port.c → Win32。要强调的一点是：<strong>Windows 不是实时系统</strong>，所以仿真环境里测不出真实时性能，但内核的调度行为、API 语义与真机完全一致——用来学内核，再合适不过。</p>
+<h2 id="二、这个实验总共需要几个文件？"><a href="#二、这个实验总共需要几个文件？" class="headerlink" title="二、这个实验总共需要几个文件？"></a>二、这个实验总共需要几个文件？</h2><p>比想象中少得多。整个工程就三类东西：</p>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>来源（仓库内路径）</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>tasks.c</code> <code>list.c</code> <code>queue.c</code> <code>timers.c</code> <code>event_groups.c</code> <code>stream_buffer.c</code></td>
+<td><code>FreeRTOS-Kernel/</code> 根目录</td>
+<td>内核核心（第一篇讲过的”三大件”们）</td>
+</tr>
+<tr>
+<td><code>port.c</code> + <code>portmacro.h</code></td>
+<td><code>portable/MSVC-MingW/</code></td>
+<td>Windows 移植层</td>
+</tr>
+<tr>
+<td><code>heap_4.c</code></td>
+<td><code>portable/MemMang/</code></td>
+<td>内存堆方案（4 号，最常用）</td>
+</tr>
+<tr>
+<td><code>FreeRTOSConfig.h</code></td>
+<td><strong>自己提供</strong></td>
+<td>裁剪内核的配置文件</td>
+</tr>
+<tr>
+<td><code>main.c</code></td>
+<td><strong>自己写</strong></td>
+<td>你的应用：创建任务、启动调度器</td>
+</tr>
+</tbody></table>
+<p>获取内核源码（commit <code>54c60e7</code>，2026-11-25 的 main 分支，本篇实测基于此版本）：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">git <span class="hljs-built_in">clone</span> --depth 1 https://github.com/FreeRTOS/FreeRTOS-Kernel.git<br></code></pre></td></tr></table></figure>
+
+<p>目录结构建议这样组织：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs text">freertos-lab/<br>├── FreeRTOS-Kernel/      # 刚 clone 下来的内核<br>└── demo01/               # 我们的第一个工程<br>    ├── main.c<br>    └── FreeRTOSConfig.h<br></code></pre></td></tr></table></figure>
+
+<p>编译器用 MinGW-w64 的 gcc（本机实测版本：<code>gcc 16.2.0, x86_64-w64-mingw32</code>）。Windows 上安装它最省事的两种方式：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash">scoop install mingw      <span class="hljs-comment"># 方式一：Scoop 包管理器</span><br><span class="hljs-comment"># 或者安装 MSYS2，用 pacman 装 mingw-w64 工具链（方式二）</span><br></code></pre></td></tr></table></figure>
+
+<p>装完在终端里 <code>gcc -v</code> 能打印版本号就绪了。</p>
+<h2 id="三、写第一个程序：两个任务交替打印"><a href="#三、写第一个程序：两个任务交替打印" class="headerlink" title="三、写第一个程序：两个任务交替打印"></a>三、写第一个程序：两个任务交替打印</h2><p>目标：创建两个任务，各自每秒打印一行。先看完整代码，马上逐段拆解：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/*</span><br><span class="hljs-comment"> * main.c —— 第一个 FreeRTOS 程序</span><br><span class="hljs-comment"> * 两个任务共用同一个任务函数，通过参数区分</span><br><span class="hljs-comment"> */</span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;FreeRTOS.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;task.h&quot;</span></span><br><br><span class="hljs-comment">/* 任务函数：FreeRTOS 里&quot;任务&quot;就是一个永不返回的函数 */</span><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">vPrinterTask</span><span class="hljs-params">( <span class="hljs-type">void</span> * pvParameters )</span><br>&#123;<br>    <span class="hljs-type">const</span> <span class="hljs-type">char</span> * pcName = ( <span class="hljs-type">const</span> <span class="hljs-type">char</span> * ) pvParameters;<br><br>    <span class="hljs-keyword">for</span>( ; ; )   <span class="hljs-comment">/* 任务主体必须是死循环，绝不能 return */</span><br>    &#123;<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;[%s] running, tick = %lu\r\n&quot;</span>,<br>                pcName, ( <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ) xTaskGetTickCount() );<br><br>        <span class="hljs-comment">/* 阻塞延时 1 秒：期间 CPU 让给其他任务 */</span><br>        vTaskDelay( pdMS_TO_TICKS( <span class="hljs-number">1000</span> ) );<br>    &#125;<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">( <span class="hljs-type">void</span> )</span><br>&#123;<br>    <span class="hljs-comment">/* 关闭 stdout 缓冲，输出重定向到文件时也能实时看到打印 */</span><br>    setvbuf( <span class="hljs-built_in">stdout</span>, <span class="hljs-literal">NULL</span>, _IONBF, <span class="hljs-number">0</span> );<br><br>    <span class="hljs-comment">/* xTaskCreate(任务函数, 任务名, 栈深度(字), 参数, 优先级, 任务句柄) */</span><br>    BaseType_t xOK1 = xTaskCreate( vPrinterTask, <span class="hljs-string">&quot;TaskA&quot;</span>, configMINIMAL_STACK_SIZE,<br>                                   ( <span class="hljs-type">void</span> * ) <span class="hljs-string">&quot;TaskA&quot;</span>, <span class="hljs-number">1</span>, <span class="hljs-literal">NULL</span> );<br>    BaseType_t xOK2 = xTaskCreate( vPrinterTask, <span class="hljs-string">&quot;TaskB&quot;</span>, configMINIMAL_STACK_SIZE,<br>                                   ( <span class="hljs-type">void</span> * ) <span class="hljs-string">&quot;TaskB&quot;</span>, <span class="hljs-number">1</span>, <span class="hljs-literal">NULL</span> );<br><br>    <span class="hljs-keyword">if</span>( ( xOK1 != pdPASS ) || ( xOK2 != pdPASS ) )<br>    &#123;<br>        <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;Task create failed! (heap too small?)\r\n&quot;</span> );<br>        <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>    &#125;<br><br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;Starting scheduler...\r\n&quot;</span> );<br><br>    <span class="hljs-comment">/* 启动调度器，控制权交给内核，之后 main() 不再运行 */</span><br>    vTaskStartScheduler();<br><br>    <span class="hljs-comment">/* 正常情况下永远到不了这里 */</span><br>    <span class="hljs-built_in">printf</span>( <span class="hljs-string">&quot;Scheduler exited unexpectedly!\r\n&quot;</span> );<br>    <span class="hljs-keyword">for</span>( ; ; )<br>    &#123;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><strong>逐段拆解：</strong></p>
+<p><strong>1. 任务函数的”标准形态”。</strong> <code>vPrinterTask</code> 是一个参数为 <code>void *</code>、返回值为 <code>void</code> 的函数，主体是 <code>for( ; ; )</code> 死循环。这就是 FreeRTOS 任务的标准长相：<strong>任务不能 return</strong>——返回了内核会直接判定为严重错误。想让任务”结束”，要调用 <code>vTaskDelete(NULL)</code> 删除自己（后面讲任务管理的篇章细说）。</p>
+<p><strong>2. 两个任务共用同一个函数，秘密在参数。</strong> 在 FreeRTOS 的眼里，任务 &#x3D; 任务函数 + 独立的栈 + 任务控制块。同一个函数配上不同的 <code>pvParameters</code>，就能实例化出两个互不干扰的任务——这个技巧在传感器轮询等场景非常好用。</p>
+<p><code>xTaskCreate</code> 的六个参数值得一表：</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>本例取值</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>任务函数</td>
+<td><code>vPrinterTask</code></td>
+<td>函数入口地址</td>
+</tr>
+<tr>
+<td>任务名</td>
+<td><code>&quot;TaskA&quot;</code></td>
+<td>调试用可读名，不必唯一</td>
+</tr>
+<tr>
+<td>栈深度</td>
+<td><code>configMINIMAL_STACK_SIZE</code></td>
+<td><strong>单位是”字”不是字节</strong>；仿真下任务真实栈在 Win32 线程里，70 足够</td>
+</tr>
+<tr>
+<td>参数</td>
+<td><code>(void *)&quot;TaskA&quot;</code></td>
+<td>传给任务函数的指针</td>
+</tr>
+<tr>
+<td>优先级</td>
+<td><code>1</code></td>
+<td>数字越大优先级越高，0 最低</td>
+</tr>
+<tr>
+<td>任务句柄</td>
+<td><code>NULL</code></td>
+<td>需要后续操作该任务时传入指针拿句柄</td>
+</tr>
+</tbody></table>
+<p>返回值是关键：<code>pdPASS</code> 表示创建成功；其他值通常意味着<strong>堆内存不够</strong>了。</p>
+<p><strong>3. <code>vTaskDelay(pdMS_TO_TICKS(1000))</code>。</strong> 这是 RTOS 版的”延时”——和裸机的 <code>delay_ms</code> 忙等完全不同：调用后任务进入<strong>阻塞态</strong>，内核立刻去运行别的任务，1 秒后 tick 中断把它叫醒。<code>pdMS_TO_TICKS</code> 把毫秒换算成 tick 数（我们的 tick 是 1ms 一次，所以换算后就是 1000）。</p>
+<p><strong>4. <code>vTaskStartScheduler()</code> 之后，main 不再是主角。</strong> 调用它的瞬间，内核创建空闲任务、启动 tick、开始调度，控制权一去不回。main 里写在它后面的代码只有一种情况会被执行：调度器启动失败（几乎总是堆不够）。</p>
+<h2 id="四、FreeRTOSConfig-h：你灵魂画手般的”裁剪刀”"><a href="#四、FreeRTOSConfig-h：你灵魂画手般的”裁剪刀”" class="headerlink" title="四、FreeRTOSConfig.h：你灵魂画手般的”裁剪刀”"></a>四、FreeRTOSConfig.h：你灵魂画手般的”裁剪刀”</h2><p>每个工程都必须提供一个 <code>FreeRTOSConfig.h</code>——它决定内核哪些功能参与编译、tick 多快、堆多大。基于官方模板（<code>examples/template_configuration/</code>）精简后，本实验用的版本：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">ifndef</span> FREERTOS_CONFIG_H</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> FREERTOS_CONFIG_H</span><br><br><span class="hljs-comment">/* ---------------- 调度行为 ---------------- */</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configUSE_PREEMPTION                    1      <span class="hljs-comment">/* 抢占式调度 */</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configUSE_TIME_SLICING                  1      <span class="hljs-comment">/* 同优先级任务按时间片轮转 */</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configUSE_PORT_OPTIMISED_TASK_SELECTION 1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configTICK_RATE_HZ                      ( 1000 )   <span class="hljs-comment">/* tick 频率：1ms 一次心跳 */</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configMAX_PRIORITIES                    ( 7 )      <span class="hljs-comment">/* 优先级 0 ~ 6 */</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configMINIMAL_STACK_SIZE                ( ( unsigned short ) 70 )</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configMAX_TASK_NAME_LEN                 16</span><br><br><span class="hljs-comment">/* Win32 仿真按 64 位编译时使用 64 位 tick 计数 */</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configTICK_TYPE_WIDTH_IN_BITS           TICK_TYPE_WIDTH_64_BITS</span><br><br><span class="hljs-comment">/* ---------------- 内存堆 ---------------- */</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configTOTAL_HEAP_SIZE                   ( ( size_t ) ( 128 * 1024 ) )</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configSUPPORT_DYNAMIC_ALLOCATION        1      <span class="hljs-comment">/* 允许 xTaskCreate 动态分配 */</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configSUPPORT_STATIC_ALLOCATION         0</span><br><br><span class="hljs-comment">/* ---------------- 内核可选功能 ---------------- */</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configUSE_TIMERS                        1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configTIMER_TASK_PRIORITY               ( configMAX_PRIORITIES - 1 )</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configTIMER_TASK_STACK_DEPTH            configMINIMAL_STACK_SIZE</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configTIMER_QUEUE_LENGTH                10</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configUSE_MUTEXES                       1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configUSE_COUNTING_SEMAPHORES           1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configUSE_TASK_NOTIFICATIONS            1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configUSE_CO_ROUTINES                   0</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configUSE_IDLE_HOOK                     0</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configUSE_TICK_HOOK                     0</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configCHECK_FOR_STACK_OVERFLOW          0</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configUSE_MALLOC_FAILED_HOOK            0</span><br><br><span class="hljs-comment">/* ---------------- API 裁剪 ---------------- */</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> INCLUDE_vTaskDelay                      1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> INCLUDE_vTaskDelete                     1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> INCLUDE_vTaskSuspend                    1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> INCLUDE_xTaskGetSchedulerState          1</span><br><br><span class="hljs-comment">/* ---------------- 调试断言 ---------------- */</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> configASSERT( x )    <span class="hljs-keyword">if</span>( ( x ) == 0 ) &#123; taskDISABLE_INTERRUPTS(); for( ; ; ) ; &#125;</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">endif</span> <span class="hljs-comment">/* FREERTOS_CONFIG_H */</span></span><br></code></pre></td></tr></table></figure>
+
+<p>初学阶段不用逐个啃完，先记住四个最常用的：</p>
+<ul>
+<li><code>configTICK_RATE_HZ</code>：心跳频率，1000 &#x3D; 1ms 一次；</li>
+<li><code>configTOTAL_HEAP_SIZE</code>：内核堆大小，任务创建失败九成是它太小；</li>
+<li><code>configMAX_PRIORITIES</code>：可用优先级数量；</li>
+<li><code>configASSERT</code>：断言宏，参数传错时原地停机，挂上调试器就能定位——<strong>强烈建议开发期始终开启</strong>。</li>
+</ul>
+<p>其余项”先照抄，用到再查”，官方每个宏都有文档说明。</p>
+<h2 id="五、一条命令编译，跑起来！"><a href="#五、一条命令编译，跑起来！" class="headerlink" title="五、一条命令编译，跑起来！"></a>五、一条命令编译，跑起来！</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs bash">gcc -O0 -g -Wall -Wextra -D_WIN32_WINNT=0x0601 ^<br>    -I ../FreeRTOS-Kernel/include ^<br>    -I ../FreeRTOS-Kernel/portable/MSVC-MingW ^<br>    -I . ^<br>    main.c ^<br>    ../FreeRTOS-Kernel/tasks.c ../FreeRTOS-Kernel/list.c ../FreeRTOS-Kernel/queue.c ^<br>    ../FreeRTOS-Kernel/timers.c ../FreeRTOS-Kernel/event_groups.c ../FreeRTOS-Kernel/stream_buffer.c ^<br>    ../FreeRTOS-Kernel/portable/MSVC-MingW/port.c ^<br>    ../FreeRTOS-Kernel/portable/MemMang/heap_4.c ^<br>    -o FreeRTOSDemo.exe -lwinmm<br></code></pre></td></tr></table></figure>
+
+<p>命令虽长，结构很清晰：三个 <code>-I</code> 是头文件搜索路径（内核头、移植层头、当前目录的 <code>FreeRTOSConfig.h</code>）；源文件就是第二节表格里的清单；两个特别参数：</p>
+<ul>
+<li><code>-lwinmm</code>：链接 Windows 多媒体定时器库——移植层用它模拟 tick 中断；</li>
+<li><code>-D_WIN32_WINNT=0x0601</code>：声明目标系统版本（Win7 及以上），来自官方 demo 的 Makefile。</li>
+</ul>
+<p>编译一次通过（实测 <code>gcc 16.2.0</code>，零 warning），得到约 191KB 的 <code>FreeRTOSDemo.exe</code>。运行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">FreeRTOSDemo.exe<br></code></pre></td></tr></table></figure>
+
+<p><strong>本机实测输出（节选）：</strong></p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs text">Starting scheduler...<br>[TaskA] running, tick = 2<br>[TaskB] running, tick = 3<br>[TaskA] running, tick = 1024<br>[TaskB] running, tick = 1039<br>[TaskA] running, tick = 2042<br>[TaskB] running, tick = 2057<br>[TaskA] running, tick = 3068<br>[TaskB] running, tick = 3088<br>...（持续运行，每秒各打印一次，Ctrl+C 退出）<br></code></pre></td></tr></table></figure>
+
+<h2 id="六、读懂这-9-行输出，你就读懂了”多任务”"><a href="#六、读懂这-9-行输出，你就读懂了”多任务”" class="headerlink" title="六、读懂这 9 行输出，你就读懂了”多任务”"></a>六、读懂这 9 行输出，你就读懂了”多任务”</h2><p><strong>现象 1：两个任务在”同时”打印。</strong> 宏观上它们并行运行，微观上是内核在两个 Win32 线程间快速切换——这正是第一篇对比图里说的调度器行为。</p>
+<p><strong>现象 2：TaskA 总是先打印、TaskB 紧随其后。</strong> 两者优先级同为 1，<code>configUSE_TIME_SLICING=1</code> 让同优先级任务按时间片轮转；又因为 A 先创建、先就绪，每轮调度总是 A 先上场。</p>
+<p><strong>现象 3：tick 每 1000 次出头一跳，但每秒增量并不精确。</strong> 1024-2&#x3D;1022，2042-1024&#x3D;1018……按 1ms 一个 tick，理论上每秒应该恰好 +1000。多出来的十几毫秒就是 <strong>Windows 调度的抖动</strong>。记住这个细节：它直观地证明了”仿真环境不适合评估实时性”——如果这 20ms 的偏差发生在电机控制里，就是第一篇说的”错过 deadline”。</p>
+<p>到这里，你已经拥有了整个系列共用的实验底座：后面每一篇的代码，都只是在 <code>main.c</code> 上添砖加瓦。</p>
+<h2 id="七、踩坑记录"><a href="#七、踩坑记录" class="headerlink" title="七、踩坑记录"></a>七、踩坑记录</h2><ol>
+<li>**任务函数绝不能 <code>return</code>**。返回后的行为未定义，内核甚至可能直接断言崩溃。要”结束”一个任务，标准姿势是 <code>vTaskDelete(NULL)</code>。</li>
+<li>**<code>vTaskStartScheduler()</code> 后面别写”善后代码”**。正常流程它永不返回；返回只意味着启动失败（通常是堆不足）。要检查错误，检查的是每个 <code>xTaskCreate</code> 的返回值。</li>
+<li><strong><code>printf</code> 不是线程安全的</strong>。两个任务同时 printf，输出可能交叉撕裂。本例频率低、单行短，问题不明显；正式产品里应该用队列把日志发给专门的”日志任务”，或用互斥量保护——这正是第 5、7 篇的主角。</li>
+<li><strong>别在仿真里测实时性能</strong>。tick 有抖动、调度有毫秒级延迟，量出来的数字没有参考意义。仿真学机制，真机调性能。</li>
+<li><strong>杀毒软件偶尔拦未签名 exe</strong>。编译出的演示程序被 SmartScreen&#x2F;杀软误报时，加白名单即可。</li>
+</ol>
+<h2 id="八、小结与下一篇预告"><a href="#八、小结与下一篇预告" class="headerlink" title="八、小结与下一篇预告"></a>八、小结与下一篇预告</h2><p>本篇我们：</p>
+<ul>
+<li>理解了 Windows 仿真的原理：<strong>任务&#x3D;Win32 线程，tick&#x3D;定时器模拟中断</strong>；</li>
+<li>认识了最小工程的五类文件，并亲手编译出了 195KB 的 <code>FreeRTOSDemo.exe</code>；</li>
+<li>掌握了本系列最重要的两个 API：<code>xTaskCreate</code> 和 <code>vTaskDelay</code>；</li>
+<li>从真实输出里看穿了时间片轮转与调度抖动。</li>
+</ul>
+<p>下一篇我们钻进任务内部：<strong>任务状态机（就绪&#x2F;运行&#x2F;阻塞&#x2F;挂起）、优先级到底怎么影响调度、神秘的空闲任务在干嘛</strong>。预告一个实验：如果把 <code>vTaskDelay</code> 换成空转的 <code>for</code> 循环延时，打印节奏会变成什么样？下篇用实验说话。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://www.freertos.org/Documentation/02-Kernel/03-Supported-devices/04-Demos/03-Emulation-and-simulation/Windows/FreeRTOS-Windows-Simulator-Emulator-for-Visual-Studio-and-Eclipse-MingW">官方文档：FreeRTOS Windows Simulator（Visual Studio &amp; Eclipse&#x2F;MingW）</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/FreeRTOS/FreeRTOS-Kernel">FreeRTOS-Kernel 源码仓库</a></li>
+<li>官方完整 demo：<a target="_blank" rel="noopener" href="https://github.com/FreeRTOS/FreeRTOS">FreeRTOS&#x2F;FreeRTOS 仓库</a> 的 <code>FreeRTOS/Demo/WIN32-MingW</code>（含 Makefile，可直接参考）</li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/FreeRTOS-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" class="category-chain-item">FreeRTOS 学习笔记</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/FreeRTOS/" class="print-no-link">#FreeRTOS</a>
+      
+        <a href="/tags/RTOS/" class="print-no-link">#RTOS</a>
+      
+        <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/" class="print-no-link">#嵌入式</a>
+      
+        <a href="/tags/C%E8%AF%AD%E8%A8%80/" class="print-no-link">#C语言</a>
+      
+    </div>
+  
+</div>
+
+
+              
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2026/11/18/freertos-03-task-management/" title="FreeRTOS 学习笔记（三）：任务管理 —— 状态机、优先级与空闲任务">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">FreeRTOS 学习笔记（三）：任务管理 —— 状态机、优先级与空闲任务</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/11/18/freertos-01-introduction/" title="FreeRTOS 学习笔记（一）：初识 FreeRTOS —— 从裸机到多任务">
+                        <span class="hidden-mobile">FreeRTOS 学习笔记（一）：初识 FreeRTOS —— 从裸机到多任务</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

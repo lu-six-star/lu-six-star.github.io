@@ -1,0 +1,662 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/imgs/ava/fluid.png">
+  <link rel="icon" href="/imgs/ava/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Chris">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="struct &amp;#123; char c; int i; &amp;#125; 的 sizeof 是多少？字段加起来明明只有 5 字节，实测却是 8——中间 3 个字节的 padding 就藏在 c 和 i 之间。本篇用 6 个结构体的实测数据，把对齐规则每一条钉死。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="数据结构（四）：结构体内存对齐 —— padding 就在你眼皮底下">
+<meta property="og:url" content="https://lu-six-star.github.io/2026/11/23/data_struct_04_alignment/index.html">
+<meta property="og:site_name" content="星橙点点">
+<meta property="og:description" content="struct &amp;#123; char c; int i; &amp;#125; 的 sizeof 是多少？字段加起来明明只有 5 字节，实测却是 8——中间 3 个字节的 padding 就藏在 c 和 i 之间。本篇用 6 个结构体的实测数据，把对齐规则每一条钉死。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://lu-six-star.github.io/images/data_struct-04-align.png">
+<meta property="article:published_time" content="2026-11-23T01:00:00.000Z">
+<meta property="article:modified_time" content="2026-11-26T09:10:17.851Z">
+<meta property="article:author" content="Chris">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="数据结构">
+<meta property="article:tag" content="内存">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://lu-six-star.github.io/images/data_struct-04-align.png">
+  
+  
+  
+  <title>数据结构（四）：结构体内存对齐 —— padding 就在你眼皮底下 - 星橙点点</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"lu-six-star.github.io","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>星橙点点</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/images/data_struct-04-align.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="数据结构（四）：结构体内存对齐 —— padding 就在你眼皮底下"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-11-23 09:00" pubdate>
+          2026年11月23日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          2.1k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          18 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">数据结构（四）：结构体内存对齐 —— padding 就在你眼皮底下</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <blockquote>
+<p><code>struct &#123; char c; int i; &#125;</code> 的 sizeof 是多少？字段加起来明明只有 5 字节，实测却是 <strong>8</strong>——中间 3 个字节的 padding 就藏在 c 和 i 之间。本篇用 6 个结构体的实测数据，把对齐规则每一条钉死。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="系列目录"><a href="#系列目录" class="headerlink" title="系列目录"></a>系列目录</h2><ol>
+<li><a href="/2026/11/26/data_struct_01_memory_map/">C 程序的内存地图：你的变量都住在哪</a></li>
+<li><a href="/2026/11/26/data_struct_02_stack_frames/">栈与函数调用：栈帧、递归与爆栈</a></li>
+<li><a href="/2026/11/26/data_struct_03_heap/">堆与动态内存：malloc&#x2F;free 的三板斧</a></li>
+<li><strong>结构体内存对齐：padding 就在你眼皮底下（本篇）</strong></li>
+<li><a href="/2026/11/26/data_struct_05_struct_advanced/">结构体进阶：union、位域与柔性数组</a></li>
+<li><a href="/2026/11/26/data_struct_06_vector/">数组与动态数组：手写简易 vector</a></li>
+<li><a href="/2026/11/26/data_struct_07_slist/">单链表：指针串起来的散装节点</a></li>
+<li><a href="/2026/11/26/data_struct_08_dlist/">双向链表与循环链表：哨兵节点</a></li>
+<li><a href="/2026/11/26/data_struct_09_stack_queue/">栈与队列：LIFO 与 FIFO 的工程实现</a></li>
+<li><a href="/2026/11/26/data_struct_10_hash/">哈希表：数组与链表的合体</a></li>
+<li><a href="/2026/11/26/data_struct_11_freertos_list/">真工程实战：解读 FreeRTOS list.c</a></li>
+<li><a href="/2026/11/26/data_struct_12_tsqueue/">手写线程安全队列：竞态与临界区</a></li>
+<li><a href="/2026/11/26/data_struct_13_appendix/">附录：全部实验代码与复现指南</a></li>
+</ol>
+<h2 id="一、为什么需要对齐"><a href="#一、为什么需要对齐" class="headerlink" title="一、为什么需要对齐"></a>一、为什么需要对齐</h2><p>CPU 访问内存按”自然宽度”取数：int 要一次取 4 字节，double 要一次取 8 字节。如果 int 横跨两个 4 字节边界，CPU 要读两次再拼接——<strong>对齐就是用空间换访问速度</strong>。嵌入式更极端：部分架构（如老 Cortex-M0）未对齐访问直接 HardFault。</p>
+<h2 id="二、实测：6-个结构体的-sizeof"><a href="#二、实测：6-个结构体的-sizeof" class="headerlink" title="二、实测：6 个结构体的 sizeof"></a>二、实测：6 个结构体的 sizeof</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">A</span> &#123;</span> <span class="hljs-type">char</span> c; &#125;;                    <span class="hljs-comment">/* 预期 1  */</span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">B</span> &#123;</span> <span class="hljs-type">char</span> c; <span class="hljs-type">int</span> i; &#125;;             <span class="hljs-comment">/* 预期 8  */</span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">C</span> &#123;</span> <span class="hljs-type">char</span> c; <span class="hljs-type">double</span> d; <span class="hljs-type">char</span> c2; &#125;; <span class="hljs-comment">/* 预期 24 */</span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">D</span> &#123;</span> <span class="hljs-type">int</span> i; <span class="hljs-type">char</span> c; <span class="hljs-type">short</span> s; &#125;;    <span class="hljs-comment">/* 预期 8  */</span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">E</span> &#123;</span> <span class="hljs-type">char</span> c1; <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">B</span> <span class="hljs-title">b</span>;</span> <span class="hljs-type">char</span> c2; &#125;; <span class="hljs-comment">/* 预期 16 */</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">pragma</span> pack(push, 1)</span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">Packed</span> &#123;</span> <span class="hljs-type">char</span> c; <span class="hljs-type">int</span> i; &#125;;        <span class="hljs-comment">/* 强制 1 字节对齐 */</span><br><span class="hljs-meta">#<span class="hljs-keyword">pragma</span> pack(pop)</span><br></code></pre></td></tr></table></figure>
+
+<p>实测输出：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs text">sizeof(struct A) =  1<br>sizeof(struct B) =  8  （char + int，中间 3 字节 padding）<br>sizeof(struct C) = 24  （char + double + char，前后都要补）<br>sizeof(struct D) =  8  （int + char + short：自然紧排 7，补齐到 8）<br>sizeof(struct E) = 16  （嵌套结构体按 B 的对齐数摆放）<br>sizeof(struct Packed) pack(1) = 5<br>offsetof(B, c) = 0<br>offsetof(B, i) = 4  （0~3 就是那 3 字节 padding）<br>struct B arr[2] 总大小 = 16（2 x 8，不是 10 x 2）<br></code></pre></td></tr></table></figure>
+
+<p><img src="/images/data_struct-04-align-d.png" srcset="/img/loading.gif" lazyload alt="结构体内存对齐"></p>
+<h2 id="三、三条对齐规则（全部被实测验证）"><a href="#三、三条对齐规则（全部被实测验证）" class="headerlink" title="三、三条对齐规则（全部被实测验证）"></a>三、三条对齐规则（全部被实测验证）</h2><ol>
+<li><strong>成员对齐数</strong>：int→4、double→8、char→1；嵌套结构体按其内部最大对齐数；</li>
+<li><strong>成员摆放</strong>：偏移必须是对齐数的整数倍，放不下就在前面补 padding；</li>
+<li><strong>总大小补齐</strong>：结构体总大小必须是最大对齐数的整数倍（尾部也可能补）。</li>
+</ol>
+<p>逐个验证：</p>
+<ul>
+<li><strong>B（8 字节）</strong>：c 在偏移 0，i 要对齐到 4 → 偏移 0<del>3 补 3 字节 pad，i 占 4</del>7；</li>
+<li><strong>C（24 字节）</strong>：d 要对齐到 8 → c 后补 7 字节，d 占 8~15，c2 占 16，尾部补齐到 24；</li>
+<li><strong>D（8 字节）</strong>：i 占 0<del>3、c 占 4、s 要对齐到 2 → s 占 6</del>7，总 7 补齐到 8；</li>
+<li><strong>E（16 字节）</strong>：嵌套的 B 按对齐数 4 摆放 → c1 占 0、pad 1<del>3、b 占 4</del>11、c2 占 12，补齐 16。</li>
+</ul>
+<p><strong>手写优化结论</strong>：同一批字段，<code>&#123;int, short, char, char&#125;</code> 按大小件在前排列 &#x3D; 8 字节；乱序排 <code>= 12</code> 字节。批量结构体（1 万条记录）调整一次顺序就省 40KB。</p>
+<h2 id="四、pack-1-：关掉对齐的代价"><a href="#四、pack-1-：关掉对齐的代价" class="headerlink" title="四、pack(1)：关掉对齐的代价"></a>四、pack(1)：关掉对齐的代价</h2><p><code>#pragma pack(1)</code> 强制紧凑排列，sizeof 从 8 变 5。用途：<strong>通信协议打包</strong>（字段必须按字节流严丝合缝）。代价：</p>
+<ul>
+<li>成员可能横跨对齐边界，部分架构访问要拆成多次总线操作；</li>
+<li>未对齐访问在某些 CPU 上直接 HardFault；</li>
+<li>所以工程惯例是”<strong>发送前 pack 打包，内存里还是自然对齐的结构</strong>“，而不是全程 pack。</li>
+</ul>
+<h2 id="五、踩坑记录"><a href="#五、踩坑记录" class="headerlink" title="五、踩坑记录"></a>五、踩坑记录</h2><ol>
+<li><strong>口算偏移</strong>——协议结构体永远用 <code>offsetof()</code> 确认字段偏移，别跟编译器赌；</li>
+<li><strong>结构体直接 memcpy 跨机器传输</strong>——两端对齐&#x2F;端序不同就解出乱码，协议序列化要用显式字节序；</li>
+<li>**以为数组元素是”名义大小”**——B[2] 占 16 字节，每个元素都带自己的 padding；</li>
+<li><strong>sizeof 出现在网络传输里</strong>——不同编译器&#x2F;位宽的结果可能不同，跨平台结构体要显式定宽类型（uint32_t）+ pack。</li>
+</ol>
+<h2 id="六、小结与下一篇预告"><a href="#六、小结与下一篇预告" class="headerlink" title="六、小结与下一篇预告"></a>六、小结与下一篇预告</h2><ul>
+<li>对齐三条规则 + 一个实测表：1、8、24、8、16、5 全部钉死；</li>
+<li>字段按大小件在前排列可以白捡内存；</li>
+<li>offsetof 是协议&#x2F;驱动开发的必备工具；</li>
+<li>pack(1) 是协议打包工具，不是内存布局的常态。</li>
+</ul>
+<p>下一篇结构体进阶：<strong>union 为什么能”看穿”大小端（实测 04 03 02 01）？位域怎么把 4 个字段压进 16 bit（实测 0xEAAD）？柔性数组为什么是通信包的标配？</strong> 全部实测。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li>《深入理解计算机系统》第 2、3 章</li>
+<li><a target="_blank" rel="noopener" href="https://learn.microsoft.com/cpp/preprocessor/pack">MSVC #pragma pack 文档</a></li>
+<li>本系列附录（<a href="/2026/11/26/data_struct_13_appendix/">第 13 篇</a>）收录全部实验代码</li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/DATA-STRUCT/" class="category-chain-item">DATA_STRUCT</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/C/" class="print-no-link">#C</a>
+      
+        <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" class="print-no-link">#数据结构</a>
+      
+        <a href="/tags/%E5%86%85%E5%AD%98/" class="print-no-link">#内存</a>
+      
+    </div>
+  
+</div>
+
+
+              
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2026/11/23/data_struct_05_struct_advanced/" title="数据结构（五）：结构体进阶 —— union、位域与柔性数组">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">数据结构（五）：结构体进阶 —— union、位域与柔性数组</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/11/22/data_struct_03_heap/" title="数据结构（三）：堆与动态内存 —— malloc/free 的三板斧">
+                        <span class="hidden-mobile">数据结构（三）：堆与动态内存 —— malloc/free 的三板斧</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
